@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enums removed for sqlite compatibility in local dev. Use string values:
+// role: 'OWNER' | 'ADMIN' | 'KARYAWAN'
+// category: 'REGULER' | 'MAHASISWA' | 'KEBUN'
+// status: 'HADIR' | 'IZIN' | 'SAKIT' | 'CUTI' | 'ALFA'
+// leave/overtime types/status: use string values (e.g., 'PENDING','APPROVED','REJECTED')
+
+model users {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  password_hash String
+  role         String
+  is_active    Boolean   @default(true)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  // relation to employees (one-to-one optional)
+  employee     employees?
+
+  attendance_corrections attendance_corrections[] @relation("user_corrections")
+  payroll_periods_locked  payroll_periods[] @relation("user_locked_periods")
+  approved_leave_requests leave_requests[] @relation("user_approvals_leave")
+  approved_overtime_requests overtime_requests[] @relation("user_approvals_overtime")
+}
+
+model employees {
+  id            String    @id @default(uuid())
+  user_id       String    @unique
+  employee_code String?
+  name          String
+  category      String
+  is_active     Boolean   @default(true)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  user          users     @relation(fields: [user_id], references: [id])
+
+  attendance    attendance[]
+  leave_requests leave_requests[]
+  overtime_requests overtime_requests[]
+}
+
+model attendance {
+  id                 String          @id @default(uuid())
+  employee_id        String
+  attendance_date    DateTime
+  check_in_time      DateTime?
+  check_out_time     DateTime?
+  check_in_location  String?
+  check_out_location String?
+  check_in_photo     String?
+  check_out_photo    String?
+  late_minutes       Int             @default(0)
+  status             String
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @updatedAt
+
+  employee           employees       @relation(fields: [employee_id], references: [id])
+
+  attendance_corrections attendance_corrections[]
+
+  @@index([employee_id, attendance_date])
+}
+
+model attendance_corrections {
+  id                    String   @id @default(uuid())
+  attendance_id         String
+  corrected_by_user_id  String
+  field_name            String
+  before_value          String?
+  after_value           String?
+  reason                String
+  created_at            DateTime @default(now())
+
+  attendance            attendance @relation(fields: [attendance_id], references: [id])
+  corrected_by_user     users      @relation("user_corrections", fields: [corrected_by_user_id], references: [id])
+}
+
+model leave_requests {
+  id           String      @id @default(uuid())
+  employee_id  String
+  type         String
+  start_date   DateTime
+  end_date     DateTime
+  reason       String
+  status       String @default("PENDING")
+  approved_by  String?
+  created_at   DateTime    @default(now())
+
+  employee     employees   @relation(fields: [employee_id], references: [id])
+  approver     users?      @relation("user_approvals_leave", fields: [approved_by], references: [id])
+}
+
+model overtime_requests {
+  id           String      @id @default(uuid())
+  employee_id  String
+  overtime_date DateTime
+  start_time   DateTime
+  end_time     DateTime
+  reason       String
+  status       String @default("PENDING")
+  approved_by  String?
+  created_at   DateTime    @default(now())
+
+  employee     employees   @relation(fields: [employee_id], references: [id])
+  approver     users?      @relation("user_approvals_overtime", fields: [approved_by], references: [id])
+}
+
+model payroll_periods {
+  id           String    @id @default(uuid())
+  period_start DateTime
+  period_end   DateTime
+  is_locked    Boolean   @default(false)
+  locked_by    String?
+  locked_at    DateTime?
+  created_at   DateTime  @default(now())
+
+  locked_by_user users?  @relation("user_locked_periods", fields: [locked_by], references: [id])
+}
