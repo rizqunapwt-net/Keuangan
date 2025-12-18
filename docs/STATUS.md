@@ -8,7 +8,7 @@
 
 ## Tahap Saat Ini
 
-FASE D – API Contract & Frontend Preparation
+FASE E – Frontend Scaffold (Admin)
 
 ## Yang Sudah Selesai
 
@@ -40,10 +40,15 @@ FASE D – API Contract & Frontend Preparation
   - `src/guards/assertPayrollUnlocked.js`
   - `src/services/payrollPeriod.service.js`
 
+- Frontend scaffold (Admin) dibuat di `frontend/`:
+  - Next.js (App Router) + Tailwind CSS
+  - Basic routes: `app/layout`, `app/page`, `app/admin/layout`, `app/admin/page`
+  - Static mock data; belum ada integrasi API (no fetches)
+
 ## Next Step
 
-- Definisikan API contract (OpenAPI minimal)
-- Persiapan frontend (See attachments — frontend scaffold placeholder present)
+- Finalisasi desain UI dan definisi API untuk integrasi (FASE F)
+- Implementasi integrasi API di frontend (menggunakan kontrak di `docs/API_CONTRACT.md`)
 
 -- Untuk menjalankan lokal: jalankan `npm install`, set `DATABASE_URL` di `.env`, lalu `npx prisma generate` dan `npm run seed`.
 
@@ -79,3 +84,5 @@ npm run dev
 ```
 
 Jika `npx prisma db push` sudah dijalankan, cukup jalankan `npm run seed` lalu `npm run dev`.
+
+**🔒 Checkpoint: Struktur repo final** — Repo diinisialisasi, commit struktural dibuat dan dipush ke `origin/main`.

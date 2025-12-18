@@ -1,0 +1,21 @@
+# Node
+node_modules/
+
+# Next.js
+.next/
+
+# Prisma
+dev.db
+/prisma/dev.db
+
+# Env
+.env
+.env.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
