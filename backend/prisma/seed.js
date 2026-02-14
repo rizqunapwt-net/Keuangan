@@ -45,7 +45,7 @@ async function main() {
         },
     });
 
-    await prisma.employees.upsert({
+    const employee = await prisma.employees.upsert({
         where: { user_id: worker.id },
         update: {},
         create: {
@@ -57,7 +57,75 @@ async function main() {
         },
     });
 
-    console.log('Seeding finished. Users created: owner/admin/karyawan1');
+    // Create Leave Types
+    console.log('Seeding leave types...');
+    const annualLeave = await prisma.leave_types.upsert({
+        where: { code: 'ANNUAL' },
+        update: {},
+        create: {
+            code: 'ANNUAL',
+            name: 'Cuti Tahunan',
+            description: 'Jatah cuti tahunan reguler',
+            max_days: 12,
+            color: '#6366f1'
+        }
+    });
+
+    const sickLeave = await prisma.leave_types.upsert({
+        where: { code: 'SICK' },
+        update: {},
+        create: {
+            code: 'SICK',
+            name: 'Izin Sakit',
+            description: 'Izin dengan surat keterangan dokter',
+            max_days: 10,
+            requires_doc: true,
+            color: '#ef4444'
+        }
+    });
+
+    // Create Leave Balances for the employee
+    console.log('Seeding leave balances...');
+    const currentYear = new Date().getFullYear();
+    await prisma.leave_balances.upsert({
+        where: {
+            employee_id_year_leave_type_id: {
+                employee_id: employee.id,
+                year: currentYear,
+                leave_type_id: annualLeave.id
+            }
+        },
+        update: {},
+        create: {
+            employee_id: employee.id,
+            year: currentYear,
+            leave_type_id: annualLeave.id,
+            total_quota: annualLeave.max_days,
+            used: 0,
+            remaining: annualLeave.max_days
+        }
+    });
+
+    await prisma.leave_balances.upsert({
+        where: {
+            employee_id_year_leave_type_id: {
+                employee_id: employee.id,
+                year: currentYear,
+                leave_type_id: sickLeave.id
+            }
+        },
+        update: {},
+        create: {
+            employee_id: employee.id,
+            year: currentYear,
+            leave_type_id: sickLeave.id,
+            total_quota: sickLeave.max_days,
+            used: 0,
+            remaining: sickLeave.max_days
+        }
+    });
+
+    console.log('Seeding finished. Users & Leave configurations updated.');
 }
 
 main()

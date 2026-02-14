@@ -1,0 +1,45 @@
+{
+  "name": "employee-leave-management-tests",
+  "version": "1.0.0",
+  "description": "Comprehensive test suite for Leave Management System",
+  "scripts": {
+    "test:backend": "jest --config jest.config.js",
+    "test:backend:watch": "jest --config jest.config.js --watch",
+    "test:backend:coverage": "jest --config jest.config.js --coverage",
+    "test:frontend": "vitest run",
+    "test:frontend:watch": "vitest",
+    "test:frontend:ui": "vitest --ui",
+    "test:frontend:coverage": "vitest run --coverage",
+    "test:all": "npm run test:backend && npm run test:frontend",
+    "test:all:coverage": "npm run test:backend:coverage && npm run test:frontend:coverage"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.6",
+    "@types/react": "^18.2.46",
+    "@types/react-dom": "^18.2.18",
+    "@types/supertest": "^6.0.2",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/ui": "^1.1.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jest-mock-extended": "^3.0.5",
+    "jsdom": "^23.0.1",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.10",
+    "vitest": "^1.1.0",
+    "@vitest/coverage-v8": "^1.1.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.7.1",
+    "express": "^4.18.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zod": "^3.22.4"
+  }
+}

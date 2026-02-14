@@ -5,6 +5,127 @@ module.exports = (prisma, { assertAuthenticated, requireRole, requireAnyRole, as
 
     const attendanceService = require('../services/attendance.service');
 
+    // GET /attendance/status
+    router.get('/status', assertAuthenticated, async (req, res) => {
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Need employee ID from user
+            const employee = await prisma.employees.findUnique({
+                where: { user_id: req.user.id }
+            });
+
+            if (!employee) {
+                return res.json({ status: 'NOT_EMPLOYEE' });
+            }
+
+            const attendance = await prisma.attendance.findFirst({
+                where: {
+                    employee_id: employee.id,
+                    attendance_date: {
+                        gte: today
+                    }
+                }
+            });
+
+            if (!attendance) {
+                return res.json({ status: 'NOT_CHECKED_IN' });
+            }
+
+            if (attendance.check_out_time) {
+                return res.json({ status: 'CHECKED_OUT', data: attendance });
+            }
+
+            return res.json({ status: 'CHECKED_IN', data: attendance });
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Server error' });
+        }
+    });
+
+    // GET /attendance/history
+    router.get('/history', assertAuthenticated, async (req, res) => {
+        try {
+            const employee = await prisma.employees.findUnique({
+                where: { user_id: req.user.id }
+            });
+
+            if (!employee) return res.status(404).json({ message: 'Employee not found' });
+
+            // Last 30 days
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            const history = await prisma.attendance.findMany({
+                where: {
+                    employee_id: employee.id,
+                    attendance_date: {
+                        gte: thirtyDaysAgo
+                    }
+                },
+                orderBy: {
+                    attendance_date: 'desc'
+                }
+            });
+
+            return res.json(history);
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    });
+
+    // GET /attendance/summary (ADMIN only)
+    router.get('/summary', assertAuthenticated, requireRole('ADMIN'), async (req, res) => {
+        try {
+            // Default to today
+            const dateStr = req.query.date || new Date().toISOString().split('T')[0];
+            const startDate = new Date(dateStr);
+            startDate.setHours(0, 0, 0, 0);
+
+            const endDate = new Date(startDate);
+            endDate.setHours(23, 59, 59, 999);
+
+            const attendance = await prisma.attendance.findMany({
+                where: {
+                    attendance_date: {
+                        gte: startDate,
+                        lte: endDate
+                    }
+                },
+                include: {
+                    employee: true
+                }
+            });
+
+            const employees = await prisma.employees.findMany({
+                where: { is_active: true }
+            });
+
+            const summary = employees.map(emp => {
+                const att = attendance.find(a => a.employee_id === emp.id);
+                return {
+                    id: emp.id,
+                    name: emp.name,
+                    employee_code: emp.employee_code,
+                    category: emp.category,
+                    status: att ? att.status : 'ABSEN', // Default to ABSEN if no record
+                    check_in: att?.check_in_time,
+                    check_out: att?.check_out_time,
+                    late_minutes: att?.late_minutes || 0
+                };
+            });
+
+            return res.json({ date: dateStr, summary });
+
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    });
+
     // POST /attendance/check-in
     router.post(
         '/check-in',

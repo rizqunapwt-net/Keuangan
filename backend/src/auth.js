@@ -11,16 +11,29 @@ module.exports = (prisma) => {
         if (!username || !password) return res.status(400).json({ error: 'username and password required' });
 
         try {
-            const user = await prisma.users.findUnique({ where: { username } });
-            if (!user) return res.status(401).json({ error: 'invalid credentials' });
+            const userWithEmployee = await prisma.users.findUnique({
+                where: { username },
+                include: {
+                    employees: true
+                }
+            });
 
-            const match = await bcrypt.compare(password, user.password_hash);
-            if (!match) return res.status(401).json({ error: 'invalid credentials' });
+            const employee = userWithEmployee.employees[0] || null;
 
-            const payload = { userId: user.id, role: user.role };
-            const token = jwt.sign(payload, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '8h' });
-
-            return res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+            return res.json({
+                token,
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    role: user.role,
+                    face_descriptor: user.face_descriptor,
+                    employee: employee ? {
+                        id: employee.id,
+                        name: employee.name,
+                        category: employee.category
+                    } : null
+                }
+            });
         } catch (err) {
             console.error('login error', err);
             return res.status(500).json({ error: 'server error' });
@@ -31,6 +44,28 @@ module.exports = (prisma) => {
     router.post('/logout', (req, res) => {
         // With stateless JWTs, logout is handled on client side or with token blacklist (not implemented)
         return res.json({ ok: true });
+    });
+
+    // POST /auth/biometric
+    router.post('/biometric', async (req, res) => {
+        const { descriptor } = req.body;
+        // Since this route is under /auth, and global middleware is AFTER, 
+        // we might not have req.user yet if called here.
+        // But we want it protected.
+        const authHeader = req.headers.authorization;
+        if (!authHeader) return res.status(401).json({ error: 'no token' });
+
+        const token = authHeader.split(' ')[1];
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+            await prisma.users.update({
+                where: { id: decoded.userId },
+                data: { face_descriptor: JSON.stringify(descriptor) }
+            });
+            return res.json({ ok: true });
+        } catch (err) {
+            return res.status(401).json({ error: 'invalid token' });
+        }
     });
 
     return router;
