@@ -53,7 +53,15 @@ run_step "backend_deps" "Ensure backend dependencies" \
   bash -lc "cd '${ROOT_DIR}/backend' && if [[ -d node_modules ]]; then echo 'node_modules exists'; else npm ci --no-audit --no-fund; fi"
 
 run_step "backend_tests" "Run backend tests (Jest)" \
-  bash -lc "cd '${ROOT_DIR}/backend' && npm test -- --runInBand"
+  bash -lc "cd '${ROOT_DIR}/backend' \
+    && if node -e \"const p=require('./package.json');process.exit(p.scripts&&p.scripts.test?0:1)\"; then \
+         npm test -- --runInBand; \
+       elif [[ -x node_modules/.bin/jest ]]; then \
+         node_modules/.bin/jest --runInBand; \
+       else \
+         echo 'No backend test script or local jest binary found.' >&2; \
+         exit 1; \
+       fi"
 
 run_step "frontend_deps" "Ensure frontend dependencies" \
   bash -lc "cd '${ROOT_DIR}/frontend' && if [[ -d node_modules ]]; then echo 'node_modules exists'; else npm ci --legacy-peer-deps --no-audit --no-fund; fi"
