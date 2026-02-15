@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #1a1a1a;
+  --background: #fdfdfd;
+  --foreground: #334155;
   --primary: #FAB005;
   --primary-hover: #E5A100;
-  --accent: #FAB005;
+  --accent: #f59e0b;
   --card-bg: #ffffff;
-  --card-border: #f0f0f0;
-  --muted: #f8f9fa;
+  --card-border: #f1f5f9;
+  --muted: #f8fafc;
 }
 
 body {
@@ -128,9 +128,17 @@ body {
 }
 
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0px rgba(250, 176, 5, 0.2); }
-  70% { box-shadow: 0 0 0 20px rgba(250, 176, 5, 0); }
-  100% { box-shadow: 0 0 0 0px rgba(250, 176, 5, 0); }
+  0% {
+    box-shadow: 0 0 0 0px rgba(250, 176, 5, 0.2);
+  }
+
+  70% {
+    box-shadow: 0 0 0 20px rgba(250, 176, 5, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0px rgba(250, 176, 5, 0);
+  }
 }
 
 ::-webkit-scrollbar {

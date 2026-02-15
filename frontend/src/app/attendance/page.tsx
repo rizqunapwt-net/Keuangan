@@ -5,7 +5,7 @@ import api from '@/utils/api';
 import { loadModels, getFaceDescriptor, compareFaceDescriptors } from '@/utils/biometric';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, MapPin, Camera, Scan, CheckCircle2, AlertCircle, Loader2, RefreshCcw } from 'lucide-react';
+import { ChevronLeft, MapPin, Camera, Scan, CheckCircle2, AlertCircle, Loader2, RefreshCcw, UserCheck } from 'lucide-react';
 
 export default function AttendancePage() {
     const { user, loading: authLoading } = useAuth();
@@ -137,20 +137,20 @@ export default function AttendancePage() {
     }
 
     return (
-        <div className="min-h-screen bg-white pb-20">
-            {/* Header */}
-            <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md px-4 py-4 border-b border-gray-100 flex items-center justify-between">
-                <button onClick={() => router.push('/')} className="p-2 -ml-2 text-gray-500">
+        <div className="min-h-screen bg-white pb-24">
+            {/* Header Navigation */}
+            <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 py-4">
+                <button onClick={() => router.push('/')} className="p-2 -ml-2 text-gray-500 hover:text-amber-500 transition-colors">
                     <ChevronLeft size={24} />
                 </button>
-                <h1 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Presensi Kehadiran</h1>
+                <h1 className="text-sm font-black text-gray-900 uppercase tracking-widest">Presensi Kehadiran</h1>
                 <div className="w-10"></div>
             </div>
 
-            <main className="px-6 py-8">
-                {/* Time Section */}
-                <div className="text-center mb-8">
-                    <h2 className="text-5xl font-black text-gray-900 tracking-tighter mb-1">
+            <main className="px-6 py-8 md:max-w-xl md:mx-auto">
+                {/* Time Display Section */}
+                <div className="text-center mb-10">
+                    <h2 className="text-5xl font-black text-slate-800 tracking-tighter mb-1">
                         {currentTime.toLocaleTimeString('id-ID', { hour12: false })}
                     </h2>
                     <p className="text-xs text-amber-500 font-black uppercase tracking-[0.2em]">
@@ -158,104 +158,122 @@ export default function AttendancePage() {
                     </p>
                 </div>
 
-                {/* Camera / Biometric Section */}
-                <div className="modern-card p-4 mb-6 bg-gray-50 border-gray-100 overflow-hidden">
-                    <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-black shadow-inner">
+                {/* Video/Scan Section - Clean Redesign */}
+                <div className="modern-card p-3 mb-8 bg-white border-amber-100 overflow-hidden relative">
+                    <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-slate-50 border border-slate-100">
                         <video
                             ref={videoRef}
                             autoPlay
                             muted
                             playsInline
-                            className={`w-full h-full object-cover transition-all duration-700 ${isFaceVerified ? 'brightness-110 contrast-110' : 'brightness-50 grayscale'}`}
+                            className={`w-full h-full object-cover transition-all duration-700 ${isFaceVerified ? 'brightness-105' : 'brightness-90'}`}
                         />
 
-                        {/* Overlay Scan UI */}
-                        <div className="absolute inset-0 border-[16px] border-black/10 rounded-[24px]"></div>
-
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        {/* Scan UI Overlay */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                             {!isFaceVerified ? (
-                                <div className="flex flex-col items-center gap-3">
-                                    <div className="w-48 h-48 border-2 border-dashed border-amber-400/50 rounded-full animate-[spin_10s_linear_infinite] flex items-center justify-center">
-                                        <div className="w-40 h-40 border-2 border-white/20 rounded-full"></div>
+                                <div className="flex flex-col items-center gap-6">
+                                    <div className="w-56 h-56 border-2 border-dashed border-amber-400/40 rounded-full animate-[spin_15s_linear_infinite] flex items-center justify-center relative">
+                                        <div className="absolute inset-0 bg-amber-400/5 rounded-full pulse-slow"></div>
+                                        <div className="w-48 h-48 border border-white/40 rounded-full"></div>
                                     </div>
-                                    <p className="text-[10px] font-black text-white uppercase tracking-widest bg-black/40 px-4 py-2 rounded-full backdrop-blur-md">
-                                        Posisikan Wajah Anda
-                                    </p>
+                                    <div className="bg-white/80 backdrop-blur-md border border-amber-100 px-6 py-3 rounded-2xl shadow-xl flex items-center gap-2">
+                                        <Scan size={18} className="text-amber-500 animate-pulse" />
+                                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">
+                                            Scanning Identitas...
+                                        </span>
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="bg-green-500/90 backdrop-blur-md p-4 rounded-full text-white animate-in zoom-in duration-300">
-                                    <CheckCircle2 size={48} />
+                                <div className="flex flex-col items-center gap-4 animate-in zoom-in duration-500">
+                                    <div className="bg-green-500 p-6 rounded-full text-white shadow-2xl shadow-green-200">
+                                        <UserCheck size={48} />
+                                    </div>
+                                    <div className="bg-white/95 px-6 py-3 rounded-2xl shadow-xl border border-green-100">
+                                        <span className="text-xs font-black text-green-600 uppercase tracking-widest">
+                                            Identitas Terverifikasi
+                                        </span>
+                                    </div>
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
 
-                {/* Status Information */}
-                <div className="space-y-4 mb-8">
-                    <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100 transition-colors">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${coords ? 'bg-amber-100 text-amber-600' : 'bg-red-50 text-red-400'}`}>
-                            <MapPin size={20} />
+                {/* Status Tiles */}
+                <div className="space-y-4 mb-10">
+                    <div className="flex items-center gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 transition-all hover:bg-slate-50">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${coords ? 'bg-white text-blue-500' : 'bg-white text-red-500'}`}>
+                            <MapPin size={22} />
                         </div>
-                        <div className="flex-1">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-tight">Lokasi Presensi</p>
-                            <p className="text-sm font-bold text-gray-800 truncate">{location}</p>
+                        <div className="flex-1 overflow-hidden">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight mb-0.5">Sinyal Navigasi Satelit</p>
+                            <p className="text-sm font-bold text-slate-700 truncate">{location}</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isFaceVerified ? 'bg-green-100 text-green-600' : 'bg-amber-50 text-amber-400'}`}>
-                            <Scan size={20} />
+                    <div className="flex items-center gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 transition-all hover:bg-slate-50">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${isFaceVerified ? 'bg-white text-green-500' : 'bg-white text-amber-500'}`}>
+                            <Scan size={22} />
                         </div>
-                        <div className="flex-1">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-tight">Status Biometrik</p>
-                            <p className="text-sm font-bold text-gray-800">
-                                {isFaceVerified ? 'Identitas Terkonfirmasi' : 'Verifikasi Dibutuhkan'}
+                        <div className="flex-1 overflow-hidden">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight mb-0.5">Protokol Biometrik</p>
+                            <p className="text-sm font-bold text-slate-700">
+                                {isFaceVerified ? 'Sistem Aktif • Akses Diberikan' : 'Sistem Siap • Menunggu Scan'}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Error Box */}
+                {/* Error Banner */}
                 {errorMessage && (
-                    <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-100 flex items-start gap-3">
-                        <AlertCircle className="text-red-500 shrink-0" size={20} />
-                        <p className="text-xs font-bold text-red-600 leading-tight">{errorMessage}</p>
+                    <div className="mb-10 p-5 rounded-3xl bg-red-50 border border-red-100 flex items-start gap-4">
+                        <div className="bg-red-500 p-1.5 rounded-lg text-white">
+                            <AlertCircle size={18} />
+                        </div>
+                        <p className="text-xs font-bold text-red-700 leading-tight pt-1">{errorMessage}</p>
                     </div>
                 )}
 
-                {/* Action Button */}
+                {/* Main Action Trigger */}
                 {status !== 'CHECKED_OUT' ? (
                     <button
                         onClick={handleAction}
                         disabled={actionLoading || !isFaceVerified || (!coords && status === 'NOT_CHECKED_IN')}
-                        className={`btn-primary h-20 flex items-center justify-center gap-3 transition-all ${status === 'CHECKED_IN' ? 'bg-gray-900 shadow-gray-900/10' : ''}`}
+                        className={`btn-primary h-20 relative flex items-center justify-center transition-all ${status === 'CHECKED_IN' ? 'bg-slate-700 hover:bg-slate-800 shadow-slate-200' : ''}`}
                     >
                         {actionLoading ? (
-                            <Loader2 className="animate-spin" size={24} />
+                            <Loader2 className="animate-spin text-white" size={28} />
                         ) : (
-                            <>
-                                <Scan size={24} />
-                                <span className="text-lg font-black tracking-widest">
-                                    {status === 'NOT_CHECKED_IN' ? 'CHECK-IN SEKARANG' : 'CHECK-OUT SEKARANG'}
+                            <div className="flex items-center gap-4">
+                                <Scan size={28} className={status === 'CHECKED_IN' ? 'text-white' : 'text-slate-800'} />
+                                <span className={`text-lg font-black tracking-[0.15em] ${status === 'CHECKED_IN' ? 'text-white' : 'text-slate-800'}`}>
+                                    {status === 'NOT_CHECKED_IN' ? 'CHECK-IN' : 'CHECK-OUT'}
                                 </span>
-                            </>
+                            </div>
+                        )}
+                        {!isFaceVerified && !actionLoading && (
+                            <div className="absolute -top-3 right-4 bg-slate-800 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
+                                Locked
+                            </div>
                         )}
                     </button>
                 ) : (
-                    <div className="p-6 rounded-[2rem] bg-gray-50 border border-gray-100 text-center">
-                        <CheckCircle2 size={32} className="text-green-500 mx-auto mb-3" />
-                        <p className="text-sm font-black text-gray-900 uppercase tracking-tight">Presensi Selesai</p>
-                        <p className="text-xs text-gray-500 font-medium">Data Anda telah tersimpan secara aman.</p>
+                    <div className="p-10 rounded-[2.5rem] bg-green-50 border border-green-100 text-center animate-in fade-in duration-700">
+                        <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-green-500 shadow-sm mx-auto mb-4">
+                            <CheckCircle2 size={32} />
+                        </div>
+                        <p className="text-lg font-black text-slate-800 uppercase tracking-tight mb-1">Berhasil Disimpan</p>
+                        <p className="text-xs text-slate-500 font-medium">Data absensi harian Anda telah masuk ke arsip pusat.</p>
                     </div>
                 )}
 
                 <button
                     onClick={() => window.location.reload()}
-                    className="w-full mt-6 py-3 flex items-center justify-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest active:text-amber-500 transition-colors"
+                    className="w-full mt-10 py-4 flex items-center justify-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] hover:text-amber-500 transition-colors active:scale-95 duration-200"
                 >
-                    <RefreshCcw size={14} />
-                    Kalibrasi Ulang Perangkat
+                    <RefreshCcw size={16} />
+                    Sync Ulang Perangkat
                 </button>
             </main>
         </div>

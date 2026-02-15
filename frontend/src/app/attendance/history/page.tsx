@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { ChevronLeft, Calendar, Clock, History, FileText, AlertTriangle } from 'lucide-react';
 
 interface AttendanceRecord {
     id: string;
@@ -46,90 +47,101 @@ export default function HistoryPage() {
 
     if (authLoading || loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-[#0a0a0c]">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-500/20 border-t-indigo-500" />
+            <div className="flex items-center justify-center min-h-screen bg-white">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-amber-100 border-t-amber-500" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0c] text-white overflow-hidden relative selection:bg-indigo-500/30">
-            {/* Animated Nebula Background */}
-            <div className="nebula" />
+        <div className="min-h-screen bg-[#fdfdfd] pb-24">
+            {/* Header Navigation */}
+            <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 py-4">
+                <button onClick={() => router.push('/')} className="p-2 -ml-2 text-gray-500 hover:text-amber-500 transition-colors">
+                    <ChevronLeft size={24} />
+                </button>
+                <h1 className="text-sm font-black text-gray-900 uppercase tracking-widest">Riwayat Absensi</h1>
+                <div className="w-10"></div>
+            </div>
 
-            <nav className="border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-xl sticky top-0 z-50">
-                <div className="max-w-5xl mx-auto px-6 h-20 flex justify-between items-center">
-                    <button onClick={() => router.push('/')} className="group flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-white transition-colors">
-                        <svg className="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        DASBOR
-                    </button>
-                    <div className="hidden md:block">
-                        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-600">Akses Arsip Personel</span>
+            <main className="px-6 py-8 md:max-w-xl md:mx-auto">
+                {/* Title Section */}
+                <div className="mb-10 text-center">
+                    <div className="w-16 h-16 bg-amber-50 rounded-3xl flex items-center justify-center text-amber-500 mx-auto mb-4">
+                        <History size={32} />
                     </div>
-                </div>
-            </nav>
-
-            <main className="max-w-5xl mx-auto py-10 md:py-16 px-4 md:px-6 relative z-10">
-                <div className="mb-16 md:mb-24">
-                    <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-4 bg-gradient-to-b from-white to-white/30 bg-clip-text text-transparent uppercase">Arsip <span className="text-indigo-500">Personel</span></h1>
-                    <p className="text-gray-500 text-[10px] md:text-xs font-black uppercase tracking-[0.5em]">Laporan Kinerja Historis • 30 Siklus Terakhir</p>
+                    <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-1">Arsip Kehadiran</h2>
+                    <p className="text-xs text-gray-400 font-medium uppercase tracking-[0.2em]">30 Periode Terakhir</p>
                 </div>
 
-                <div className="glass-card rounded-[2.5rem] overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full">
-                            <thead className="bg-white/[0.02]">
-                                <tr>
-                                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Tanggal Siklus</th>
-                                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Inisialisasi</th>
-                                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Kesimpulan</th>
-                                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Status Protokol</th>
-                                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Penyimpangan</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5">
-                                {history.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-8 py-12 text-center text-sm text-gray-600 italic">Tidak ada entri arsip yang ditemukan untuk operator ini.</td>
-                                    </tr>
-                                ) : (
-                                    history.map((record) => (
-                                        <tr key={record.id} className="hover:bg-white/[0.02] transition-colors">
-                                            <td className="px-8 py-6 text-sm font-black text-white">
-                                                {format(new Date(record.attendance_date), 'MMM dd, yyyy', { locale: id })}
-                                            </td>
-                                            <td className="px-8 py-6 text-sm font-mono text-gray-400">
-                                                {format(new Date(record.check_in_time), 'HH:mm:ss', { locale: id })}
-                                            </td>
-                                            <td className="px-8 py-6 text-sm font-mono text-gray-400">
-                                                {record.check_out_time ? format(new Date(record.check_out_time), 'HH:mm:ss', { locale: id }) : '--:--:--'}
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <span className={`px-2 py-1 text-[10px] font-black uppercase tracking-widest rounded-md
-                                            ${record.status === 'HADIR' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-gray-500/10 text-gray-500 border border-white/10'}`}>
-                                                    {record.status === 'HADIR' ? 'HADIR' : record.status}
+                {/* History List */}
+                <div className="space-y-4">
+                    {history.length === 0 ? (
+                        <div className="modern-card p-12 text-center border-dashed">
+                            <FileText size={40} className="text-gray-200 mx-auto mb-4" />
+                            <p className="text-sm font-bold text-gray-400">Belum ada catatan riwayat.</p>
+                        </div>
+                    ) : (
+                        history.map((record) => (
+                            <div key={record.id} className="modern-card p-5 group hover:border-amber-400 transition-all border-l-4 border-l-amber-500">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <p className="text-xs font-black text-amber-600 uppercase tracking-widest mb-1">
+                                            {format(new Date(record.attendance_date), 'EEEE, d MMM yyyy', { locale: id })}
+                                        </p>
+                                        <div className="flex items-center gap-1">
+                                            <span className={`px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-full 
+                                                ${record.status === 'HADIR' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                {record.status}
+                                            </span>
+                                            {record.late_minutes > 0 && (
+                                                <span className="px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-full bg-red-50 text-red-600">
+                                                    Terlambat {record.late_minutes}m
                                                 </span>
-                                            </td>
-                                            <td className="px-8 py-6 text-xs text-gray-500">
-                                                {record.late_minutes > 0 ? (
-                                                    <span className="text-red-500 font-bold">+{record.late_minutes}m Penyimpangan</span>
-                                                ) : 'Tanpa Latensi'}
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="p-2 bg-gray-50 rounded-xl text-gray-400">
+                                        <Calendar size={16} />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-50">
+                                    <div className="flex items-center gap-2">
+                                        <Clock size={14} className="text-gray-400" />
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Masuk</p>
+                                            <p className="text-xs font-black text-gray-900">
+                                                {format(new Date(record.check_in_time), 'HH:mm')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Clock size={14} className="text-gray-400" />
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Keluar</p>
+                                            <p className="text-xs font-black text-gray-900">
+                                                {record.check_out_time ? format(new Date(record.check_out_time), 'HH:mm') : '--:--'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
 
-                <div className="mt-16 glass-card p-10 rounded-[2.5rem] bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent">
-                    <h4 className="text-[10px] font-black mb-3 uppercase tracking-[0.4em] text-indigo-400">Keamanan Cloud Terjamin</h4>
-                    <p className="text-xs text-gray-600 leading-relaxed max-w-md uppercase tracking-widest font-bold">
-                        Semua data arsip ditandatangani secara kriptografis dan disinkronkan dengan simpul global. Catatan tahan gangguan (Tamper-proof).
-                    </p>
+                {/* Footer Info */}
+                <div className="mt-12 p-6 rounded-[2rem] bg-amber-50/50 border border-amber-100 flex gap-4 items-start">
+                    <div className="p-3 bg-white rounded-2xl text-amber-500 shadow-sm shrink-0">
+                        <AlertTriangle size={20} />
+                    </div>
+                    <div>
+                        <h4 className="text-xs font-black text-amber-900 uppercase tracking-tight mb-1">Verifikasi Cloud Monitoring</h4>
+                        <p className="text-[10px] text-amber-700 font-medium leading-relaxed">
+                            Semua data absensi disinkronkan secara aman dengan sistem pusat PT New Rizquna Elfath untuk akurasi pelaporan.
+                        </p>
+                    </div>
                 </div>
             </main>
         </div>
