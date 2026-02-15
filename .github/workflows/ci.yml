@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - 'erp/**'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'erp/**'
+      - '.github/workflows/**'
+
+jobs:
+  erp-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: erp_testing
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d erp_testing"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secret scan (gitleaks) (non-blocking)
+        continue-on-error: true
+        run: |
+          # Scope to `erp/` to keep CI fast in this monorepo.
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" zricethezav/gitleaks:latest dir /repo/erp \
+            --config /repo/.gitleaks.toml \
+            --no-banner \
+            --redact
+
+      - name: Trivy filesystem scan (non-blocking)
+        uses: aquasecurity/trivy-action@0.28.0
+        continue-on-error: true
+        with:
+          scan-type: fs
+          scan-ref: erp
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      - name: Build PHP docker image (non-blocking)
+        continue-on-error: true
+        run: docker build -f erp/docker/php/Dockerfile -t rizquna-erp-php:ci erp
+
+      - name: Trivy image scan (non-blocking)
+        uses: aquasecurity/trivy-action@0.28.0
+        continue-on-error: true
+        with:
+          scan-type: image
+          image-ref: rizquna-erp-php:ci
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, pdo_pgsql
+          coverage: none
+          tools: composer:v2
+
+      - name: Prepare env
+        working-directory: erp
+        run: |
+          cp .env.example .env
+
+      - name: Install dependencies
+        working-directory: erp
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Generate app key
+        working-directory: erp
+        run: php artisan key:generate
+
+      - name: Run tests
+        working-directory: erp
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: erp_testing
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+        run: php artisan test
+
+      - name: Composer audit (non-blocking)
+        if: always()
+        working-directory: erp
+        run: composer audit --no-interaction || true

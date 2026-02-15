@@ -1,0 +1,16 @@
+title = "Rizquna ERP gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Project-specific allowlist to reduce noise from dependencies/generated files"
+paths = [
+  '''(?:^|/)erp/vendor(?:/.*)?$''',
+  '''(?:^|/)erp/node_modules(?:/.*)?$''',
+  '''(?:^|/)erp/public/(?:css|js)/filament(?:/.*)?$''',
+  '''(?:^|/)erp/public/build(?:/.*)?$''',
+  '''(?:^|/)erp/storage(?:/.*)?$''',
+  '''(?:^|/)erp/backups(?:/.*)?$''',
+]
+
