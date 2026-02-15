@@ -137,13 +137,13 @@ const fillValidForm = async (user: any) => {
 
   // Fill dates (Monday to Friday)
   const startDateInput = screen.getByLabelText(/mulai/i);
-  const endDateInput = screen.getByLabelText(/hingga/i);
+  const endDateInput = screen.getByLabelText(/sampai/i);
 
   await user.type(startDateInput, '2025-03-10'); // Monday
   await user.type(endDateInput, '2025-03-14');   // Friday
 
   // Fill reason
-  const reasonTextarea = screen.getByPlaceholderText(/jelaskan keperluan cuti anda.../i);
+  const reasonTextarea = screen.getByLabelText(/alasan/i);
   await user.type(reasonTextarea, 'Ini adalah alasan yang valid untuk pengajuan cuti saya');
 };
 
@@ -165,9 +165,9 @@ describe('LeaveRequestForm - Component Mounting', () => {
 
     // SUCCESS: These matches the Indonesian labels in LeaveRequestForm.tsx
     expect(screen.getByText('Jenis Cuti')).toBeInTheDocument();
-    expect(screen.getByText('Mulai')).toBeInTheDocument();
-    expect(screen.getByText('Hingga')).toBeInTheDocument();
-    expect(screen.getByText('Alasan')).toBeInTheDocument();
+    expect(screen.getByText('Mulai Tanggal')).toBeInTheDocument();
+    expect(screen.getByText('Sampai Tanggal')).toBeInTheDocument();
+    expect(screen.getByText('Alasan Pengajuan')).toBeInTheDocument();
   });
 
   test('should fetch and display leave types on mount', async () => {
@@ -186,7 +186,7 @@ describe('LeaveRequestForm - Component Mounting', () => {
 
     const annualLeaveCard = screen.getByText('Cuti Tahunan').closest('button');
     expect(within(annualLeaveCard!).getByText('10')).toBeInTheDocument();
-    expect(within(annualLeaveCard!).getByText('hari Sisa')).toBeInTheDocument();
+    expect(within(annualLeaveCard!).getByText(/sisa kuota/i)).toBeInTheDocument();
   });
 });
 
@@ -207,14 +207,14 @@ describe('LeaveRequestForm - User Interactions', () => {
     const { user } = await setupComponent();
 
     const startDateInput = screen.getByLabelText(/mulai/i);
-    const endDateInput = screen.getByLabelText(/hingga/i);
+    const endDateInput = screen.getByLabelText(/sampai/i);
 
     // Monday to Friday = 5 business days
     await user.type(startDateInput, '2025-03-10');
     await user.type(endDateInput, '2025-03-14');
 
     await waitFor(() => {
-      expect(screen.getByText(/total hari kerja:/i)).toBeInTheDocument();
+      expect(screen.getByText(/durasi cuti/i)).toBeInTheDocument();
       expect(screen.getByText(/5 Hari/i)).toBeInTheDocument();
     });
   });
@@ -226,13 +226,13 @@ describe('LeaveRequestForm - User Interactions', () => {
     await user.click(annualLeaveButton);
 
     const startDateInput = screen.getByLabelText(/mulai/i);
-    const endDateInput = screen.getByLabelText(/hingga/i);
+    const endDateInput = screen.getByLabelText(/sampai/i);
 
     // Request 15 days (Monday onwards for 3 weeks)
     await user.type(startDateInput, '2025-03-03');
     await user.type(endDateInput, '2025-03-21'); // 15 business days
 
-    const reasonTextarea = screen.getByPlaceholderText(/jelaskan keperluan cuti anda.../i);
+    const reasonTextarea = screen.getByLabelText(/alasan/i);
     await user.type(reasonTextarea, 'Ini adalah alasan yang sangat valid sekali');
 
     const submitButton = screen.getByRole('button', { name: /kirim pengajuan/i });
@@ -277,7 +277,7 @@ describe('LeaveRequestForm - Submission', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/pengajuan terkirim!/i)).toBeInTheDocument();
+      expect(screen.getByText(/pengajuan berhasil/i)).toBeInTheDocument();
     });
   });
 });
