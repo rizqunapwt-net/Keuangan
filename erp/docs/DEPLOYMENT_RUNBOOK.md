@@ -5,7 +5,7 @@ Tanggal: 2026-02-15
 Dokumen ini menjelaskan langkah deploy staging/production untuk aplikasi `erp/`.
 
 ## Requirement
-- PHP 8.4+
+- PHP 8.2+
 - Composer 2
 - PostgreSQL 16
 - Redis (recommended untuk queue/horizon)
@@ -106,3 +106,25 @@ pg_restore -c -h <host> -U <user> -d <db> backup.dump
 2. Login admin (jika panel digunakan)
 3. Test API token: `POST /api/v1/auth/token`
 4. Jalankan `php artisan audit:export YYYY-MM`
+
+## CI/CD GitHub Actions (Opsional)
+Repo sudah disiapkan workflow deploy: `.github/workflows/deploy_erp.yml` (manual atau auto saat push ke `main` jika secrets tersedia).
+
+### One-time Setup di Server
+1. Clone repo pada path tertentu (contoh: `/home/<user>/nre`), lalu pastikan folder `erp/` ada.
+2. Buat file `erp/.env` (jangan commit) dan set variable produksi (DB, `APP_URL`, `APP_KEY`, storage S3, dsb).
+3. Pastikan `php` dan `composer` tersedia di server.
+4. Tambahkan deploy key public ke `~/.ssh/authorized_keys` user deploy di server.
+
+### Secrets yang Wajib di GitHub
+Set pada GitHub Repo Settings -> Secrets and variables -> Actions:
+- `DEPLOY_HOST` (contoh: `server.infiatin.cloud`)
+- `DEPLOY_USER` (contoh: `tholib_server`)
+- `DEPLOY_PATH` (path repo di server, contoh: `/home/tholib_server/nre`)
+- `SSH_PRIVATE_KEY` (private key deploy, format OpenSSH)
+- `CF_ACCESS_TOKEN_ID` dan `CF_ACCESS_TOKEN_SECRET` (Cloudflare Access service token)
+- (Opsional) `SSH_KNOWN_HOSTS` untuk strict host key checking
+
+### Apa yang Dilakukan Workflow
+1. `git pull` di server (branch `main`)
+2. Jalankan `erp/scripts/deploy_server.sh` (composer install prod + migrate + cache + restart horizon)

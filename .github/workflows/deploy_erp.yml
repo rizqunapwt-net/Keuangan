@@ -1,0 +1,73 @@
+name: Deploy Rizquna ERP
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'erp/**'
+      - '.github/workflows/deploy_erp.yml'
+
+concurrency:
+  group: deploy-erp
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Skip gracefully unless all required secrets are configured.
+    if: >-
+      ${{
+        secrets.DEPLOY_HOST != '' &&
+        secrets.DEPLOY_USER != '' &&
+        secrets.DEPLOY_PATH != '' &&
+        secrets.SSH_PRIVATE_KEY != '' &&
+        secrets.CF_ACCESS_TOKEN_ID != '' &&
+        secrets.CF_ACCESS_TOKEN_SECRET != ''
+      }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install cloudflared
+        run: |
+          curl -L -o cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+          sudo install -m 0755 cloudflared /usr/local/bin/cloudflared
+          cloudflared version
+
+      - name: Setup SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          if [[ -n "${{ secrets.SSH_KNOWN_HOSTS }}" ]]; then
+            echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+            chmod 644 ~/.ssh/known_hosts
+          fi
+
+          cat >> ~/.ssh/config <<EOF
+          Host deploy-target
+            HostName ${{ secrets.DEPLOY_HOST }}
+            User ${{ secrets.DEPLOY_USER }}
+            IdentityFile ~/.ssh/id_ed25519
+            IdentitiesOnly yes
+            ProxyCommand cloudflared access ssh --hostname ${{ secrets.DEPLOY_HOST }} --service-token-id ${{ secrets.CF_ACCESS_TOKEN_ID }} --service-token-secret ${{ secrets.CF_ACCESS_TOKEN_SECRET }}
+            StrictHostKeyChecking no
+            UserKnownHostsFile=/dev/null
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Deploy (git pull + run server deploy script)
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh deploy-target "set -euo pipefail; cd '${{ secrets.DEPLOY_PATH }}'; git fetch origin; git checkout main; git pull --ff-only origin main; cd erp; bash scripts/deploy_server.sh"
+

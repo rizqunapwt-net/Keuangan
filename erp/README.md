@@ -14,7 +14,7 @@ Aplikasi internal ERP Publishing untuk PT Rizquna Pustaka.
 - Audit trail (Spatie Activitylog)
 
 ## Tech Stack
-- Laravel 11, PHP 8.4+
+- Laravel 11, PHP 8.2+
 - Filament v3
 - PostgreSQL 16 (target), SQLite (default local/test)
 - Redis + Horizon
@@ -22,7 +22,13 @@ Aplikasi internal ERP Publishing untuk PT Rizquna Pustaka.
 - Spatie Permission + Activitylog
 - DomPDF + Laravel Excel
 
-## Setup
+## One-Command (Recommended)
+```bash
+cd erp
+./scripts/dev.sh up
+```
+
+## Setup (Manual)
 ```bash
 cd erp
 cp .env.example .env
@@ -39,10 +45,7 @@ php artisan serve
 
 ## Docker (Opsional)
 ```bash
-docker compose up -d --build
-docker compose exec app composer install
-docker compose exec app php artisan key:generate
-docker compose exec app php artisan migrate --seed
+./scripts/dev.sh up
 ```
 
 Akses:
