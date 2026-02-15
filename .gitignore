@@ -19,6 +19,7 @@ yarn-error.log*
 
 # Coverage
 coverage/
+reports/automation/
 
 # OS
 .DS_Store
