@@ -2,6 +2,7 @@ const express = require('express');
 const { z } = require('zod');
 const prisma = require('../lib/prisma');
 const { createNotification } = require('../lib/notifications');
+const assertAuthenticated = require('../middlewares/assertAuthenticated');
 const requireAnyRole = require('../middlewares/requireAnyRole');
 
 const router = express.Router();
@@ -51,7 +52,7 @@ async function generatePayrollNumber() {
 // API ENDPOINTS
 // ============================================================================
 
-router.get('/payrolls', async (req, res) => {
+router.get('/payrolls', assertAuthenticated, async (req, res) => {
     try {
         const { employeeId, month, year } = req.query;
 

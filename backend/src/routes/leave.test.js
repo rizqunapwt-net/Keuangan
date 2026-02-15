@@ -34,6 +34,16 @@ jest.mock('../lib/prisma', () => ({
   }
 }));
 
+// Mock middlewares BEFORE importing the router
+jest.mock('../middlewares/assertAuthenticated', () => (req, res, next) => {
+  req.user = { role: 'ADMIN', userId: 'test-admin' }; // Simulate logged in admin
+  next();
+});
+jest.mock('../middlewares/requireAnyRole', () => (roles) => (req, res, next) => {
+  req.user = { role: 'ADMIN', userId: 'test-admin' }; // Simulate role match
+  next();
+});
+
 // Import the mocked instance
 const mockPrisma = require('../lib/prisma');
 const leaveRouter = require('./leave.routes');
@@ -41,6 +51,11 @@ const leaveRouter = require('./leave.routes');
 // Create Express app for testing
 const app = express();
 app.use(express.json());
+// Add a mock req.user for tests that check it directly
+app.use((req, res, next) => {
+  req.user = { role: 'ADMIN', userId: 'test-admin' };
+  next();
+});
 app.use('/api', leaveRouter);
 
 // Use static year for tests (matches system clock 2026)

@@ -2,6 +2,7 @@ const express = require('express');
 const { z } = require('zod');
 const prisma = require('../lib/prisma');
 const { createNotification } = require('../lib/notifications');
+const assertAuthenticated = require('../middlewares/assertAuthenticated');
 const requireAnyRole = require('../middlewares/requireAnyRole');
 
 const router = express.Router();
@@ -46,7 +47,7 @@ async function generateOvertimeRequestNumber() {
 // API ENDPOINTS
 // ============================================================================
 
-router.get('/overtime-requests', async (req, res) => {
+router.get('/overtime-requests', assertAuthenticated, async (req, res) => {
     try {
         const { employeeId, status } = req.query;
 
@@ -70,7 +71,7 @@ router.get('/overtime-requests', async (req, res) => {
     }
 });
 
-router.post('/overtime-requests', async (req, res) => {
+router.post('/overtime-requests', assertAuthenticated, async (req, res) => {
     try {
         const validatedData = createOvertimeRequestSchema.parse(req.body);
 

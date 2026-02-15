@@ -11,26 +11,44 @@ module.exports = (prisma) => {
         if (!username || !password) return res.status(400).json({ error: 'username and password required' });
 
         try {
-            const userWithEmployee = await prisma.users.findUnique({
+            const user = await prisma.users.findUnique({
                 where: { username },
                 include: {
-                    employees: true
+                    employee: true
                 }
             });
 
-            const employee = userWithEmployee.employees[0] || null;
+            if (!user) {
+                return res.status(401).json({ error: 'invalid credentials' });
+            }
+
+            const valid = bcrypt.compareSync(password, user.password_hash);
+            if (!valid) {
+                return res.status(401).json({ error: 'invalid credentials' });
+            }
+
+            const token = jwt.sign(
+                {
+                    userId: user.id,
+                    role: user.role,
+                    employee_id: user.employee?.id
+                },
+                process.env.JWT_SECRET || 'dev_secret',
+                { expiresIn: '24h' }
+            );
 
             return res.json({
                 token,
+                status: 'success',
                 user: {
                     id: user.id,
                     username: user.username,
                     role: user.role,
                     face_descriptor: user.face_descriptor,
-                    employee: employee ? {
-                        id: employee.id,
-                        name: employee.name,
-                        category: employee.category
+                    employee: user.employee ? {
+                        id: user.employee.id,
+                        name: user.employee.name,
+                        category: user.employee.category
                     } : null
                 }
             });
@@ -42,16 +60,12 @@ module.exports = (prisma) => {
 
     // POST /auth/logout (stateless placeholder)
     router.post('/logout', (req, res) => {
-        // With stateless JWTs, logout is handled on client side or with token blacklist (not implemented)
         return res.json({ ok: true });
     });
 
     // POST /auth/biometric
     router.post('/biometric', async (req, res) => {
         const { descriptor } = req.body;
-        // Since this route is under /auth, and global middleware is AFTER, 
-        // we might not have req.user yet if called here.
-        // But we want it protected.
         const authHeader = req.headers.authorization;
         if (!authHeader) return res.status(401).json({ error: 'no token' });
 

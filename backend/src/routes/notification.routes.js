@@ -1,5 +1,6 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
+const assertAuthenticated = require('../middlewares/assertAuthenticated');
 
 const router = express.Router();
 
@@ -9,7 +10,7 @@ const router = express.Router();
 
 // GET /api/notifications
 // Fetch notifications for the logged-in user
-router.get('/notifications', async (req, res) => {
+router.get('/notifications', assertAuthenticated, async (req, res) => {
     try {
         const { employeeId } = req.query;
 
@@ -37,7 +38,7 @@ router.get('/notifications', async (req, res) => {
 
 // PATCH /api/notifications/:id/read
 // Mark a specific notification as read
-router.patch('/notifications/:id/read', async (req, res) => {
+router.patch('/notifications/:id/read', assertAuthenticated, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -55,7 +56,7 @@ router.patch('/notifications/:id/read', async (req, res) => {
 
 // PATCH /api/notifications/read-all
 // Mark all notifications for an employee as read
-router.patch('/notifications/read-all', async (req, res) => {
+router.patch('/notifications/read-all', assertAuthenticated, async (req, res) => {
     try {
         const { employeeId } = req.body;
 

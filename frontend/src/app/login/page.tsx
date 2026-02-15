@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/utils/api';
+import { ShieldCheck, User as UserIcon, Lock, ChevronRight, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
     const { login } = useAuth();
@@ -22,90 +23,99 @@ export default function LoginPage() {
                 login(token, user);
             }
         } catch (err: any) {
-            setError(err.response?.data?.error || err.response?.data?.message || 'Unauthorized Access');
+            setError(err.response?.data?.error || err.response?.data?.message || 'Akses tidak diizinkan');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a0c]">
-            {/* Animated Nebula Background */}
-            <div className="nebula" />
-
-            <div className="relative w-full max-w-md px-6 py-8">
-                <div className="mb-12 text-center">
-                    <h1 className="bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-5xl font-black tracking-tighter text-transparent">
-                        ABSENSI
-                    </h1>
-                    <p className="mt-3 text-[10px] font-black uppercase tracking-[0.5em] text-indigo-500/80">
-                        EDISI KORPORAT MEWAH
-                    </p>
-                </div>
-
-                <div className="glass-card group relative overflow-hidden rounded-[2.5rem] p-1 transition-all hover:border-white/20">
-                    <div className="rounded-[calc(2.5rem-1px)] bg-[#111114]/40 p-8 md:p-10">
-                        <form onSubmit={handleSubmit} className="space-y-8">
-                            {error && (
-                                <div className="animate-pulse rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-center text-xs font-medium text-red-400">
-                                    {error === 'Unauthorized Access' ? 'Akses Ditolak' : error}
-                                </div>
-                            )}
-
-                            <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Identitas Pegawai</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Nama Pengguna"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        className="glass-input w-full rounded-2xl px-5 py-4 text-white outline-none placeholder:text-gray-700"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Kunci Keamanan</label>
-                                    <input
-                                        type="password"
-                                        placeholder="Kata Sandi"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="glass-input w-full rounded-2xl px-5 py-4 text-white outline-none placeholder:text-gray-700"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-700 py-5 font-black tracking-[0.2em] text-white shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40 active:scale-[0.98] disabled:opacity-50"
-                            >
-                                {loading ? (
-                                    <span className="flex items-center gap-2">
-                                        <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                        </svg>
-                                        MENGOTENTIKASI...
-                                    </span>
-                                ) : 'MASUK AMAN'}
-                            </button>
-
-                            <div className="text-center">
-                                <p className="text-[10px] uppercase tracking-widest text-gray-600">
-                                    Keamanan Perusahaan • Siap Biometrik
-                                </p>
-                            </div>
-                        </form>
+        <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
+            <div className="w-full max-w-sm">
+                {/* Logo Section */}
+                <div className="text-center mb-10">
+                    <img
+                        src="/logo.png"
+                        alt="New Rizquna Elfath"
+                        className="h-24 mx-auto object-contain mb-4 animate-in fade-in zoom-in duration-700"
+                    />
+                    <div className="inline-flex items-center gap-1.5 bg-amber-50 px-3 py-1 rounded-full border border-amber-100 mb-2">
+                        <ShieldCheck className="text-amber-500" size={12} />
+                        <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Akses Terenkripsi</span>
                     </div>
                 </div>
 
-                <p className="mt-8 text-center text-xs text-gray-500">
-                    Didukung oleh Antigravity OS v4.0.1
-                </p>
+                {/* Login Form */}
+                <div className="space-y-6">
+                    <div className="text-left">
+                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Selamat Datang</h2>
+                        <p className="text-sm text-gray-500 font-medium">Silakan masuk untuk melanjutkan absensi</p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {error && (
+                            <div className="rounded-xl bg-red-50 border border-red-100 p-3 text-center text-xs font-semibold text-red-500 animate-in slide-in-from-top-2">
+                                {error}
+                            </div>
+                        )}
+
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                                <UserIcon size={18} />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Username / ID Pegawai"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-11 pr-4 py-4 text-sm font-medium outline-none focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 transition-all text-gray-900"
+                                required
+                            />
+                        </div>
+
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                                <Lock size={18} />
+                            </div>
+                            <input
+                                type="password"
+                                placeholder="Kata Sandi"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-11 pr-4 py-4 text-sm font-medium outline-none focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 transition-all text-gray-900"
+                                required
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="btn-primary flex items-center justify-center gap-2 group"
+                        >
+                            {loading ? (
+                                <Loader2 className="animate-spin" size={20} />
+                            ) : (
+                                <>
+                                    <span>Masuk Sekarang</span>
+                                    <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
+
+                        <div className="pt-6 text-center">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest bg-gray-50 py-2 rounded-lg">
+                                Rizquna Elfath Attendance Hub • v4.2
+                            </p>
+                        </div>
+                    </form>
+                </div>
+
+                <div className="mt-12 text-center">
+                    <p className="text-xs text-gray-400">
+                        &copy; {new Date().getFullYear()} PT New Rizquna Elfath.<br />
+                        <span className="font-medium italic">"Anda punya ide, kami wujudkan"</span>
+                    </p>
+                </div>
             </div>
         </div>
     );

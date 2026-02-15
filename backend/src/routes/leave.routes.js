@@ -108,7 +108,7 @@ async function syncLeaveWithAttendance(leaveRequest) {
 // API ENDPOINTS
 // ============================================================================
 
-router.get('/leave-types', async (req, res) => {
+router.get('/leave-types', assertAuthenticated, async (req, res) => {
     try {
         const leaveTypes = await prisma.leave_types.findMany({
             where: { is_active: true },
@@ -122,7 +122,7 @@ router.get('/leave-types', async (req, res) => {
     }
 });
 
-router.get('/leave-requests', async (req, res) => {
+router.get('/leave-requests', assertAuthenticated, async (req, res) => {
     try {
         const { employeeId, status, startDate, endDate } = req.query;
 
@@ -151,7 +151,7 @@ router.get('/leave-requests', async (req, res) => {
     }
 });
 
-router.post('/leave-requests', async (req, res) => {
+router.post('/leave-requests', assertAuthenticated, async (req, res) => {
     try {
         const validatedData = createLeaveRequestSchema.parse(req.body);
 
@@ -287,7 +287,7 @@ router.patch('/leave-requests/:id/status', requireAnyRole(['ADMIN', 'OWNER']), a
     }
 });
 
-router.get('/employees/:id/leave-balance', async (req, res) => {
+router.get('/employees/:id/leave-balance', assertAuthenticated, async (req, res) => {
     try {
         const { id } = req.params;
         const currentYear = new Date().getFullYear();
