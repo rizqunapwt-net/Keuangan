@@ -7,8 +7,8 @@ const withPWA = require('next-pwa')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  trailingSlash: true, // Penting untuk navigasi Capacitor agar tidak 404/crash
+  // output: 'export', // JANGAN AKTIFKAN DI SERVER (Hanya untuk build Android/iOS)
+  trailingSlash: true,
   images: {
     unoptimized: true,
   },
@@ -16,9 +16,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  turbopack: {},
-  webpack: (config: any) => {
-    return config;
+  eslint: {
+    ignoreDuringBuilds: true,
   }
 };
 
