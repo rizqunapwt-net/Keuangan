@@ -56,8 +56,8 @@ const ReviewModal = ({ request, onClose, onSubmit }: { request: any, onClose: ()
                         <button
                             onClick={() => setStatus('APPROVED')}
                             className={`py-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 ${status === 'APPROVED'
-                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-600 shadow-lg shadow-emerald-100'
-                                    : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-emerald-200 hover:bg-white'
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-600 shadow-lg shadow-emerald-100'
+                                : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-emerald-200 hover:bg-white'
                                 }`}
                         >
                             <UserCheck className="w-7 h-7" />
@@ -66,8 +66,8 @@ const ReviewModal = ({ request, onClose, onSubmit }: { request: any, onClose: ()
                         <button
                             onClick={() => setStatus('REJECTED')}
                             className={`py-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 ${status === 'REJECTED'
-                                    ? 'border-red-500 bg-red-50 text-red-600 shadow-lg shadow-red-100'
-                                    : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-red-200 hover:bg-white'
+                                ? 'border-red-500 bg-red-50 text-red-600 shadow-lg shadow-red-100'
+                                : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-red-200 hover:bg-white'
                                 }`}
                         >
                             <UserX className="w-7 h-7" />
@@ -122,12 +122,12 @@ const RequestCard = ({ request, onReview }: { request: any, onReview: () => void
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 mb-8 bg-slate-50 p-5 rounded-[1.5rem] border border-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 bg-slate-50 p-5 rounded-[1.5rem] border border-slate-100">
                 <div>
                     <p className="text-[9px] text-slate-400 uppercase font-black mb-1">Klasifikasi</p>
                     <p className="text-sm text-slate-800 font-black">{request.leave_type.name}</p>
                 </div>
-                <div className="text-right">
+                <div className="sm:text-right">
                     <p className="text-[9px] text-slate-400 uppercase font-black mb-1">Estimasi Hari</p>
                     <p className="text-sm text-slate-800 font-black">{request.total_days} Hari</p>
                 </div>

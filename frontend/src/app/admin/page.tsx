@@ -85,12 +85,12 @@ export default function AdminDashboard() {
                         <div>
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="p-2 bg-amber-50 rounded-lg">
-                                    <Settings className="text-amber-600" size={18} />
+                                    <Settings className="text-amber-600" size={16} />
                                 </div>
-                                <p className="text-[10px] font-black uppercase text-amber-600 tracking-[0.4em]">Corporate Control Hub</p>
+                                <p className="text-[9px] sm:text-[10px] font-black uppercase text-amber-600 tracking-[0.3em]">Corporate Control Hub</p>
                             </div>
-                            <h2 className="text-5xl font-black tracking-tighter text-slate-800 mb-2">Ikhtisar Organisasi</h2>
-                            <p className="text-sm text-slate-400 font-medium max-w-lg">Monitoring mobilisasi dan kepatuhan sumber daya manusia secara real-time.</p>
+                            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-slate-800 mb-2">Ikhtisar Organisasi</h2>
+                            <p className="text-xs sm:text-sm text-slate-400 font-medium max-w-lg">Monitoring mobilisasi dan kepatuhan sumber daya manusia secara real-time.</p>
                         </div>
 
                         <div className="flex flex-wrap gap-4">

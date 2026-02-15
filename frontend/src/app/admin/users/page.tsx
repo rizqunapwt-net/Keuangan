@@ -176,10 +176,10 @@ export default function UserManagementPage() {
                                 <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
                             </button>
                             <div>
-                                <h1 className="text-4xl font-black text-slate-800 tracking-tighter mb-1">Manajemen Personel</h1>
+                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-800 tracking-tighter mb-1">Manajemen Personel</h1>
                                 <div className="flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Database Hub • Live Access</p>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Database Hub • Live Access</p>
                                 </div>
                             </div>
                         </div>
@@ -245,7 +245,7 @@ export default function UserManagementPage() {
                                         <p className="text-xs text-slate-400 font-bold lowercase bg-slate-50 inline-block px-3 py-1 rounded-lg">@{emp.user.username}</p>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4 mb-10">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
                                         <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 group-hover:bg-white transition-colors shadow-sm">
                                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Level Akses</p>
                                             <p className="text-[11px] font-black text-slate-700 uppercase">{emp.user.role}</p>

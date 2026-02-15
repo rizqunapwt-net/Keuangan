@@ -53,15 +53,15 @@ const AdminPayrollPanel: React.FC = () => {
 
                 {status && (
                     <div className={`mb-10 p-6 rounded-3xl border flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500 ${status.type === 'success'
-                            ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                            : 'bg-red-50 border-red-100 text-red-600'
+                        ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                        : 'bg-red-50 border-red-100 text-red-600'
                         }`}>
                         {status.type === 'success' ? <CheckCircle className="h-6 w-6 shrink-0" /> : <AlertTriangle className="h-6 w-6 shrink-0" />}
                         <p className="text-xs font-bold leading-relaxed">{status.message}</p>
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-10">
                     <div className="space-y-3">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Periode Bulan</label>
                         <div className="relative">
