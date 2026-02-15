@@ -1,4 +1,7 @@
-import Link from "next/link";
+"use client";
+
+import React from "react";
+import Navigation from "@/components/Navigation";
 
 export default function AdminLayout({
     children,
@@ -6,28 +9,22 @@ export default function AdminLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div style={{ display: "flex", minHeight: "100vh" }}>
-            <aside
-                style={{
-                    width: 220,
-                    padding: 16,
-                    background: "#111",
-                    color: "#fff",
-                }}
-            >
-                <h3>Admin</h3>
-                <nav style={{ marginTop: 16 }}>
-                    <ul style={{ listStyle: "none", padding: 0 }}>
-                        <li>
-                            <Link href="/admin" style={{ color: "#fff" }}>
-                                Dashboard
-                            </Link>
-                        </li>
-                    </ul>
-                </nav>
-            </aside>
+        <div className="min-h-screen bg-[#fdfdfd]">
+            <Navigation />
+            <div className="admin-container">
+                {children}
+            </div>
 
-            <main style={{ flex: 1, padding: 24 }}>{children}</main>
+            <style jsx>{`
+                .admin-container {
+                    width: 100%;
+                }
+                @media (min-width: 768px) {
+                    .admin-container {
+                        padding-left: 0;
+                    }
+                }
+            `}</style>
         </div>
     );
 }
