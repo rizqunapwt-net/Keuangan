@@ -25,6 +25,17 @@ ensure_env() {
   fi
 }
 
+fix_permissions() {
+  # When using bind mounts, PHP-FPM runs as www-data (uid 82) but project files
+  # are owned by the host user. Ensure Laravel runtime paths are writable to
+  # avoid 500 errors like: "Failed to open stream: Permission denied".
+  "${COMPOSE[@]}" exec -T app sh -lc '
+    mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
+    chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+    chmod -R ug+rwX storage bootstrap/cache 2>/dev/null || true
+  '
+}
+
 wait_for_postgres() {
   # Best-effort wait (docker compose `depends_on` doesn't wait for readiness).
   local i
@@ -50,6 +61,7 @@ bootstrap() {
 
   "${COMPOSE[@]}" exec -T app php artisan migrate --seed --force
   "${COMPOSE[@]}" exec -T app php artisan storage:link >/dev/null 2>&1 || true
+  fix_permissions
 }
 
 case "${1:-}" in
