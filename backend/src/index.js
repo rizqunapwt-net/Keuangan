@@ -75,6 +75,10 @@ app.use('/api', payrollRoutes);
 const notificationRoutes = require('./routes/notification.routes');
 app.use('/api', notificationRoutes);
 
+// Mount employee management routes
+const employeeRoutes = require('./routes/employee.routes');
+app.use('/api', employeeRoutes);
+
 // user info endpoint for frontend initialization
 app.get('/api/users/me', async (req, res) => {
     try {

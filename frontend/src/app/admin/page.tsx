@@ -6,6 +6,20 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import {
+    Users,
+    UserCheck,
+    AlertTriangle,
+    TrendingUp,
+    Calendar,
+    ChevronRight,
+    Search,
+    Filter,
+    ArrowUpRight,
+    Bell,
+    Settings,
+    LogOut
+} from 'lucide-react';
 import AdminPayrollPanel from '@/components/payroll/AdminPayrollPanel';
 import AdminApprovalPanel from '@/components/leave/AdminApprovalPanel';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
@@ -22,7 +36,7 @@ interface EmployeeSummary {
 }
 
 export default function AdminDashboard() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, logout } = useAuth();
     const router = useRouter();
     const [summary, setSummary] = useState<EmployeeSummary[]>([]);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -54,8 +68,8 @@ export default function AdminDashboard() {
 
     if (authLoading || (loading && summary.length === 0)) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-[#0a0a0c]">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-500/20 border-t-indigo-500" />
+            <div className="flex items-center justify-center min-h-screen bg-white">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-amber-100 border-t-amber-500" />
             </div>
         );
     }
@@ -64,124 +78,239 @@ export default function AdminDashboard() {
     const lateCount = summary.filter(s => s.late_minutes > 0).length;
 
     return (
-        <div className="min-h-screen bg-[#0a0a0c] text-white selection:bg-indigo-500/30">
-            {/* Animated Nebula Background */}
-            <div className="nebula" />
-            <nav className="border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-xl sticky top-0 z-50">
+        <div className="min-h-screen bg-[#fdfdfd] pb-24 text-slate-800">
+            {/* Admin Top Navigation */}
+            <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center font-black text-sm text-white">A</div>
-                        <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent italic">
-                            INTELIJEN
-                        </h1>
+                    <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                            <Settings className="text-white" size={20} />
+                        </div>
+                        <div>
+                            <h1 className="text-sm font-black tracking-[0.2em] text-slate-800 uppercase">Control Center</h1>
+                            <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Admin Authorization Level</p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-6">
+
+                    <div className="flex items-center gap-4">
+                        <div className="hidden md:flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                            <Calendar size={14} className="text-slate-400" />
+                            <input
+                                type="date"
+                                value={date}
+                                onChange={(e) => setDate(e.target.value)}
+                                className="bg-transparent text-xs font-bold text-slate-700 outline-none"
+                            />
+                        </div>
                         <NotificationDropdown />
-                        <input
-                            type="date"
-                            value={date}
-                            onChange={(e) => setDate(e.target.value)}
-                            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm outline-none focus:border-indigo-500 transition-colors"
-                        />
-                        <button onClick={() => router.push('/')} className="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition-colors">
-                            Dashboard
+                        <button onClick={logout} className="p-2.5 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-red-500 transition-all shadow-sm">
+                            <LogOut size={18} />
                         </button>
                     </div>
                 </div>
             </nav>
 
-            <main className="max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
-                <div className="mb-16 md:mb-20">
-                    <h2 className="text-4xl md:text-6xl font-black tracking-tighter bg-gradient-to-b from-white to-white/30 bg-clip-text text-transparent uppercase">Ikhtisar Organisasi</h2>
-                    <p className="text-gray-500 text-[10px] md:text-xs font-black uppercase tracking-[0.4em] mt-3">Data mobilisasi waktu nyata untuk siklus operasional.</p>
-                </div>
+            <main className="max-w-7xl mx-auto py-10 px-6">
+                {/* Welcome & Stats Header */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                    <div>
+                        <h2 className="text-4xl font-black tracking-tight text-slate-800 mb-2">Ikhtisar Organisasi</h2>
+                        <p className="text-xs text-slate-400 font-medium uppercase tracking-[0.3em]">Monitoring mobilisasi sumber daya manusia.</p>
+                    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-                    <div className="glass-card p-8 rounded-[2rem] transition-all hover:scale-[1.02]">
-                        <p className="text-[10px] font-black uppercase text-indigo-400 tracking-[0.3em] mb-4">Total Personel</p>
-                        <p className="text-5xl font-black tracking-tighter">{summary.length}</p>
-                        <p className="text-[10px] text-gray-600 mt-4 uppercase tracking-widest font-bold">Tenaga kerja aktif</p>
-                    </div>
-                    <div className="glass-card p-8 rounded-[2rem] transition-all hover:scale-[1.02]">
-                        <p className="text-[10px] font-black uppercase text-green-400 tracking-[0.3em] mb-4">Dimobilisasi</p>
-                        <p className="text-5xl font-black text-green-400 tracking-tighter">{presentCount}</p>
-                        <p className="text-[10px] text-gray-600 mt-4 uppercase tracking-widest font-bold">Sedang bertugas</p>
-                    </div>
-                    <div className="glass-card p-8 rounded-[2rem] transition-all hover:scale-[1.02]">
-                        <p className="text-[10px] font-black uppercase text-red-500 tracking-[0.3em] mb-4">Anomali</p>
-                        <p className="text-5xl font-black text-red-500 tracking-tighter">{lateCount}</p>
-                        <p className="text-[10px] text-gray-600 mt-4 uppercase tracking-widest font-bold">Kebocoran Protokol</p>
-                    </div>
-                    <div className="glass-card p-8 rounded-[2rem] transition-all hover:scale-[1.02]">
-                        <p className="text-[10px] font-black uppercase text-purple-400 tracking-[0.3em] mb-4">Efisiensi</p>
-                        <p className="text-5xl font-black tracking-tighter">{Math.round((presentCount / summary.length) * 100) || 0}%</p>
-                        <p className="text-[10px] text-gray-600 mt-4 uppercase tracking-widest font-bold">Tingkat Mobilitas</p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => router.push('/admin/users')}
+                            className="bg-slate-800 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all shadow-xl shadow-slate-200"
+                        >
+                            <Users size={16} />
+                            Manajemen Karyawan
+                        </button>
                     </div>
                 </div>
 
-                <div className="space-y-12 mb-12">
-                    <AdminPayrollPanel />
-                    <div className="border-t border-white/5 pt-12">
-                        <AdminApprovalPanel />
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
+                    <div className="modern-card p-8 bg-white border-slate-50 transition-all hover:shadow-xl hover:shadow-slate-200/50">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center mb-6">
+                            <Users size={24} />
+                        </div>
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">Total Personel</p>
+                        <p className="text-4xl font-black text-slate-800 tracking-tight">{summary.length}</p>
+                        <div className="mt-4 flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                            <ArrowUpRight size={12} className="text-green-500" />
+                            Target operasional
+                        </div>
+                    </div>
+
+                    <div className="modern-card p-8 bg-white border-slate-50 transition-all hover:shadow-xl hover:shadow-slate-200/50">
+                        <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center mb-6">
+                            <UserCheck size={24} />
+                        </div>
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">Dimobilisasi</p>
+                        <p className="text-4xl font-black text-green-600 tracking-tight">{presentCount}</p>
+                        <div className="mt-4 flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                            <ArrowUpRight size={12} className="text-green-500" />
+                            Hadir bertugas
+                        </div>
+                    </div>
+
+                    <div className="modern-card p-8 bg-white border-slate-50 transition-all hover:shadow-xl hover:shadow-slate-200/50">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-6">
+                            <AlertTriangle size={24} />
+                        </div>
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">Anomali</p>
+                        <p className="text-4xl font-black text-amber-500 tracking-tight">{lateCount}</p>
+                        <div className="mt-4 flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                            <TrendingUp size={12} className="text-amber-500" />
+                            Keterlambatan
+                        </div>
+                    </div>
+
+                    <div className="modern-card p-8 bg-white border-slate-50 transition-all hover:shadow-xl hover:shadow-slate-200/50">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center mb-6">
+                            <TrendingUp size={24} />
+                        </div>
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">Efisiensi</p>
+                        <p className="text-4xl font-black text-blue-600 tracking-tight">
+                            {Math.round((presentCount / summary.length) * 100) || 0}%
+                        </p>
+                        <div className="mt-4 flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                            <ArrowUpRight size={12} className="text-blue-500" />
+                            Skor kehadiran
+                        </div>
                     </div>
                 </div>
 
-                <div className="space-y-12 mb-12">
-                    <AdminPayrollPanel />
-                    <div className="border-t border-white/5 pt-12">
-                        <AdminApprovalPanel />
+                {/* Action Panels */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16">
+                    <div className="modern-card p-4 bg-white shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                            <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Persetujuan Cuti & Izin</h3>
+                            <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border border-amber-200">Pending Actions</span>
+                        </div>
+                        <div className="p-4">
+                            <AdminApprovalPanel />
+                        </div>
+                    </div>
+
+                    <div className="modern-card p-4 bg-white shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                            <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Sistem Manajemen Payroll</h3>
+                            <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border border-blue-200">Cycle Active</span>
+                        </div>
+                        <div className="p-4">
+                            <AdminPayrollPanel />
+                        </div>
                     </div>
                 </div>
 
-                <div className="glass-card rounded-[2.5rem] overflow-hidden">
+                {/* Main Data Table */}
+                <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/20 overflow-hidden">
+                    <div className="px-10 py-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white">
+                        <div>
+                            <h3 className="text-lg font-black text-slate-800 tracking-tight">Status Mobilisasi Operator</h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Log aktivitas personel per {format(new Date(date), 'd MMMM yyyy', { locale: id })}</p>
+                        </div>
+
+                        <div className="relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                            <input
+                                type="text"
+                                placeholder="Cari nama atau kode..."
+                                className="bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 py-3 text-xs font-medium focus:ring-2 focus:ring-amber-500/20 outline-none transition-all w-full md:w-64"
+                            />
+                        </div>
+                    </div>
+
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
-                            <thead className="bg-white/[0.02]">
+                            <thead className="bg-slate-50/50">
                                 <tr>
-                                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Operator</th>
-                                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Divisi</th>
-                                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Status</th>
-                                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Masuk</th>
-                                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Keluar</th>
-                                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Gesekan</th>
+                                    <th className="px-10 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Identitas Operator</th>
+                                    <th className="px-10 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Divisi</th>
+                                    <th className="px-10 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Protokol</th>
+                                    <th className="px-10 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Inisialisasi</th>
+                                    <th className="px-10 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Terminasi</th>
+                                    <th className="px-10 py-5 text-right text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/5">
+                            <tbody className="divide-y divide-slate-50">
                                 {summary.map((emp) => (
-                                    <tr key={emp.id} className="hover:bg-white/[0.02] transition-colors">
-                                        <td className="px-8 py-6">
-                                            <div className="text-sm font-black text-white">{emp.name}</div>
-                                            <div className="text-[10px] font-medium text-indigo-400 uppercase tracking-widest">{emp.employee_code}</div>
+                                    <tr key={emp.id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-10 py-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-black text-slate-400 text-xs group-hover:bg-amber-500 group-hover:text-white transition-all">
+                                                    {emp.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-black text-slate-800 leading-none mb-1">{emp.name}</div>
+                                                    <div className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">{emp.employee_code}</div>
+                                                </div>
+                                            </div>
                                         </td>
-                                        <td className="px-8 py-6 text-xs font-bold text-gray-500 uppercase">
-                                            {emp.category === 'REGULER' ? 'REGULER' : emp.category}
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full 
-                                    ${emp.status === 'HADIR' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                                                {emp.status === 'HADIR' ? 'HADIR' : emp.status}
+                                        <td className="px-10 py-6">
+                                            <span className="text-[10px] font-black text-slate-500 border border-slate-200 px-2 py-1 rounded-lg uppercase">
+                                                {emp.category}
                                             </span>
                                         </td>
-                                        <td className="px-8 py-6 text-sm font-mono text-gray-400">
-                                            {emp.check_in ? format(new Date(emp.check_in), 'HH:mm:ss', { locale: id }) : '--:--:--'}
+                                        <td className="px-10 py-6">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-2 h-2 rounded-full ${emp.status === 'HADIR' ? 'bg-green-500 pulse-slow' : 'bg-red-500'}`}></div>
+                                                <span className={`text-[10px] font-black uppercase tracking-widest 
+                                                    ${emp.status === 'HADIR' ? 'text-green-600' : 'text-red-500'}`}>
+                                                    {emp.status}
+                                                </span>
+                                            </div>
                                         </td>
-                                        <td className="px-8 py-6 text-sm font-mono text-gray-400">
-                                            {emp.check_out ? format(new Date(emp.check_out), 'HH:mm:ss', { locale: id }) : '--:--:--'}
+                                        <td className="px-10 py-6">
+                                            <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-500">
+                                                <Clock size={12} className="text-slate-300" />
+                                                {emp.check_in ? format(new Date(emp.check_in), 'HH:mm:ss') : '--:--:--'}
+                                            </div>
                                         </td>
-                                        <td className="px-8 py-6">
-                                            {emp.late_minutes > 0 ? (
-                                                <span className="text-xs font-black text-red-500">+{emp.late_minutes}m Kebocoran Protokol</span>
-                                            ) : (
-                                                <span className="text-xs font-bold text-gray-700">Nominal</span>
-                                            )}
+                                        <td className="px-10 py-6">
+                                            <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-500">
+                                                <Clock size={12} className="text-slate-300" />
+                                                {emp.check_out ? format(new Date(emp.check_out), 'HH:mm:ss') : '--:--:--'}
+                                            </div>
+                                        </td>
+                                        <td className="px-10 py-6 text-right">
+                                            <button className="p-2 text-slate-300 hover:text-amber-500 transition-colors">
+                                                <ChevronRight size={18} />
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
+
+                    <div className="px-10 py-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        <span>Menampilkan {summary.length} Entri Personel</span>
+                        <div className="flex gap-4">
+                            <button className="hover:text-slate-800 transition-colors cursor-not-allowed opacity-50">Prev</button>
+                            <button className="hover:text-slate-800 transition-colors cursor-not-allowed opacity-50">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer Center Info */}
+                <div className="mt-20 text-center opacity-40">
+                    <img src="/logo.png" alt="Logo" className="grayscale h-12 mx-auto mb-4" />
+                    <p className="text-[8px] font-black uppercase tracking-[0.5em] text-slate-900">
+                        NRE Enterprise Authorization Portal • Secure v5.0
+                    </p>
                 </div>
             </main>
         </div>
+    );
+}
+
+function Clock({ className, size }: { className?: string, size?: number }) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+        </svg>
     );
 }
