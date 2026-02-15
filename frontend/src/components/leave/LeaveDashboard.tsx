@@ -9,37 +9,38 @@ import api from '@/utils/api';
 const StatusBadge = ({ status }: { status: string }) => {
     const config = {
         PENDING: {
-            bg: 'bg-amber-500/20',
-            text: 'text-amber-300',
-            border: 'border-amber-500/40',
+            bg: 'bg-amber-50',
+            text: 'text-amber-600',
+            border: 'border-amber-100',
             icon: Clock,
         },
         APPROVED: {
-            bg: 'bg-emerald-500/20',
-            text: 'text-emerald-300',
-            border: 'border-emerald-500/40',
+            bg: 'bg-emerald-50',
+            text: 'text-emerald-600',
+            border: 'border-emerald-100',
             icon: CheckCircle,
         },
         REJECTED: {
-            bg: 'bg-red-500/20',
-            text: 'text-red-300',
-            border: 'border-red-500/40',
+            bg: 'bg-red-50',
+            text: 'text-red-600',
+            border: 'border-red-100',
             icon: XCircle,
         },
         CANCELLED: {
-            bg: 'bg-gray-500/20',
-            text: 'text-gray-300',
-            border: 'border-gray-500/40',
+            bg: 'bg-slate-50',
+            text: 'text-slate-500',
+            border: 'border-slate-100',
             icon: AlertCircle,
         },
     };
 
-    const statusConfig = config[status] || config.PENDING;
+    const statusKey = (status in config) ? (status as keyof typeof config) : 'PENDING';
+    const statusConfig = config[statusKey];
     const { bg, text, border, icon: Icon } = statusConfig;
 
     return (
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${bg} ${text} ${border}`}>
-            <Icon className="w-3.5 h-3.5" />
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${bg} ${text} ${border}`}>
+            <Icon className="w-3 h-3" />
             {status}
         </span>
     );
@@ -49,48 +50,47 @@ const LeaveBalanceCard = ({ balance }: { balance: any }) => {
     const percentage = (balance.remaining / balance.total_quota) * 100;
 
     return (
-        <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:border-white/20 transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="group relative overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50 group-hover:opacity-100 transition-opacity" />
 
             <div className="relative p-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h3 className="text-sm font-medium text-gray-400 mb-1">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
                             {balance.leave_type.name}
                         </h3>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-bold text-white">
+                            <span className="text-4xl font-black text-slate-800 tracking-tighter">
                                 {balance.remaining}
                             </span>
-                            <span className="text-sm text-gray-400">
+                            <span className="text-xs font-bold text-slate-400">
                                 / {balance.total_quota} hari
                             </span>
                         </div>
                     </div>
 
                     <div
-                        className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
                         style={{
-                            backgroundColor: `${balance.leave_type.color}20`,
-                            border: `1px solid ${balance.leave_type.color}40`
+                            backgroundColor: `${balance.leave_type.color}10`, // 10% opacity
+                            border: `1px solid ${balance.leave_type.color}20`
                         }}
                     >
-                        <Calendar className="w-8 h-8" style={{ color: balance.leave_type.color }} />
+                        <Calendar className="w-6 h-6" style={{ color: balance.leave_type.color }} />
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <div className="flex justify-between text-xs text-gray-400">
-                        <span>Terpakai: {balance.used} hari</span>
-                        <span>{percentage.toFixed(0)}% tersisa</span>
+                <div className="space-y-3">
+                    <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <span>Terpakai: {balance.used}</span>
+                        <span>{percentage.toFixed(0)}% Sisa</span>
                     </div>
-                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-2 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
                         <div
-                            className="h-full rounded-full transition-all duration-500"
+                            className="h-full rounded-full transition-all duration-1000 ease-out"
                             style={{
                                 width: `${percentage}%`,
                                 backgroundColor: balance.leave_type.color,
-                                boxShadow: `0 0 10px ${balance.leave_type.color}60`
                             }}
                         />
                     </div>
@@ -105,50 +105,52 @@ const LeaveRequestCard = ({ request }: { request: any }) => {
     const endDate = new Date(request.end_date);
 
     return (
-        <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:border-white/20 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 cursor-pointer">
-            <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: request.leave_type.color }} />
+        <div className="group relative overflow-hidden rounded-[2rem] border border-slate-100 bg-white hover:border-amber-200 transition-all duration-300">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-100 group-hover:bg-amber-400 transition-colors" />
 
             <div className="relative p-6 pl-8">
                 <div className="flex items-start justify-between mb-4">
                     <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-mono text-gray-400">
-                                {request.request_number}
+                        <div className="flex items-center gap-3 mb-2">
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                                #{request.request_number.slice(-6)}
                             </span>
                             <StatusBadge status={request.status} />
                         </div>
-                        <h3 className="text-lg font-semibold text-white">
+                        <h3 className="text-lg font-black text-slate-800 tracking-tight">
                             {request.leave_type.name}
                         </h3>
                     </div>
 
-                    <div className="text-right">
-                        <div className="text-2xl font-bold text-white">
+                    <div className="text-right bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
+                        <div className="text-xl font-black text-slate-800 leading-none">
                             {request.total_days}
                         </div>
-                        <div className="text-xs text-gray-400">hari</div>
+                        <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Hari</div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3 mb-3 text-sm text-gray-300">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <span>
-                        {startDate.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })}
-                        {' → '}
-                        {endDate.toLocaleDateString('id-ID', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </span>
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-100 flex items-center gap-2 text-amber-700">
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span className="text-xs font-bold">
+                            {startDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                            {' - '}
+                            {endDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                    </div>
                 </div>
 
-                <p className="text-sm text-gray-400 line-clamp-2 mb-3">
+                <p className="text-xs font-medium text-slate-500 leading-relaxed mb-4 line-clamp-2">
                     {request.reason}
                 </p>
 
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="flex items-center justify-between text-[10px] uppercase font-bold text-slate-400 tracking-widest border-t border-slate-50 pt-4">
                     <span>
-                        Diajukan {new Date(request.submitted_at).toLocaleDateString('id-ID')}
+                        Diajukan: {new Date(request.submitted_at).toLocaleDateString('id-ID')}
                     </span>
-                    <span className="text-purple-400 group-hover:text-purple-300 transition-colors">
-                        Detail →
+                    <span className="text-amber-500 group-hover:translate-x-1 transition-transform cursor-pointer">
+                        Lihat Detail →
                     </span>
                 </div>
             </div>
@@ -194,81 +196,88 @@ export default function LeaveDashboard({ onNewRequest }: { onNewRequest: () => v
 
     if (isLoading) {
         return (
-            <div className="py-12 flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+            <div className="py-24 flex flex-col items-center justify-center">
+                <div className="w-12 h-12 border-4 border-amber-100 border-t-amber-500 rounded-full animate-spin mb-4" />
+                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Memuat Data...</p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-8 animate-fadeIn">
-            <div className="flex items-center justify-between">
+        <div className="space-y-10 animate-fade-in-up">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold text-white mb-2">Manajemen Cuti</h2>
-                    <p className="text-gray-400">Pantau saldo dan status pengajuan cuti Anda</p>
+                    <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2">Manajemen Cuti</h2>
+                    <p className="text-xs font-medium text-slate-400 max-w-xs">Pantau saldo, ajukan permohonan, dan kelola keseimbangan kerja Anda.</p>
                 </div>
 
                 <button
                     onClick={onNewRequest}
-                    className="group relative overflow-hidden px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300"
+                    className="group relative overflow-hidden px-8 py-4 rounded-[2rem] bg-slate-900 text-white shadow-xl shadow-slate-200 hover:shadow-2xl transition-all duration-300 active:scale-95"
                 >
-                    <span className="relative z-10 flex items-center gap-2">
-                        <Plus className="w-5 h-5" />
-                        Ajukan Cuti
+                    <span className="relative z-10 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                        <Plus className="w-4 h-4" />
+                        Buat Pengajuan
                     </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </button>
             </div>
 
-            <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <TrendingUp className="w-5 h-5 text-purple-400" />
-                    <h3 className="text-xl font-semibold text-white">Saldo Cuti</h3>
+            <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-50 rounded-lg text-amber-500">
+                        <TrendingUp className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Saldo Cuti Aktif</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {balances.map((balance, idx) => (
                         <LeaveBalanceCard key={idx} balance={balance} />
                     ))}
                     {balances.length === 0 && (
-                        <div className="col-span-full p-8 rounded-2xl border border-white/10 bg-white/5 text-center text-gray-500">
-                            Belum ada data saldo cuti tersedia.
+                        <div className="col-span-full p-10 rounded-[2rem] border-2 border-dashed border-slate-100 bg-slate-50/50 text-center">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Belum ada data saldo cuti tersedia.</p>
                         </div>
                     )}
                 </div>
             </div>
 
-            <div>
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-purple-400" />
-                        <h3 className="text-xl font-semibold text-white">Riwayat Pengajuan</h3>
+            <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-slate-50 rounded-lg text-slate-500">
+                            <FileText className="w-4 h-4" />
+                        </div>
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Riwayat Pengajuan</h3>
                     </div>
 
-                    <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
+                    <div className="flex p-1 bg-slate-100/80 backdrop-blur-sm rounded-[1.2rem] border border-slate-200/50 self-start sm:self-auto">
                         {['all', 'pending', 'approved'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab
-                                    ? 'bg-purple-600 text-white shadow-lg'
-                                    : 'text-gray-400 hover:text-white'
+                                className={`px-5 py-2.5 rounded-[1rem] text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === tab
+                                    ? 'bg-white text-slate-800 shadow-sm scale-100'
+                                    : 'text-slate-400 hover:text-slate-600 scale-95'
                                     }`}
                             >
-                                {tab === 'all' ? 'Semua' : tab === 'pending' ? 'Tertunda' : 'Disetujui'}
+                                {tab === 'all' ? 'Semua' : tab === 'pending' ? 'Proses' : 'Selesai'}
                             </button>
                         ))}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {filteredRequests.map((request) => (
                         <LeaveRequestCard key={request.id} request={request} />
                     ))}
                     {filteredRequests.length === 0 && (
-                        <div className="col-span-full py-12 rounded-2xl border border-white/10 bg-white/5 text-center">
-                            <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                            <p className="text-gray-400">Tidak ada pengajuan cuti ditemukan.</p>
+                        <div className="col-span-full py-16 rounded-[2.5rem] border border-slate-100 bg-white text-center shadow-sm">
+                            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                <FileText className="w-8 h-8" />
+                            </div>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tidak ada pengajuan pada filter ini.</p>
                         </div>
                     )}
                 </div>
