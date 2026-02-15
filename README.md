@@ -18,3 +18,11 @@ Output laporan otomatis akan dibuat di:
 ```bash
 reports/automation/<timestamp>/report.md
 ```
+
+## Auto Cleaning
+
+Bersihkan artefak lama (report/backup automation) secara otomatis:
+
+```bash
+./scripts/auto_clean.sh
+```

@@ -145,6 +145,11 @@ fi
 echo
 echo "Report: ${REPORT_FILE}"
 
+# Keep generated artifacts bounded after each run.
+if [[ -x "${ROOT_DIR}/scripts/auto_clean.sh" ]]; then
+  "${ROOT_DIR}/scripts/auto_clean.sh" >/dev/null 2>&1 || true
+fi
+
 if [[ ${#FAILED_STEPS[@]} -eq 0 ]]; then
   exit 0
 fi
