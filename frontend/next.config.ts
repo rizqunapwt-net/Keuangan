@@ -7,13 +7,19 @@ const withPWA = require('next-pwa')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactCompiler: true,
-  eslint: {
-    ignoreDuringBuilds: true,
+  output: 'export',
+  trailingSlash: true, // Penting untuk navigasi Capacitor agar tidak 404/crash
+  images: {
+    unoptimized: true,
   },
+  reactCompiler: true,
   typescript: {
     ignoreBuildErrors: true,
+  },
+  turbopack: {},
+  webpack: (config: any) => {
+    return config;
   }
 };
 
-export default withPWA(nextConfig);
+module.exports = withPWA(nextConfig);

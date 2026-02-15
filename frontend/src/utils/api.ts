@@ -2,24 +2,9 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 const getBaseURL = () => {
-  // 1. Manually set environment variable takes precedence
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-
-    // 2. Production Domain Detection
-    if (hostname === 'absensi.infiatin.cloud') {
-      return 'https://api-absensi.infiatin.cloud';
-    }
-
-    // 3. Local Network/IP Handling (detects if port 3000 is intended for backend)
-    return `http://${hostname}:3000`;
-  }
-
-  return 'http://localhost:3000';
+  // 1. Prioritas Utama: Gunakan URL Produksi Cloud
+  // Ini memastikan APK Android bisa diakses dari internet publik (bukan cuma localhost)
+  return 'https://api-absensi.infiatin.cloud';
 };
 
 const api = axios.create({
@@ -27,6 +12,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true
 });
 
 api.interceptors.request.use(

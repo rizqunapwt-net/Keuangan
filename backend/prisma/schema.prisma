@@ -4,14 +4,8 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
-
-// Enums removed for sqlite compatibility in local dev. Use string values:
-// role: 'OWNER' | 'ADMIN' | 'KARYAWAN'
-// category: 'REGULER' | 'MAHASISWA' | 'KEBUN'
-// status: 'HADIR' | 'IZIN' | 'SAKIT' | 'CUTI' | 'ALFA'
-// leave/overtime types/status: use string values (e.g., 'PENDING','APPROVED','REJECTED')
 
 model users {
   id           String    @id @default(uuid())
@@ -23,7 +17,6 @@ model users {
   updated_at   DateTime  @updatedAt
   face_descriptor String?
 
-  // relation to employees (one-to-one optional)
   employee     employees?
 
   attendance_corrections attendance_corrections[] @relation("user_corrections")
@@ -88,16 +81,12 @@ model attendance_corrections {
   corrected_by_user     users      @relation("user_corrections", fields: [corrected_by_user_id], references: [id])
 }
 
-// ============================================================================
-// LEAVE & PERMIT MODULE
-// ============================================================================
-
 model leave_types {
   id          String   @id @default(uuid())
-  code        String   @unique // ANNUAL, SICK, MATERNITY, EMERGENCY
+  code        String   @unique
   name        String
   description String?
-  max_days    Int      // Maximum days allowed per year
+  max_days    Int
   requires_doc Boolean  @default(false)
   color       String   @default("#6366f1")
   is_active   Boolean  @default(true)
@@ -111,7 +100,7 @@ model leave_types {
 
 model leave_requests {
   id            String      @id @default(uuid())
-  request_number String      @unique // LV-2024-0001
+  request_number String      @unique
   
   employee_id   String
   employee      employees    @relation(fields: [employee_id], references: [id], onDelete: Cascade)
@@ -124,10 +113,10 @@ model leave_requests {
   total_days    Int
   reason        String
   
-  status        String      @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  status        String      @default("PENDING")
   submitted_at  DateTime    @default(now())
   reviewed_at   DateTime?
-  reviewed_by   String?     // User ID of approver
+  reviewed_by   String?
   review_notes  String?
   
   attachment_url String?
@@ -161,10 +150,6 @@ model leave_balances {
   @@unique([employee_id, year, leave_type_id])
 }
 
-// ============================================================================
-// OVERTIME MODULE
-// ============================================================================
-
 model overtime_requests {
   id            String         @id @default(uuid())
   request_number String         @unique
@@ -178,7 +163,7 @@ model overtime_requests {
   total_hours   Float
   reason        String
   
-  status        String         @default("PENDING") // PENDING, APPROVED, REJECTED
+  status        String         @default("PENDING")
   submitted_at  DateTime       @default(now())
   reviewed_at   DateTime?
   reviewed_by   String?
@@ -193,10 +178,6 @@ model overtime_requests {
 
   @@index([employee_id, overtime_date])
 }
-
-// ============================================================================
-// PAYROLL MODULE
-// ============================================================================
 
 model payrolls {
   id            String   @id @default(uuid())
@@ -235,16 +216,12 @@ model payrolls {
   @@unique([employee_id, month, year])
 }
 
-// ============================================================================
-// NOTIFICATION & ANNOUNCEMENT
-// ============================================================================
-
 model notifications {
   id          String           @id @default(uuid())
   employee_id String
   employee    employees         @relation(fields: [employee_id], references: [id], onDelete: Cascade)
   
-  type        String           // LEAVE_APPROVED, LEAVE_REJECTED, etc.
+  type        String
   title       String
   message     String
   action_url  String?

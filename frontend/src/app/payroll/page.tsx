@@ -1,49 +1,69 @@
-'use client';
+"use client";
 
-import React from 'react';
-import PayrollDashboard from '@/components/payroll/PayrollDashboard';
 import { useAuth } from '@/context/AuthContext';
-import { ArrowLeft } from 'lucide-react';
-import NotificationDropdown from '@/components/notifications/NotificationDropdown';
+import { useRouter } from 'next/navigation';
+import { ChevronLeft, Info } from 'lucide-react';
+import PayrollDashboard from '@/components/payroll/PayrollDashboard';
 
 export default function PayrollPage() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
+
+    if (authLoading) return null;
 
     return (
-        <main className="min-h-screen relative overflow-hidden bg-[#0a0a0c] font-outfit">
-            {/* Dynamic Nebula Background */}
-            <div className="fixed inset-0 z-0">
-                <div className="nebula" />
-            </div>
+        <div className="min-h-screen bg-[#FDFDFD] pb-24 selection:bg-emerald-100">
+            {/* Professional Header */}
+            <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100 px-6 py-5 flex items-center justify-between">
+                <button onClick={() => router.push('/')} className="hover:scale-110 transition-transform active:scale-95 text-slate-800">
+                    <ChevronLeft size={24} strokeWidth={2.5} />
+                </button>
+                <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em]">Financial Secure</span>
+                    <h1 className="text-xs font-black text-slate-900 uppercase tracking-widest mt-0.5">Slip Gaji Digital</h1>
+                </div>
+                <div className="w-6"></div>
+            </header>
 
-            <div className="relative z-10">
-                <nav className="border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-xl sticky top-0 z-50">
-                    <div className="max-w-7xl mx-auto px-6 h-16 md:h-20 flex justify-between items-center">
-                        <button onClick={() => window.location.href = '/'} className="group flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-white transition-colors">
-                            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                            BERANDA
-                        </button>
-                        <div className="text-center">
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-500/80">
-                                PORTAL PAYROLL EKSKLUSIF
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-6">
-                            <NotificationDropdown />
-                            <div className="hidden md:block text-right">
-                                <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Sesi Aktif</p>
-                                <p className="text-xs font-bold">{user?.username}</p>
-                            </div>
-                        </div>
+            <main className="max-w-md mx-auto px-6 py-8">
+                {/* Information Alert */}
+                <div className="mb-10 p-5 rounded-[24px] bg-blue-50 border border-blue-100 flex items-start gap-4">
+                    <div className="p-2 bg-white rounded-xl text-blue-500 shadow-sm">
+                        <Info size={18} />
                     </div>
-                </nav>
-
-                <div className="max-w-7xl mx-auto px-6 py-12 md:py-20">
-                    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <PayrollDashboard />
+                    <div>
+                        <h4 className="text-[10px] font-black text-blue-900 uppercase tracking-tight mb-1">Kerahasiaan Gaji</h4>
+                        <p className="text-[10px] text-blue-700 font-medium leading-relaxed">
+                            Informasi ini bersifat rahasia dan hanya diperuntukkan bagi {user?.employee?.name || user?.username}.
+                        </p>
                     </div>
                 </div>
-            </div>
-        </main>
+
+                <div className="payroll-container">
+                    <PayrollDashboard />
+                </div>
+
+                {/* Secure Badge */}
+                <div className="mt-12 text-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-100">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">End-to-End Encrypted Access</span>
+                    </div>
+                </div>
+            </main>
+
+            <style jsx global>{`
+                /* Overriding the dark theme from original component to match enterprise white theme */
+                .glass-card {
+                    background: white !important;
+                    border: 1px solid #f1f5f9 !important;
+                    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.02) !important;
+                }
+                .text-white { color: #0f172a !important; }
+                .text-gray-500, .text-gray-600 { color: #64748b !important; }
+                .bg-emerald-500\/20 { background-color: #ecfdf5 !important; color: #059669 !important; }
+                .border-emerald-500\/20 { border-color: #d1fae5 !important; }
+            `}</style>
+        </div>
     );
 }

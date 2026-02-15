@@ -1,11 +1,25 @@
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import Navigation from "@/components/Navigation";
+import type { Viewport } from 'next'
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#FAB005",
+};
 
 export const metadata = {
   title: "Absensi Online | New Rizquna Elfath",
   description: "Portal Absensi Karyawan Mobile",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Rizquna Absensi",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

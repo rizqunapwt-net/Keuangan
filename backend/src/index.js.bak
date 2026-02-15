@@ -1,0 +1,104 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const { PrismaClient } = require('@prisma/client');
+const helmet = require('helmet');
+const app = express();
+
+// 1. PRODUCTION SECURITY HARDENING
+app.use(helmet({
+    crossOriginResourcePolicy: false, // Required for Capacitor/Mobile images
+}));
+
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://absensi.infiatin.cloud',
+    'https://api-absensi.infiatin.cloud',
+    'capacitor://localhost',
+    'https://localhost',
+    ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // allow requests with no origin (like mobile apps)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.some(o => origin.startsWith(o)) || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'), false);
+    },
+    credentials: true
+}));
+
+const prisma = new PrismaClient();
+app.use(express.json());
+
+// 2. LOGGING MIDDLEWARE FOR AUDIT
+app.use((req, res, next) => {
+    if (process.env.NODE_ENV !== 'test') {
+        console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - ${req.ip}`);
+    }
+    next();
+});
+
+// 3. ROUTES
+const authRoutes = require('./auth');
+app.use('/auth', authRoutes(prisma));
+
+const authMiddleware = require('./auth/auth.middleware');
+app.use(authMiddleware);
+
+const attendanceRoutesFactory = require('./routes/attendance');
+const assertAuthenticated = require('./middlewares/assertAuthenticated');
+const requireRole = require('./middlewares/requireRole');
+const requireAnyRole = require('./middlewares/requireAnyRole');
+const assertPayrollUnlocked = require('./guards/assertPayrollUnlocked');
+
+app.use('/attendance', attendanceRoutesFactory(prisma, {
+    assertAuthenticated, requireRole, requireAnyRole, assertPayrollUnlocked
+}));
+
+app.use('/', require('./routes/attendanceCorrection.routes'));
+app.use('/api', require('./routes/leave.routes'));
+app.use('/api', require('./routes/overtime.routes'));
+app.use('/api', require('./routes/payroll.routes'));
+app.use('/api', require('./routes/notification.routes'));
+app.use('/api', require('./routes/employee.routes'));
+
+app.get('/api/users/me', async (req, res) => {
+    try {
+        const user = await prisma.users.findUnique({
+            where: { id: req.user.userId },
+            include: { employee: true }
+        });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json({
+            success: true,
+            data: {
+                id: user.id, username: user.username, role: user.role,
+                employee_id: user.employee?.id, employee: user.employee
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.get('/', (req, res) => res.json({ ok: true, version: '4.2.0-stable', environment: process.env.NODE_ENV }));
+
+// 4. GLOBAL ERROR HANDLER
+app.use((err, req, res, next) => {
+    console.error('SERVER_ERROR:', err);
+    res.status(err.status || 500).json({
+        success: false,
+        error: err.message || 'Internal Server Error',
+        code: err.code || 'UNKNOWN_ERROR'
+    });
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, '0.0.0.0', () => { // Bind to all interfaces for production
+    console.log(`🚀 RIZQUNA BACKEND ACTIVE | Port: ${port} | Env: ${process.env.NODE_ENV || 'development'}`);
+});
