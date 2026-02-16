@@ -82,7 +82,7 @@ class PayrollResource extends Resource
                     ->color('success')
                     ->requiresConfirmation()
                     ->action(function (Payroll $record) {
-                        $url = 'https://n8n.infiatin.cloud/webhook/generate-slip';
+                        $url = 'http://125.165.206.248:5678/webhook/generate-slip';
                         $data = [
                             'payroll_number' => $record->payroll_number,
                             'employee_name' => $record->employee->user->name,
