@@ -76,6 +76,36 @@ class PayrollResource extends Resource
             ->defaultSort('year', 'desc')
             ->actions([
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('send_whatsapp')
+                    ->label('Kirim WA')
+                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->action(function (Payroll $record) {
+                        $url = 'https://n8n.infiatin.cloud/webhook/generate-slip';
+                        $data = [
+                            'payroll_number' => $record->payroll_number,
+                            'employee_name' => $record->employee->user->name,
+                            'month' => $record->month,
+                            'year' => $record->year,
+                            'net_pay' => $record->net_pay,
+                            'whatsapp' => $record->employee->user->phone ?? '-', 
+                        ];
+
+                        try {
+                            \Illuminate\Support\Facades\Http::post($url, $data);
+                            \Filament\Notifications\Notification::make()
+                                ->title('Slip dikirim ke antrian WA')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Gagal mengirim ke n8n')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
             ]);
     }
 
