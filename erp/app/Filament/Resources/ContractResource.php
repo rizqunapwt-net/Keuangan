@@ -24,31 +24,31 @@ class ContractResource extends Resource
     {
         return $form->schema([
             Forms\Components\Select::make('book_id')
-                ->label('Book')
-                ->options(Book::query()->pluck('title', 'id'))
-                ->searchable()
-                ->required(),
+            ->label('Book')
+            ->relationship('book', 'title')
+            ->searchable()
+            ->required(),
             Forms\Components\FileUpload::make('contract_file_path')
-                ->label('Contract File')
-                ->disk(config('filesystems.default'))
-                ->directory('contracts')
-                ->acceptedFileTypes(['application/pdf'])
-                ->required(),
+            ->label('Contract File')
+            ->disk(config('filesystems.default'))
+            ->directory('contracts')
+            ->acceptedFileTypes(['application/pdf'])
+            ->required(),
             Forms\Components\DatePicker::make('start_date')->required(),
             Forms\Components\DatePicker::make('end_date')->required()->after('start_date'),
             Forms\Components\TextInput::make('royalty_percentage')
-                ->required()
-                ->numeric()
-                ->minValue(0)
-                ->maxValue(100),
+            ->required()
+            ->numeric()
+            ->minValue(0)
+            ->maxValue(100),
             Forms\Components\Select::make('status')
-                ->options([
-                    'pending' => 'Pending',
-                    'approved' => 'Approved',
-                    'rejected' => 'Rejected',
-                    'expired' => 'Expired',
-                ])
-                ->required(),
+            ->options([
+                'pending' => 'Pending',
+                'approved' => 'Approved',
+                'rejected' => 'Rejected',
+                'expired' => 'Expired',
+            ])
+            ->required(),
             Forms\Components\Textarea::make('rejected_reason')->columnSpanFull(),
         ]);
     }
@@ -57,49 +57,49 @@ class ContractResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('book.title')->label('Book')->searchable(),
-                Tables\Columns\TextColumn::make('royalty_percentage')->suffix('%')->sortable(),
-                Tables\Columns\TextColumn::make('start_date')->date(),
-                Tables\Columns\TextColumn::make('end_date')->date(),
-                Tables\Columns\TextColumn::make('status')->badge(),
-                Tables\Columns\TextColumn::make('updated_at')->dateTime(),
-            ])
+            Tables\Columns\TextColumn::make('book.title')->label('Book')->searchable(),
+            Tables\Columns\TextColumn::make('royalty_percentage')->suffix('%')->sortable(),
+            Tables\Columns\TextColumn::make('start_date')->date(),
+            Tables\Columns\TextColumn::make('end_date')->date(),
+            Tables\Columns\TextColumn::make('status')->badge(),
+            Tables\Columns\TextColumn::make('updated_at')->dateTime(),
+        ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'approved' => 'Approved',
-                        'rejected' => 'Rejected',
-                        'expired' => 'Expired',
-                    ]),
-            ])
+            Tables\Filters\SelectFilter::make('status')
+            ->options([
+                'pending' => 'Pending',
+                'approved' => 'Approved',
+                'rejected' => 'Rejected',
+                'expired' => 'Expired',
+            ]),
+        ])
             ->actions([
-                Tables\Actions\Action::make('approve')
-                    ->label('Approve')
-                    ->color('success')
-                    ->icon('heroicon-o-check')
-                    ->visible(fn (Contract $record): bool => $record->status->value !== 'approved')
-                    ->action(function (Contract $record): void {
-                        app(ContractService::class)->approve($record, auth()->user());
-                    }),
-                Tables\Actions\Action::make('reject')
-                    ->label('Reject')
-                    ->color('danger')
-                    ->icon('heroicon-o-x-mark')
-                    ->requiresConfirmation()
-                    ->form([
-                        Forms\Components\Textarea::make('rejected_reason')->required()->maxLength(1000),
-                    ])
-                    ->action(function (array $data, Contract $record): void {
-                        app(ContractService::class)->reject($record, auth()->user(), $data['rejected_reason']);
-                    }),
-                Tables\Actions\EditAction::make(),
+            Tables\Actions\Action::make('approve')
+            ->label('Approve')
+            ->color('success')
+            ->icon('heroicon-o-check')
+            ->visible(fn(Contract $record): bool => $record->status->value !== 'approved')
+            ->action(function (Contract $record): void {
+            app(ContractService::class)->approve($record, auth()->user());
+        }),
+            Tables\Actions\Action::make('reject')
+            ->label('Reject')
+            ->color('danger')
+            ->icon('heroicon-o-x-mark')
+            ->requiresConfirmation()
+            ->form([
+                Forms\Components\Textarea::make('rejected_reason')->required()->maxLength(1000),
             ])
+            ->action(function (array $data, Contract $record): void {
+            app(ContractService::class)->reject($record, auth()->user(), $data['rejected_reason']);
+        }),
+            Tables\Actions\EditAction::make(),
+        ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            Tables\Actions\BulkActionGroup::make([
+                Tables\Actions\DeleteBulkAction::make(),
+            ]),
+        ]);
     }
 
     public static function getPages(): array

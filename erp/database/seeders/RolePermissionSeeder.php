@@ -18,6 +18,13 @@ class RolePermissionSeeder extends Seeder
 
         $permissions = [
             'users.manage',
+            'employees.manage',
+            'attendance.manage',
+            'attendance.view-own',
+            'payroll.manage',
+            'payroll.view-own',
+            'leave.manage',
+            'leave.view-own',
             'authors.manage',
             'books.manage',
             'contracts.manage',
@@ -39,6 +46,7 @@ class RolePermissionSeeder extends Seeder
         $legal = Role::firstOrCreate(['name' => 'Legal']);
         $marketing = Role::firstOrCreate(['name' => 'Marketing']);
         $finance = Role::firstOrCreate(['name' => 'Finance']);
+        $karyawan = Role::firstOrCreate(['name' => 'Karyawan']);
 
         $admin->syncPermissions($permissions);
 
@@ -64,9 +72,17 @@ class RolePermissionSeeder extends Seeder
             'sales.import',
             'royalties.manage',
             'payments.manage',
+            'payroll.manage',
             'reports.view',
             'dashboard.view',
             'audit.view',
+        ]);
+
+        $karyawan->syncPermissions([
+            'attendance.view-own',
+            'leave.view-own',
+            'payroll.view-own',
+            'dashboard.view',
         ]);
     }
 }
