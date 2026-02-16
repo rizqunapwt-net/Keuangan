@@ -155,7 +155,7 @@ export default function AdminApprovalPanel() {
 
     const fetchPendingRequests = async () => {
         try {
-            const res = await api.get('/api/leave-requests?status=PENDING');
+            const res = await api.get('/leave-requests?status=PENDING');
             if (res.data.success) setRequests(res.data.data);
         } catch (error) {
             console.error('Error fetching pending requests:', error);
@@ -166,10 +166,10 @@ export default function AdminApprovalPanel() {
 
     const handleReview = async (status: string, notes: string) => {
         try {
-            const response = await api.get('/api/users/me');
+            const response = await api.get('/auth/me');
             const reviewerId = response.data.data.id;
 
-            const res = await api.patch(`/api/leave-requests/${selectedRequest.id}/status`, {
+            const res = await api.patch(`/leave-requests/${selectedRequest.id}/status`, {
                 status,
                 reviewNotes: notes,
                 reviewedBy: reviewerId

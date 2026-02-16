@@ -42,11 +42,12 @@ export default function ProfilePage() {
     }
 
     const fetchProfileStats = async () => {
+      if (!user?.employee?.id) return;
       try {
         // Fetch leave balances and other stats
         // These endpoints should exist in your backend routes
-        const leaveRes = await api.get('/api/leaves/balances');
-        const attendanceRes = await api.get('/attendance/stats/monthly');
+        const leaveRes = await api.get(`/employees/${user.employee.id}/leave-balance`);
+        const attendanceRes = await api.get('/attendance/summary');
 
         // Mocking stats if endpoints are still being perfected on backend
         // In a real scenario, we'd use the actual response
@@ -55,7 +56,7 @@ export default function ProfilePage() {
           attendance_rate: attendanceRes.data?.rate ?? 98,
           total_overtime: 0
         });
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Failed to fetch stats", err);
         // Set default values if fetch fails
         setStats(prev => ({ ...prev, leave_balance: 12 }));

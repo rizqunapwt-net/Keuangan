@@ -26,7 +26,7 @@ const OvertimeDashboard: React.FC<OvertimeDashboardProps> = ({ onNewRequest }) =
     useEffect(() => {
         const fetchRequests = async () => {
             try {
-                const response = await api.get(`/api/overtime-requests?employeeId=${user?.employee?.id}`);
+                const response = await api.get(`/overtime-requests?employeeId=${user?.employee?.id}`);
                 setRequests(response.data.data);
             } catch (err) {
                 console.error('Failed to fetch overtime requests', err);

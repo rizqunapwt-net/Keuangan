@@ -1,18 +1,13 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const getBaseURL = () => {
-  // 1. Prioritas Utama: Gunakan URL Produksi Cloud
-  // Ini memastikan APK Android bisa diakses dari internet publik (bukan cuma localhost)
-  return 'https://api-absensi.infiatin.cloud';
-};
-
 const api = axios.create({
-  baseURL: getBaseURL(),
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1/hr',
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
-  },
-  withCredentials: true
+    'Accept': 'application/json',
+  }
 });
 
 api.interceptors.request.use(

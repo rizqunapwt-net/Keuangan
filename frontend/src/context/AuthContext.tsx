@@ -36,24 +36,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const token = Cookies.get('token');
             if (token) {
                 try {
-                    // Validate token and get user data if API supports it
-                    // For now, we'll rely on stored local storage or decoding, 
-                    // but ideally we call /auth/me. 
-                    // The backend doesn't explicitly have /auth/me in index.js but auth.js might.
-                    // Let's assume we persisted user in localStorage for simplicity in this MVP 
-                    // or we can blindly trust the token until a 401 happens.
-
-                    // Better approach: fetch user profile if possible. 
-                    // Looking at backend code, there is no /auth/me.
-                    // We will store user info in localStorage during login for persistence.
-                    const storedUser = localStorage.getItem('user');
-                    if (storedUser) {
-                        setUser(JSON.parse(storedUser));
+                    // Fetch fresh user data from the new Laravel backend
+                    const response = await api.get('/auth/me');
+                    if (response.data.success) {
+                        const userData = response.data.data;
+                        setUser(userData);
+                        localStorage.setItem('user', JSON.stringify(userData));
                     }
-                } catch (error) {
+                } catch (error: unknown) {
                     console.error("Auth check failed", error);
-                    Cookies.remove('token');
-                    localStorage.removeItem('user');
+                    const axiosError = error as { response?: { status: number } };
+                    if (axiosError.response?.status === 401) {
+                        Cookies.remove('token');
+                        localStorage.removeItem('user');
+                        setUser(null);
+                    } else {
+                        // Fallback to localStorage if network fails but token exists
+                        const storedUser = localStorage.getItem('user');
+                        if (storedUser) setUser(JSON.parse(storedUser));
+                    }
                 }
             }
             setLoading(false);

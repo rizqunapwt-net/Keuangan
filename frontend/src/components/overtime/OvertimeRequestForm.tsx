@@ -31,7 +31,7 @@ const OvertimeRequestForm: React.FC<OvertimeRequestFormProps> = ({ onSuccess, on
             const startDateTime = new Date(`${formData.overtimeDate}T${formData.startTime}:00`).toISOString();
             const endDateTime = new Date(`${formData.overtimeDate}T${formData.endTime}:00`).toISOString();
 
-            const response = await api.post('/api/overtime-requests', {
+            const response = await api.post('/overtime-requests', {
                 employeeId: user?.employee?.id,
                 overtimeDate: formData.overtimeDate,
                 startTime: startDateTime,
@@ -42,8 +42,9 @@ const OvertimeRequestForm: React.FC<OvertimeRequestFormProps> = ({ onSuccess, on
             if (response.data.success) {
                 onSuccess();
             }
-        } catch (err: any) {
-            setError(err.response?.data?.message || err.response?.data?.error || 'Gagal mengirim permintaan lembur');
+        } catch (err: unknown) {
+            const axiosError = err as { response?: { data?: { message?: string, error?: string } } };
+            setError(axiosError.response?.data?.message || axiosError.response?.data?.error || 'Gagal mengirim permintaan lembur');
         } finally {
             setLoading(false);
         }

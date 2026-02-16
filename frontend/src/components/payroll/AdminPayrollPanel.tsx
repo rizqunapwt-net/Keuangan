@@ -6,7 +6,6 @@ import { useAuth } from '@/context/AuthContext';
 import { Calculator, CheckCircle, AlertTriangle, Users, Calendar, ArrowRight, Settings, Loader2 } from 'lucide-react';
 
 const AdminPayrollPanel: React.FC = () => {
-    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     const [params, setParams] = useState({
@@ -18,17 +17,18 @@ const AdminPayrollPanel: React.FC = () => {
         setLoading(true);
         setStatus(null);
         try {
-            const response = await api.post('/api/payrolls/generate', params);
+            const response = await api.post('/payrolls/generate', params);
             if (response.data.success) {
                 setStatus({
                     type: 'success',
                     message: `Berhasil menghasilkan ${response.data.data.length} slip gaji untuk periode ${params.month}/${params.year}.`
                 });
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const axiosError = err as { response?: { data?: { error?: string } } };
             setStatus({
                 type: 'error',
-                message: err.response?.data?.error || 'Gagal memproses payroll massal'
+                message: axiosError.response?.data?.error || 'Gagal memproses payroll massal'
             });
         } finally {
             setLoading(false);

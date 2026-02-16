@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '@/utils/api';
 import { useAuth } from '@/context/AuthContext';
-import { Wallet, Download, Clock, TrendingUp, AlertCircle, FileText, ChevronRight } from 'lucide-react';
+import { Wallet, Download, Clock, TrendingUp, FileText, ChevronRight } from 'lucide-react';
 
 interface Payroll {
     id: string;
@@ -26,7 +26,7 @@ const PayrollDashboard: React.FC = () => {
         const fetchPayrolls = async () => {
             try {
                 // In a real app, you might want to filter by employeeId if not handled by backend session
-                const response = await api.get(`/api/payrolls?employeeId=${user?.employee?.id}`);
+                const response = await api.get(`/payrolls?employeeId=${user?.employee?.id}`);
                 setPayrolls(response.data.data || []);
             } catch (err) {
                 console.error('Failed to fetch payrolls', err);

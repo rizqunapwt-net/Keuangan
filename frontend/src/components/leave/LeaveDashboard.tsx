@@ -46,7 +46,32 @@ const StatusBadge = ({ status }: { status: string }) => {
     );
 };
 
-const LeaveBalanceCard = ({ balance }: { balance: any }) => {
+interface LeaveType {
+    id: string;
+    name: string;
+    color: string;
+}
+
+interface LeaveBalance {
+    leave_type: LeaveType;
+    total_quota: number;
+    used: number;
+    remaining: number;
+}
+
+interface LeaveRequest {
+    id: string;
+    request_number: string;
+    status: string;
+    leave_type: LeaveType;
+    total_days: number;
+    start_date: string;
+    end_date: string;
+    reason: string;
+    submitted_at: string;
+}
+
+const LeaveBalanceCard = ({ balance }: { balance: LeaveBalance }) => {
     const percentage = (balance.remaining / balance.total_quota) * 100;
 
     return (
@@ -100,7 +125,7 @@ const LeaveBalanceCard = ({ balance }: { balance: any }) => {
     );
 };
 
-const LeaveRequestCard = ({ request }: { request: any }) => {
+const LeaveRequestCard = ({ request }: { request: LeaveRequest }) => {
     const startDate = new Date(request.start_date);
     const endDate = new Date(request.end_date);
 
@@ -159,8 +184,8 @@ const LeaveRequestCard = ({ request }: { request: any }) => {
 };
 
 export default function LeaveDashboard({ onNewRequest }: { onNewRequest: () => void }) {
-    const [balances, setBalances] = useState<any[]>([]);
-    const [requests, setRequests] = useState<any[]>([]);
+    const [balances, setBalances] = useState<LeaveBalance[]>([]);
+    const [requests, setRequests] = useState<LeaveRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('all');
 
@@ -170,14 +195,14 @@ export default function LeaveDashboard({ onNewRequest }: { onNewRequest: () => v
 
     const fetchData = async () => {
         try {
-            const response = await api.get('/api/users/me');
+            const response = await api.get('/auth/me');
             const employeeId = response.data.data.employee_id;
 
             if (!employeeId) return;
 
             const [balanceRes, requestsRes] = await Promise.all([
-                api.get(`/api/employees/${employeeId}/leave-balance`),
-                api.get(`/api/leave-requests?employeeId=${employeeId}`),
+                api.get(`/employees/${employeeId}/leave-balance`),
+                api.get(`/leave-requests?employeeId=${employeeId}`),
             ]);
 
             if (balanceRes.data.success) setBalances(balanceRes.data.data);

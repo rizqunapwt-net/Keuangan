@@ -74,7 +74,7 @@ export default function UserManagementPage() {
     const fetchEmployees = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/api/employees');
+            const res = await api.get('/employees');
             setEmployees(res.data.data || []);
         } catch (err) {
             console.error('Failed to fetch employees', err);
@@ -124,9 +124,9 @@ export default function UserManagementPage() {
                 if (!updateData.password) delete (updateData as any).password;
                 delete (updateData as any).username;
 
-                await api.patch(`/api/employees/${currentId}`, updateData);
+                await api.patch(`/employees/${currentId}`, updateData);
             } else {
-                await api.post('/api/employees', form);
+                await api.post('/employees', form);
             }
             setShowModal(false);
             fetchEmployees();
@@ -140,7 +140,7 @@ export default function UserManagementPage() {
     const handleDelete = async (id: string) => {
         if (confirm('Apakah Anda yakin ingin menonaktifkan karyawan ini?')) {
             try {
-                await api.delete(`/api/employees/${id}`);
+                await api.delete(`/employees/${id}`);
                 fetchEmployees();
             } catch (err) {
                 alert('Gagal menghapus karyawan');

@@ -27,7 +27,7 @@ export default function NotificationsPage() {
         if (!user?.employee?.id) return;
         setLoading(true);
         try {
-            const response = await api.get(`/api/notifications?employeeId=${user.employee.id}`);
+            const response = await api.get(`/notifications?employeeId=${user.employee.id}`);
             if (response.data.success) {
                 setNotifications(response.data.data);
             }
@@ -44,7 +44,7 @@ export default function NotificationsPage() {
 
     const markAsRead = async (id: string) => {
         try {
-            await api.patch(`/api/notifications/${id}/read`);
+            await api.patch(`/notifications/${id}/read`);
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
         } catch (error) {
             console.error('Failed to mark notification as read', error);
@@ -54,7 +54,7 @@ export default function NotificationsPage() {
     const markAllAsRead = async () => {
         if (!user?.employee?.id) return;
         try {
-            await api.patch('/api/notifications/read-all', { employeeId: user.employee.id });
+            await api.patch('/notifications/read-all', { employeeId: user.employee.id });
             setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
         } catch (error) {
             console.error('Failed to mark all as read', error);

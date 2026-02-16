@@ -4,9 +4,20 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, AlertCircle, CheckCircle, Upload, X, Loader2, ChevronRight, Briefcase } from 'lucide-react';
 import api from '@/utils/api';
 
+interface LeaveType {
+    id: string;
+    name: string;
+    description: string;
+}
+
+interface LeaveBalance {
+    leave_type_id: string;
+    remaining: number;
+}
+
 export default function LeaveRequestForm({ onSuccess, onCancel }: { onSuccess?: () => void, onCancel?: () => void }) {
-    const [leaveTypes, setLeaveTypes] = useState<any[]>([]);
-    const [balances, setBalances] = useState<any[]>([]);
+    const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
+    const [balances, setBalances] = useState<LeaveBalance[]>([]);
     const [formData, setFormData] = useState({
         leaveTypeId: '',
         startDate: '',
@@ -30,12 +41,12 @@ export default function LeaveRequestForm({ onSuccess, onCancel }: { onSuccess?: 
 
     const fetchInitialData = async () => {
         try {
-            const response = await api.get('/api/users/me');
+            const response = await api.get('/auth/me');
             const employeeId = response.data.data.employee_id;
 
             const [typesRes, balancesRes] = await Promise.all([
-                api.get('/api/leave-types'),
-                api.get(`/api/employees/${employeeId}/leave-balance`),
+                api.get('/leave-types'),
+                api.get(`/employees/${employeeId}/leave-balance`),
             ]);
 
             if (typesRes.data.success) setLeaveTypes(typesRes.data.data);
@@ -84,10 +95,10 @@ export default function LeaveRequestForm({ onSuccess, onCancel }: { onSuccess?: 
         setError('');
 
         try {
-            const response = await api.get('/api/users/me');
+            const response = await api.get('/auth/me');
             const employeeId = response.data.data.employee_id;
 
-            const res = await api.post('/api/leave-requests', {
+            const res = await api.post('/leave-requests', {
                 ...formData,
                 employeeId: employeeId,
             });
@@ -96,8 +107,9 @@ export default function LeaveRequestForm({ onSuccess, onCancel }: { onSuccess?: 
                 setSuccess(true);
                 setTimeout(() => onSuccess?.(), 2000);
             }
-        } catch (err: any) {
-            setError(err.response?.data?.error || 'Gagal mengirim pengajuan.');
+        } catch (err: unknown) {
+            const axiosError = err as { response?: { data?: { error?: string } } };
+            setError(axiosError.response?.data?.error || 'Gagal mengirim pengajuan.');
         } finally {
             setIsSubmitting(false);
         }
