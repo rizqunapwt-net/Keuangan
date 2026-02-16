@@ -17,10 +17,10 @@ class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+        $response->headers->set('Permissions-Policy', 'geolocation=(self), microphone=(), camera=(self)');
 
         // Optional CSP (report-only) for gradual rollout without breaking UI.
-        if (filter_var((string) env('ERP_CSP_REPORT_ONLY', false), FILTER_VALIDATE_BOOLEAN)) {
+        if (filter_var((string)env('ERP_CSP_REPORT_ONLY', false), FILTER_VALIDATE_BOOLEAN)) {
             $response->headers->set('Content-Security-Policy-Report-Only', implode('; ', [
                 "default-src 'self'",
                 "base-uri 'self'",

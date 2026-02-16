@@ -23,27 +23,27 @@ class BookResource extends Resource
     {
         return $form->schema([
             Forms\Components\Select::make('author_id')
-                ->label('Author')
-                ->options(Author::query()->pluck('name', 'id'))
-                ->searchable()
-                ->required(),
+            ->label('Author')
+            ->relationship('author', 'name')
+            ->searchable()
+            ->required(),
             Forms\Components\TextInput::make('title')->required()->maxLength(255),
             Forms\Components\TextInput::make('isbn')->maxLength(255),
             Forms\Components\Textarea::make('description')->columnSpanFull(),
             Forms\Components\TextInput::make('price')->required()->numeric()->minValue(0),
             Forms\Components\FileUpload::make('cover_path')
-                ->disk(config('filesystems.default'))
-                ->directory('books/covers')
-                ->image()
-                ->maxSize(10240),
+            ->disk(config('filesystems.default'))
+            ->directory('books/covers')
+            ->image()
+            ->maxSize(10240),
             Forms\Components\Select::make('status')
-                ->options([
-                    'draft' => 'Draft',
-                    'published' => 'Published',
-                    'archived' => 'Archived',
-                ])
-                ->required()
-                ->default('draft'),
+            ->options([
+                'draft' => 'Draft',
+                'published' => 'Published',
+                'archived' => 'Archived',
+            ])
+            ->required()
+            ->default('draft'),
         ]);
     }
 
@@ -51,29 +51,29 @@ class BookResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('title')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('author.name')->label('Author')->searchable(),
-                Tables\Columns\TextColumn::make('isbn')->searchable(),
-                Tables\Columns\TextColumn::make('price')->money(config('erp.currency')),
-                Tables\Columns\TextColumn::make('status')->badge(),
-                Tables\Columns\TextColumn::make('updated_at')->dateTime()->sortable(),
-            ])
+            Tables\Columns\TextColumn::make('title')->searchable()->sortable(),
+            Tables\Columns\TextColumn::make('author.name')->label('Author')->searchable(),
+            Tables\Columns\TextColumn::make('isbn')->searchable(),
+            Tables\Columns\TextColumn::make('price')->money(config('erp.currency')),
+            Tables\Columns\TextColumn::make('status')->badge(),
+            Tables\Columns\TextColumn::make('updated_at')->dateTime()->sortable(),
+        ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'draft' => 'Draft',
-                        'published' => 'Published',
-                        'archived' => 'Archived',
-                    ]),
-            ])
+            Tables\Filters\SelectFilter::make('status')
+            ->options([
+                'draft' => 'Draft',
+                'published' => 'Published',
+                'archived' => 'Archived',
+            ]),
+        ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
+            Tables\Actions\EditAction::make(),
+        ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            Tables\Actions\BulkActionGroup::make([
+                Tables\Actions\DeleteBulkAction::make(),
+            ]),
+        ]);
     }
 
     public static function getPages(): array

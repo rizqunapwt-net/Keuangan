@@ -24,26 +24,26 @@ class SaleResource extends Resource
     {
         return $form->schema([
             Forms\Components\Select::make('marketplace_id')
-                ->options(Marketplace::query()->pluck('name', 'id'))
-                ->searchable()
-                ->required(),
+            ->relationship('marketplace', 'name')
+            ->searchable()
+            ->required(),
             Forms\Components\Select::make('book_id')
-                ->options(Book::query()->pluck('title', 'id'))
-                ->searchable()
-                ->required(),
+            ->relationship('book', 'title')
+            ->searchable()
+            ->required(),
             Forms\Components\TextInput::make('transaction_id')->required()->maxLength(255),
             Forms\Components\TextInput::make('period_month')
-                ->required()
-                ->placeholder('YYYY-MM')
-                ->maxLength(7),
+            ->required()
+            ->placeholder('YYYY-MM')
+            ->maxLength(7),
             Forms\Components\TextInput::make('quantity')->numeric()->required()->minValue(1),
             Forms\Components\TextInput::make('net_price')->numeric()->required()->minValue(0),
             Forms\Components\Select::make('status')
-                ->options([
-                    'completed' => 'Completed',
-                    'refunded' => 'Refunded',
-                ])
-                ->required(),
+            ->options([
+                'completed' => 'Completed',
+                'refunded' => 'Refunded',
+            ])
+            ->required(),
         ]);
     }
 
@@ -51,29 +51,29 @@ class SaleResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('period_month')->sortable(),
-                Tables\Columns\TextColumn::make('book.title')->searchable(),
-                Tables\Columns\TextColumn::make('marketplace.code')->searchable(),
-                Tables\Columns\TextColumn::make('transaction_id')->searchable(),
-                Tables\Columns\TextColumn::make('quantity')->numeric(),
-                Tables\Columns\TextColumn::make('net_price')->money(config('erp.currency')),
-                Tables\Columns\TextColumn::make('status')->badge(),
-            ])
+            Tables\Columns\TextColumn::make('period_month')->sortable(),
+            Tables\Columns\TextColumn::make('book.title')->searchable(),
+            Tables\Columns\TextColumn::make('marketplace.code')->searchable(),
+            Tables\Columns\TextColumn::make('transaction_id')->searchable(),
+            Tables\Columns\TextColumn::make('quantity')->numeric(),
+            Tables\Columns\TextColumn::make('net_price')->money(config('erp.currency')),
+            Tables\Columns\TextColumn::make('status')->badge(),
+        ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'completed' => 'Completed',
-                        'refunded' => 'Refunded',
-                    ]),
-            ])
+            Tables\Filters\SelectFilter::make('status')
+            ->options([
+                'completed' => 'Completed',
+                'refunded' => 'Refunded',
+            ]),
+        ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
+            Tables\Actions\EditAction::make(),
+        ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            Tables\Actions\BulkActionGroup::make([
+                Tables\Actions\DeleteBulkAction::make(),
+            ]),
+        ]);
     }
 
     public static function getPages(): array

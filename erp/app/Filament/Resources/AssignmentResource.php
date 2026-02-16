@@ -24,22 +24,22 @@ class AssignmentResource extends Resource
     {
         return $form->schema([
             Forms\Components\Select::make('book_id')
-                ->options(Book::query()->pluck('title', 'id'))
-                ->searchable()
-                ->required(),
+            ->relationship('book', 'title')
+            ->searchable()
+            ->required(),
             Forms\Components\Select::make('marketplace_id')
-                ->options(Marketplace::query()->pluck('name', 'id'))
-                ->searchable()
-                ->required(),
+            ->relationship('marketplace', 'name')
+            ->searchable()
+            ->required(),
             Forms\Components\TextInput::make('product_url')->url()->maxLength(255),
             Forms\Components\Select::make('posting_status')
-                ->options([
-                    'draft' => 'Draft',
-                    'posted' => 'Posted',
-                    'removed' => 'Removed',
-                ])
-                ->required()
-                ->default('draft'),
+            ->options([
+                'draft' => 'Draft',
+                'posted' => 'Posted',
+                'removed' => 'Removed',
+            ])
+            ->required()
+            ->default('draft'),
         ]);
     }
 
@@ -47,28 +47,28 @@ class AssignmentResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('book.title')->searchable(),
-                Tables\Columns\TextColumn::make('marketplace.name')->searchable(),
-                Tables\Columns\TextColumn::make('posting_status')->badge(),
-                Tables\Columns\TextColumn::make('product_url')->limit(40),
-                Tables\Columns\TextColumn::make('updated_at')->dateTime(),
-            ])
+            Tables\Columns\TextColumn::make('book.title')->searchable(),
+            Tables\Columns\TextColumn::make('marketplace.name')->searchable(),
+            Tables\Columns\TextColumn::make('posting_status')->badge(),
+            Tables\Columns\TextColumn::make('product_url')->limit(40),
+            Tables\Columns\TextColumn::make('updated_at')->dateTime(),
+        ])
             ->filters([
-                Tables\Filters\SelectFilter::make('posting_status')
-                    ->options([
-                        'draft' => 'Draft',
-                        'posted' => 'Posted',
-                        'removed' => 'Removed',
-                    ]),
-            ])
+            Tables\Filters\SelectFilter::make('posting_status')
+            ->options([
+                'draft' => 'Draft',
+                'posted' => 'Posted',
+                'removed' => 'Removed',
+            ]),
+        ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
+            Tables\Actions\EditAction::make(),
+        ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            Tables\Actions\BulkActionGroup::make([
+                Tables\Actions\DeleteBulkAction::make(),
+            ]),
+        ]);
     }
 
     public static function getPages(): array
