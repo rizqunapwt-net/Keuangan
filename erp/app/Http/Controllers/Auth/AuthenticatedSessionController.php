@@ -28,7 +28,26 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // Log login time
+        $user->update([
+            'last_login_at' => now(),
+        ]);
+
+        if ($user->isKaryawan()) {
+            // Create a token for frontend auto-login
+            $token = $user->createToken('auth_token')->plainTextToken;
+            
+            // Redirect to Next.js frontend with token
+            // Assuming the frontend handles /auth/callback or similar
+            // If not, we can just redirect to frontend URL and let it handle session if domains match
+            $frontendUrl = env('FRONTEND_URL', 'http://125.165.206.248:3000');
+            return redirect()->away($frontendUrl . '/login?token=' . $token);
+        }
+
+        return redirect()->intended(route('filament.admin.pages.dashboard', absolute: false));
     }
 
     /**
