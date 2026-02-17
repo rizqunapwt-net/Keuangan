@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login - Rizquna NRE Enterprise</title>
+    <title>NRE Enterprise System | PT NEW RIZQUNA ELFATH</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap"
@@ -38,7 +38,7 @@
                 <img src="/logo-icon.png" alt="Logo" class="w-full h-full object-contain">
             </div>
             <h1 class="text-xs font-black text-amber-600 uppercase tracking-[0.4em] mb-1">Rizquna Elfath</h1>
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">NRE Enterprise System</p>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Enterprise Resource Planning</p>
         </div>
 
         <!-- Card -->

@@ -1,6 +1,6 @@
 {
   "appId": "com.absensionline.app",
-  "appName": "Absensi Online",
+  "appName": "NRE Enterprise",
   "webDir": "out",
   "bundledWebRuntime": false,
   "server": {

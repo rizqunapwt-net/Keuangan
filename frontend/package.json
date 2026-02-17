@@ -12,7 +12,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "static": "next build",
-    "mobile:init": "npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios && npx cap init AbsensiOnline com.absensionline.app --web-dir out",
+    "mobile:init": "npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios && npx cap init NREEnterprise com.absensionline.app --web-dir out",
     "mobile:add": "npx cap add android && npx cap add ios",
     "mobile:build": "npm run build && npx cap sync",
     "mobile:sync": "npx cap sync",
