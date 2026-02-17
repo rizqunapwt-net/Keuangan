@@ -14,9 +14,15 @@ class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationGroup = 'HR & Absensi';
+    protected static ?string $navigationGroup = 'ERP';
     protected static ?string $navigationLabel = 'Karyawan';
     protected static ?int $navigationSort = 1;
+    protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['user.name', 'employee_code', 'user.username'];
+    }
 
     public static function form(Form $form): Form
     {

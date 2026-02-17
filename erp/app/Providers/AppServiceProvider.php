@@ -23,6 +23,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \App\Models\Book::observe(\App\Observers\BookObserver::class);
+        \App\Models\Sale::observe(\App\Observers\SaleObserver::class);
+        \App\Models\SalesImport::observe(\App\Observers\SalesImportObserver::class);
+        \App\Models\RoyaltyCalculation::observe(\App\Observers\RoyaltyCalculationObserver::class);
+        \App\Models\Accounting\Journal::observe(\App\Observers\Accounting\JournalObserver::class);
+
         if (config('app.env') === 'production') {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }

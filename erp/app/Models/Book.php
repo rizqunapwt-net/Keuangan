@@ -17,20 +17,46 @@ class Book extends Model
     use LogsActivity;
 
     protected $fillable = [
+        'tracking_code',
         'author_id',
         'title',
         'isbn',
         'description',
         'price',
+        'stock',
         'cover_path',
         'status',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self$book) {
+            if (empty($book->tracking_code)) {
+                $book->tracking_code = 'NRE-' . strtoupper(\Illuminate\Support\Str::random(8));
+            }
+        });
+    }
+
+    public function getProgressPercentage(): int
+    {
+        return match ($this->status) {
+                BookStatus::DRAFT => 5,
+                BookStatus::INCOMING => 15,
+                BookStatus::EDITORIAL => 30,
+                BookStatus::LAYOUTING => 50,
+                BookStatus::IS_ISBN_PROCESS => 70,
+                BookStatus::PRODUCTION => 85,
+                BookStatus::WAREHOUSE, BookStatus::PUBLISHED => 100,
+                default => 0,
+            };
+    }
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
-            'status' => BookStatus::class,
+            'stock' => 'integer',
+            'status' => BookStatus::class ,
         ];
     }
 

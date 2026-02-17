@@ -36,12 +36,38 @@ class AuthTokenController extends Controller
             ->first();
 
         if (!$user || !Hash::check($validated['password'], $user->password)) {
+            \App\Models\AuthLog::create([
+                'event' => 'login_failed',
+                'identifier' => $login,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'status' => 'failed',
+                'reason' => 'invalid_credentials',
+            ]);
             return $this->error('Kredensial tidak valid.', 401);
         }
 
         if (!$user->is_active) {
+            \App\Models\AuthLog::create([
+                'event' => 'login_failed',
+                'identifier' => $login,
+                'user_id' => $user->id,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'status' => 'failed',
+                'reason' => 'account_inactive',
+            ]);
             return $this->error('Akun tidak aktif.', 403);
         }
+
+        \App\Models\AuthLog::create([
+            'event' => 'login_success',
+            'identifier' => $login,
+            'user_id' => $user->id,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'status' => 'success',
+        ]);
 
         $user->update(['last_login_at' => now()]);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Support\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\LeaveBalance;
@@ -13,6 +14,7 @@ use Illuminate\Support\Str;
 
 class EmployeeController extends Controller
 {
+    use ApiResponse;
     /**
      * GET /api/v1/hr/employees
      */
@@ -56,7 +58,7 @@ class EmployeeController extends Controller
             'user' => $emp->user,
             ]);
 
-        return response()->json(['success' => true, 'data' => $data]);
+        return $this->success($data);
     }
 
     /**
@@ -103,11 +105,7 @@ class EmployeeController extends Controller
             ]);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Karyawan berhasil didaftarkan',
-            'data' => $employee->load('user'),
-        ], 201);
+        return $this->success($employee->load('user'), 201, ['message' => 'Karyawan berhasil didaftarkan']);
     }
 
     /**
@@ -118,10 +116,10 @@ class EmployeeController extends Controller
         $employee = Employee::with(['user', 'leaveBalances.leaveType'])->find($id);
 
         if (!$employee) {
-            return response()->json(['success' => false, 'error' => 'Karyawan tidak ditemukan'], 404);
+            return $this->error('Karyawan tidak ditemukan', 404);
         }
 
-        return response()->json(['success' => true, 'data' => $employee]);
+        return $this->success($employee);
     }
 
     /**
@@ -132,7 +130,7 @@ class EmployeeController extends Controller
         $employee = Employee::with('user')->find($id);
 
         if (!$employee) {
-            return response()->json(['success' => false, 'error' => 'Karyawan tidak ditemukan'], 404);
+            return $this->error('Karyawan tidak ditemukan', 404);
         }
 
         $validated = $request->validate([
@@ -170,11 +168,7 @@ class EmployeeController extends Controller
             $employee->update($empData);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Data karyawan berhasil diperbarui',
-            'data' => $employee->fresh('user'),
-        ]);
+        return $this->success($employee->fresh('user'), 200, ['message' => 'Data karyawan berhasil diperbarui']);
     }
 
     /**
@@ -185,14 +179,11 @@ class EmployeeController extends Controller
         $employee = Employee::find($id);
 
         if (!$employee) {
-            return response()->json(['success' => false, 'error' => 'Karyawan tidak ditemukan'], 404);
+            return $this->error('Karyawan tidak ditemukan', 404);
         }
 
         $employee->user->update(['is_active' => false]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Karyawan berhasil dinonaktifkan (Deactivated)',
-        ]);
+        return $this->success(null, 200, ['message' => 'Karyawan berhasil dinonaktifkan (Deactivated)']);
     }
 }

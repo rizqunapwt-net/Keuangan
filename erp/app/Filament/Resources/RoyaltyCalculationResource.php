@@ -27,12 +27,12 @@ class RoyaltyCalculationResource extends Resource
             Forms\Components\Select::make('author_id')->relationship('author', 'name')->required(),
             Forms\Components\TextInput::make('total_amount')->numeric()->required(),
             Forms\Components\Select::make('status')
-                ->options([
-                    'draft' => 'Draft',
-                    'finalized' => 'Finalized',
-                    'paid' => 'Paid',
-                ])
-                ->required(),
+            ->options([
+                'draft' => 'Draft',
+                'finalized' => 'Finalized',
+                'paid' => 'Paid',
+            ])
+            ->required(),
         ]);
     }
 
@@ -40,42 +40,55 @@ class RoyaltyCalculationResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('period_month')->sortable(),
-                Tables\Columns\TextColumn::make('author.name')->searchable(),
-                Tables\Columns\TextColumn::make('total_amount')->money(config('erp.currency')),
-                Tables\Columns\TextColumn::make('status')->badge(),
-                Tables\Columns\TextColumn::make('updated_at')->dateTime(),
-            ])
+            Tables\Columns\TextColumn::make('period_month')->sortable(),
+            Tables\Columns\TextColumn::make('author.name')->searchable(),
+            Tables\Columns\TextColumn::make('total_amount')->money(config('erp.currency')),
+            Tables\Columns\TextColumn::make('status')->badge(),
+            Tables\Columns\TextColumn::make('updated_at')->dateTime(),
+        ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'draft' => 'Draft',
-                        'finalized' => 'Finalized',
-                        'paid' => 'Paid',
-                    ]),
-            ])
+            Tables\Filters\SelectFilter::make('status')
+            ->options([
+                'draft' => 'Draft',
+                'finalized' => 'Finalized',
+                'paid' => 'Paid',
+            ]),
+        ])
             ->actions([
-                Tables\Actions\Action::make('finalize')
-                    ->label('Finalize')
-                    ->color('warning')
-                    ->visible(fn (RoyaltyCalculation $record): bool => $record->status->value === 'draft')
-                    ->action(function (RoyaltyCalculation $record): void {
-                        app(RoyaltyCalculationService::class)->finalize($record, auth()->user());
-                    }),
-                Tables\Actions\Action::make('generate_invoice')
-                    ->label('Generate Invoice')
-                    ->color('success')
-                    ->visible(fn (RoyaltyCalculation $record): bool => $record->status->value === 'finalized')
-                    ->action(function (RoyaltyCalculation $record): void {
-                        app(PaymentService::class)->generateInvoice($record, auth()->user());
-                    }),
-                Tables\Actions\EditAction::make(),
-            ])
+            Tables\Actions\Action::make('finalize')
+            ->label('Finalize')
+            ->color('warning')
+            ->visible(fn(RoyaltyCalculation $record): bool => $record->status->value === 'draft')
+            ->action(function (RoyaltyCalculation $record): void {
+            app(RoyaltyCalculationService::class)->finalize($record, auth()->user());
+        }),
+            Tables\Actions\Action::make('generate_invoice')
+            ->label('Generate Invoice')
+            ->color('success')
+            ->visible(fn(RoyaltyCalculation $record): bool => $record->status->value === 'finalized')
+            ->action(function (RoyaltyCalculation $record): void {
+            app(PaymentService::class)->generateInvoice($record, auth()->user());
+        }),
+            Tables\Actions\EditAction::make(),
+        ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            Tables\Actions\BulkActionGroup::make([
+                Tables\Actions\BulkAction::make('batch_finalize')
+                ->label('Batch Finalize')
+                ->icon('heroicon-o-check-circle')
+                ->color('warning')
+                ->requiresConfirmation()
+                ->action(function (\Illuminate\Support\Collection $records): void {
+            $records->each(function ($record) {
+                    if ($record->status->value === 'draft') {
+                        app(RoyaltyCalculationService::class)->finalize($record, auth()->user());
+                    }
+                }
+                    );
+            }),
+                Tables\Actions\DeleteBulkAction::make(),
+            ]),
+        ]);
     }
 
     public static function getPages(): array

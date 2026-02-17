@@ -14,6 +14,12 @@ class ListSales extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+            Actions\Action::make('export')
+            ->label('Export Excel')
+            ->icon('heroicon-o-arrow-down-tray')
+            ->color('success')
+            ->action(fn() => \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\SalesExport, 'sales.xlsx'))
+            ->visible(fn() => auth()->user()->can('royalties.manage')),
         ];
     }
 }

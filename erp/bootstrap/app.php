@@ -32,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->api(append: [
             \App\Http\Middleware\SecurityHeaders::class,
+            \App\Http\Middleware\RequestIdMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
