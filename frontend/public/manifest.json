@@ -1,7 +1,7 @@
 {
-    "name": "Rizquna Absensi",
-    "short_name": "Absensi",
-    "description": "Premium Attendance Management System - Rizquna Group",
+    "name": "NRE Enterprise",
+    "short_name": "NRE Enterprise",
+    "description": "Enterprise Resource Planning & Business Suite",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#FDFDFD",
