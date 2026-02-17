@@ -204,8 +204,8 @@ export default function ProfilePage() {
               <LogOut size={20} className="text-red-500 group-hover:translate-x-1 transition-transform" />
               <span className="text-xs font-black text-red-600 uppercase tracking-[0.2em]">Keluar dari Sesi</span>
             </button>
-            <p className="text-center text-[9px] text-slate-300 font-bold uppercase tracking-widest mt-6">
-              Absensi Online v4.2.0 • PT New Rizquna Elfath
+            <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em] text-center leading-relaxed">
+              Enterprise Cloud v4.2.0 • PT New Rizquna Elfath
             </p>
           </div>
         </div>
