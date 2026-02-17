@@ -74,7 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         Cookies.remove('token');
         localStorage.removeItem('user');
         setUser(null);
-        router.push('/login');
+        // Redirect to Unified Login Door on port 80
+        window.location.href = 'http://125.165.206.248/login';
     };
 
     return (

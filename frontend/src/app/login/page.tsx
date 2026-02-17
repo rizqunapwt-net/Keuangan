@@ -1,23 +1,49 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/utils/api';
 import { ShieldCheck, User as UserIcon, Lock, ChevronRight, Loader2, Info } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+function LoginContent() {
     const { login } = useAuth();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const token = searchParams.get('token');
+        if (token) {
+            handleAutoLogin(token);
+        }
+    }, [searchParams]);
+
+    const handleAutoLogin = async (token: string) => {
+        setLoading(true);
+        try {
+            const response = await api.get('/auth/me', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const user = response.data.data || response.data;
+            if (user) {
+                login(token, user);
+            }
+        } catch (err: any) {
+            setError('Sesi otomatis gagal. Silakan login manual.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
         try {
-            // Added a small delay for smoother transition on high-speed connections
             const response = await api.post('/auth/login', { username, password });
             const { token, user } = response.data;
             if (token && user) {
@@ -37,26 +63,19 @@ export default function LoginPage() {
             <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-amber-100/20 rounded-full blur-3xl -z-10"></div>
 
             <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-6 duration-1000">
-                {/* Logo Section */}
                 <div className="text-center mb-12">
                     <div className="relative inline-block mb-6">
                         <div className="w-24 h-24 bg-white rounded-[32px] shadow-2xl shadow-amber-200/50 flex items-center justify-center border border-amber-50 p-4 transition-transform hover:scale-105 duration-500">
-                            <img
-                                src="/logo-icon.png"
-                                alt="Logo"
-                                className="w-full h-full object-contain"
-                            />
+                            <img src="/logo-icon.png" alt="Logo" className="w-full h-full object-contain" />
                         </div>
                         <div className="absolute -bottom-2 -right-2 bg-amber-500 text-white p-1.5 rounded-xl shadow-lg">
                             <ShieldCheck size={16} />
                         </div>
                     </div>
-
                     <h1 className="text-sm font-black text-amber-600 uppercase tracking-[0.4em] mb-1">Rizquna Elfath</h1>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Attendance Management System</p>
                 </div>
 
-                {/* Login Form Container */}
                 <div className="bg-white rounded-[40px] shadow-2xl shadow-slate-200/60 border border-white p-8 mb-8 relative">
                     <div className="mb-8">
                         <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Login Portal</h2>
@@ -124,13 +143,7 @@ export default function LoginPage() {
                     </form>
                 </div>
 
-                {/* Footer Credits */}
                 <div className="text-center space-y-6">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-100">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Secure Global Network Active</span>
-                    </div>
-
                     <p className="text-[10px] text-slate-400 font-bold leading-relaxed">
                         &copy; {new Date().getFullYear()} PT NEW RIZQUNA ELFATH<br />
                         <span className="text-amber-600">Enterprise Attendance Cloud v4.2.0</span>
@@ -149,5 +162,17 @@ export default function LoginPage() {
                 }
             `}</style>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="animate-spin text-amber-500" size={48} />
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
     );
 }

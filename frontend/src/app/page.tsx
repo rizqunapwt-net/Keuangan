@@ -1,24 +1,35 @@
 "use client";
 
+import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Scan,
+  Building2,
+  Users,
+  Calendar,
   Clock,
-  CalendarDays,
-  History,
-  LogOut,
-  Plus,
   ArrowRight,
   UserCheck,
-  Bell
+  Bell,
+  LogOut,
+  ChevronRight,
+  User as UserIcon,
+  ShieldCheck,
+  LayoutDashboard,
+  Loader2,
+  Scan,
+  CalendarDays,
+  History,
+  Plus
 } from 'lucide-react';
+import api from '@/utils/api';
 
-export default function HomePage() {
-  const { user, loading, logout } = useAuth();
+function HomeContent() {
+  const { user, loading: authLoading, logout, login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [autoLoginLoading, setAutoLoginLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -27,16 +38,49 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
+    const token = searchParams.get('token');
+    if (token) {
+      handleAutoLogin(token);
     }
-  }, [user, loading, router]);
+  }, [searchParams]);
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-amber-50 border-t-amber-500" />
-    </div>
-  );
+  const handleAutoLogin = async (token: string) => {
+    setAutoLoginLoading(true);
+    try {
+      const response = await api.get('/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const userData = response.data.data || response.data;
+      if (userData) {
+        login(token, userData);
+        // Clear token from URL
+        router.replace('/');
+      }
+    } catch (err: any) {
+      console.error('SSO auto-login failed:', err);
+    } finally {
+      setAutoLoginLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!authLoading && !autoLoginLoading && !user) {
+      // Redirect to Unified Login Door on port 80
+      window.location.href = 'https://nre.infiatin.cloud/login';
+    }
+  }, [user, authLoading, autoLoginLoading]);
+
+  if (authLoading || autoLoginLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="animate-spin text-amber-500 mb-4 mx-auto" size={48} />
+          <p className="text-sm font-black text-slate-900 uppercase tracking-widest">Sinkronisasi Akses...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) return null;
 
   return (
@@ -165,6 +209,31 @@ export default function HomePage() {
           Professionalism & Integrity
         </p>
       </footer>
+
+      <style jsx global>{`
+        .modern-card {
+           @apply bg-white rounded-[2.5rem] border border-gray-100 shadow-sm transition-all duration-300;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="animate-spin text-amber-500" size={48} />
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
