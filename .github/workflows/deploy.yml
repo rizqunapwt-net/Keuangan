@@ -1,4 +1,4 @@
-name: Deploy Rizquna ERP
+name: Deploy NRE Stack
 
 on:
   workflow_dispatch:
@@ -6,15 +6,15 @@ on:
     branches: [main]
     paths:
       - 'erp/**'
-      - '.github/workflows/deploy_erp.yml'
+      - 'frontend/**'
+      - '.github/workflows/deploy.yml'
 
 concurrency:
-  group: deploy-erp
+  group: deploy-stack
   cancel-in-progress: false
 
 jobs:
   deploy:
-    # Skip gracefully unless all required secrets are configured.
     if: >-
       ${{
         secrets.DEPLOY_HOST != '' &&
@@ -65,9 +65,31 @@ jobs:
           EOF
           chmod 600 ~/.ssh/config
 
-      - name: Deploy (git pull + run server deploy script)
+      - name: Deploy (git pull + build)
         shell: bash
         run: |
           set -euo pipefail
-          ssh deploy-target "set -euo pipefail; cd '${{ secrets.DEPLOY_PATH }}'; git fetch origin; git checkout main; git pull --ff-only origin main; cd erp; bash scripts/deploy_server.sh"
-
+          ssh deploy-target "
+            set -euo pipefail
+            cd '${{ secrets.DEPLOY_PATH }}'
+            
+            echo '--- Pulling latest code ---'
+            git fetch origin
+            git checkout main
+            git pull --ff-only origin main
+            
+            echo '--- Deploying ERP (Laravel) ---'
+            cd erp
+            bash scripts/deploy_server.sh
+            
+            echo '--- Deploying Frontend (Next.js) ---'
+            cd ../frontend
+            if [ -f \"package.json\" ]; then
+              npm install
+              npm run build
+              # Restarting pm2 process for frontend
+              pm2 restart nre-frontend || pm2 start npm --name \"nre-frontend\" -- start
+            fi
+            
+            echo '--- Deployment Complete ---'
+          "
