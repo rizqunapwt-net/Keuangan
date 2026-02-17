@@ -13,12 +13,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata = {
-  title: "Absensi Online | New Rizquna Elfath",
-  description: "Portal Absensi Karyawan Mobile",
+  title: "NRE Enterprise System | PT NEW RIZQUNA ELFATH",
+  description: "Enterprise Resource Planning & Business Suite",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Rizquna Absensi",
+    title: "NRE Enterprise",
   },
 };
 
