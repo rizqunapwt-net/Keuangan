@@ -73,7 +73,7 @@ function LoginContent() {
                         </div>
                     </div>
                     <h1 className="text-sm font-black text-amber-600 uppercase tracking-[0.4em] mb-1">Rizquna Elfath</h1>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Attendance Management System</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Enterprise Resource Planning</p>
                 </div>
 
                 <div className="bg-white rounded-[40px] shadow-2xl shadow-slate-200/60 border border-white p-8 mb-8 relative">
@@ -146,7 +146,7 @@ function LoginContent() {
                 <div className="text-center space-y-6">
                     <p className="text-[10px] text-slate-400 font-bold leading-relaxed">
                         &copy; {new Date().getFullYear()} PT NEW RIZQUNA ELFATH<br />
-                        <span className="text-amber-600">Enterprise Attendance Cloud v4.2.0</span>
+                        <span className="text-amber-600">Cloud ERP System v4.2.0</span>
                     </p>
                 </div>
             </div>
