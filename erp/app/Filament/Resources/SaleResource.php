@@ -19,6 +19,12 @@ class SaleResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
 
     protected static ?string $navigationGroup = 'ERP';
+    protected static ?string $recordTitleAttribute = 'transaction_id';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['transaction_id', 'book.title', 'marketplace.name'];
+    }
 
     public static function form(Form $form): Form
     {

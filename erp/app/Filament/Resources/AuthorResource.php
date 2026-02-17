@@ -17,6 +17,12 @@ class AuthorResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
     protected static ?string $navigationGroup = 'ERP';
+    protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'email', 'phone'];
+    }
 
     public static function form(Form $form): Form
     {
@@ -29,17 +35,17 @@ class AuthorResource extends Resource
             Forms\Components\TextInput::make('bank_account')->maxLength(255),
             Forms\Components\TextInput::make('npwp')->maxLength(255),
             Forms\Components\FileUpload::make('ktp_path')
-                ->disk(config('filesystems.default'))
-                ->directory('authors/ktp')
-                ->acceptedFileTypes(['image/jpeg', 'image/png', 'application/pdf'])
-                ->maxSize(10240),
+            ->disk(config('filesystems.default'))
+            ->directory('authors/ktp')
+            ->acceptedFileTypes(['image/jpeg', 'image/png', 'application/pdf'])
+            ->maxSize(10240),
             Forms\Components\Select::make('status')
-                ->options([
-                    'active' => 'Active',
-                    'inactive' => 'Inactive',
-                ])
-                ->default('active')
-                ->required(),
+            ->options([
+                'active' => 'Active',
+                'inactive' => 'Inactive',
+            ])
+            ->default('active')
+            ->required(),
         ]);
     }
 
@@ -47,28 +53,33 @@ class AuthorResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('email')->searchable(),
-                Tables\Columns\TextColumn::make('phone'),
-                Tables\Columns\TextColumn::make('bank_name'),
-                Tables\Columns\TextColumn::make('status')->badge(),
-                Tables\Columns\TextColumn::make('updated_at')->dateTime()->sortable(),
-            ])
+            Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
+            Tables\Columns\TextColumn::make('email')->searchable(),
+            Tables\Columns\TextColumn::make('phone'),
+            Tables\Columns\TextColumn::make('bank_name'),
+            Tables\Columns\TextColumn::make('status')->badge(),
+            Tables\Columns\TextColumn::make('updated_at')->dateTime()->sortable(),
+        ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'active' => 'Active',
-                        'inactive' => 'Inactive',
-                    ]),
-            ])
+            Tables\Filters\SelectFilter::make('status')
+            ->options([
+                'active' => 'Active',
+                'inactive' => 'Inactive',
+            ]),
+        ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
+            Tables\Actions\EditAction::make(),
+            Tables\Actions\Action::make('statement')
+            ->label('Statement')
+            ->icon('heroicon-o-document-text')
+            ->color('info')
+            ->url(fn(Author $record) => static::getUrl('statement', ['record' => $record])),
+        ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            Tables\Actions\BulkActionGroup::make([
+                Tables\Actions\DeleteBulkAction::make(),
+            ]),
+        ]);
     }
 
     public static function getPages(): array
@@ -77,6 +88,7 @@ class AuthorResource extends Resource
             'index' => Pages\ListAuthors::route('/'),
             'create' => Pages\CreateAuthor::route('/create'),
             'edit' => Pages\EditAuthor::route('/{record}/edit'),
+            'statement' => Pages\AuthorStatement::route('/{record}/statement'),
         ];
     }
 }

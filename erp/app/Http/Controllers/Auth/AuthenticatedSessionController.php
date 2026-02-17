@@ -44,7 +44,7 @@ class AuthenticatedSessionController extends Controller
             // Assuming the frontend handles /auth/callback or similar
             // If not, we can just redirect to frontend URL and let it handle session if domains match
             $frontendUrl = env('FRONTEND_URL', 'http://125.165.206.248:3000');
-            return redirect()->away($frontendUrl . '/login?token=' . $token);
+            return redirect()->away($frontendUrl . '/?token=' . $token);
         }
 
         return redirect()->intended(route('filament.admin.pages.dashboard', absolute: false));

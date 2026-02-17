@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -14,7 +13,7 @@ return new class extends Migration
         Schema::create('royalty_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('royalty_calculation_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('sale_id')->constrained()->restrictOnDelete();
+            $table->foreignId('sale_id')->constrained()->cascadeOnDelete();
             $table->foreignId('book_id')->constrained()->restrictOnDelete();
             $table->unsignedInteger('quantity');
             $table->decimal('net_price', 14, 2);

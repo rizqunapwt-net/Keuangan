@@ -30,6 +30,9 @@ Route::prefix('v1')->group(function (): void {
     // ── Unified Auth (email or username + password → Sanctum token) ──
     Route::post('/auth/login', AuthTokenController::class)->middleware('throttle:auth');
     Route::post('/auth/token', AuthTokenController::class)->middleware('throttle:auth'); // compatibility alias
+
+    // ── Public Tracking ──
+    Route::get('/tracking', [\App\Http\Controllers\Api\V1\PublicTrackingController::class , 'track']);
 });
 
 // ── ERP Protected Routes ──
@@ -63,31 +66,34 @@ Route::prefix('v1/hr')->middleware('auth:sanctum')->group(function (): void {
     Route::post('/attendance/check-out', [AttendanceController::class , 'checkOut']);
     Route::put('/attendance/{id}/correct', [AttendanceController::class , 'correct']);
 
-    // Employees
-    Route::get('/employees', [EmployeeController::class , 'index']);
-    Route::post('/employees', [EmployeeController::class , 'store']);
-    Route::get('/employees/{id}', [EmployeeController::class , 'show']);
-    Route::patch('/employees/{id}', [EmployeeController::class , 'update']);
-    Route::delete('/employees/{id}', [EmployeeController::class , 'destroy']);
-    Route::get('/employees/{id}/leave-balance', [LeaveController::class , 'balance']);
+    // Employees (Protected)
+    Route::middleware('role:Admin|HR|Owner')->group(function () {
+            Route::get('/employees', [EmployeeController::class , 'index']);
+            Route::post('/employees', [EmployeeController::class , 'store']);
+            Route::get('/employees/{id}', [EmployeeController::class , 'show']);
+            Route::patch('/employees/{id}', [EmployeeController::class , 'update']);
+            Route::delete('/employees/{id}', [EmployeeController::class , 'destroy']);
+        }
+        );
+        Route::get('/employees/{id}/leave-balance', [LeaveController::class , 'balance']);
 
-    // Leave
-    Route::get('/leave-types', [LeaveController::class , 'types']);
-    Route::get('/leave-requests', [LeaveController::class , 'index']);
-    Route::post('/leave-requests', [LeaveController::class , 'store']);
-    Route::patch('/leave-requests/{id}/status', [LeaveController::class , 'updateStatus']);
+        // Leave
+        Route::get('/leave-types', [LeaveController::class , 'types']);
+        Route::get('/leave-requests', [LeaveController::class , 'index']);
+        Route::post('/leave-requests', [LeaveController::class , 'store']);
+        Route::patch('/leave-requests/{id}/status', [LeaveController::class , 'updateStatus'])->middleware('role:Admin|HR|Owner');
 
-    // Overtime
-    Route::get('/overtime-requests', [OvertimeController::class , 'index']);
-    Route::post('/overtime-requests', [OvertimeController::class , 'store']);
-    Route::patch('/overtime-requests/{id}/status', [OvertimeController::class , 'updateStatus']);
+        // Overtime
+        Route::get('/overtime-requests', [OvertimeController::class , 'index']);
+        Route::post('/overtime-requests', [OvertimeController::class , 'store']);
+        Route::patch('/overtime-requests/{id}/status', [OvertimeController::class , 'updateStatus'])->middleware('role:Admin|HR|Owner');
 
-    // Payroll
-    Route::get('/payrolls', [HrPayrollController::class , 'index']);
-    Route::post('/payrolls/generate', [HrPayrollController::class , 'generate']);
+        // Payroll
+        Route::get('/payrolls', [HrPayrollController::class , 'index']);
+        Route::post('/payrolls/generate', [HrPayrollController::class , 'generate'])->middleware('role:Admin|HR|Owner');
 
-    // Notifications
-    Route::get('/notifications', [HrNotificationController::class , 'index']);
-    Route::patch('/notifications/{id}/read', [HrNotificationController::class , 'markRead']);
-    Route::patch('/notifications/read-all', [HrNotificationController::class , 'markAllRead']);
-});
+        // Notifications
+        Route::get('/notifications', [HrNotificationController::class , 'index']);
+        Route::patch('/notifications/{id}/read', [HrNotificationController::class , 'markRead']);
+        Route::patch('/notifications/read-all', [HrNotificationController::class , 'markAllRead']);
+    });
