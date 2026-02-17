@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1/hr',
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://nre.infiatin.cloud/api/v1/hr',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
