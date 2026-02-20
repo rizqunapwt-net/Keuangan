@@ -19,24 +19,41 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'geolocation=(self), microphone=(), camera=(self)');
 
-        // Optional CSP (report-only) for gradual rollout without breaking UI.
+        // CSP Report-Only for gradual rollout (set ERP_CSP_REPORT_ONLY=true in .env to enable)
         if (filter_var((string)env('ERP_CSP_REPORT_ONLY', false), FILTER_VALIDATE_BOOLEAN)) {
-            $response->headers->set('Content-Security-Policy-Report-Only', implode('; ', [
+            $cspDirectives = [
                 "default-src 'self'",
                 "base-uri 'self'",
                 "form-action 'self'",
                 "frame-ancestors 'none'",
-                "img-src 'self' data: blob:",
-                "style-src 'self' 'unsafe-inline'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-                "font-src 'self' data:",
-                "connect-src 'self'",
-            ]));
+                "img-src 'self' data: blob: https:",
+                "style-src 'self' 'unsafe-inline' https:",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+                "font-src 'self' data: https:",
+                "connect-src 'self' https: wss:",
+                "frame-src 'self' https:",
+                "object-src 'none'",
+                "upgrade-insecure-requests",
+            ];
+            
+            // Add report-uri if configured
+            $reportUri = env('CSP_REPORT_URI');
+            if ($reportUri) {
+                $cspDirectives[] = "report-uri {$reportUri}";
+                $cspDirectives[] = "report-to csp-endpoint";
+            }
+
+            $response->headers->set('Content-Security-Policy-Report-Only', implode('; ', $cspDirectives));
         }
 
         if (app()->environment('production')) {
             // Enable HSTS only when served over HTTPS.
-            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+            
+            // Additional production security headers
+            $response->headers->set('X-XSS-Protection', '1; mode=block');
+            $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
+            $response->headers->set('Cross-Origin-Embedder-Policy', 'require-corp');
         }
 
         return $response;
