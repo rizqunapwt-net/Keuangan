@@ -43,7 +43,7 @@ import {
   PhoneOutlined,
   TeamOutlined,
   PrinterOutlined,
-  FactoryOutlined,
+  ForkOutlined as FactoryOutlined,
 } from '@ant-design/icons';
 import logoHorizontal from './assets/logo/logo_horizontal.png';
 
