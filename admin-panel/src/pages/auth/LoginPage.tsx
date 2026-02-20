@@ -3,6 +3,8 @@ import { Form, Input, Button, Checkbox, Card, Typography, message, Tabs } from '
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import api from '../../api';
 
+import logoVertical from '../../assets/logo/logo_vertical_white.png';
+
 const { Title, Text } = Typography;
 
 const LoginPage: React.FC = () => {
@@ -30,16 +32,8 @@ const LoginPage: React.FC = () => {
         <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
             <Card className="w-full max-w-md shadow-lg rounded-2xl border-none">
                 <div className="text-center mb-8">
-                    <div style={{
-                        width: 56, height: 56, borderRadius: 12,
-                        background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', fontWeight: 800, fontSize: 22,
-                        margin: '0 auto 12px',
-                    }}>
-                        RE
-                    </div>
-                    <Title level={2} className="text-primary !mb-1">NRE Enterprise</Title>
+                    <img src={logoVertical} alt="New Rizquna Elfath" style={{ height: 120, margin: '0 auto 12px', display: 'block' }} />
+                    <Title level={2} className="text-primary !mb-1">New Rizquna Elfath</Title>
                     <Text type="secondary">Masuk ke dashboard admin untuk melanjutkan</Text>
                 </div>
 

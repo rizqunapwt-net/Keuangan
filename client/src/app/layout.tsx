@@ -13,12 +13,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata = {
-  title: "NRE Enterprise System | PT NEW RIZQUNA ELFATH",
+  title: "New Rizquna Elfath ERP | PT NEW RIZQUNA ELFATH",
   description: "Enterprise Resource Planning & Business Suite",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "NRE Enterprise",
+    title: "New Rizquna Elfath",
   },
 };
 
