@@ -118,6 +118,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
 
     // ── Author Auth (Public) ──
     Route::post('/authors/register', [AuthorAuthController::class , 'register']);
+    Route::post('/authors/verify-email', [AuthorAuthController::class , 'verifyEmail']);
+    Route::post('/authors/resend-verification', [AuthorAuthController::class , 'resendVerification']);
     Route::post('/authors/forgot-password', [AuthorAuthController::class , 'forgotPassword']);
     Route::post('/authors/reset-password', [AuthorAuthController::class , 'resetPassword']);
 });
