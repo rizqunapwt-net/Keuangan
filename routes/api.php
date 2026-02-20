@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\AuthTokenController;
+use App\Http\Controllers\Api\V1\AuthorPortalController;
 use App\Http\Controllers\Api\V1\BookOrderController;
 use App\Http\Controllers\Api\V1\ContractController;
 use App\Http\Controllers\Api\V1\EmployeeController;
@@ -90,6 +91,16 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
     Route::get('/sales', [BookOrderController::class , 'sales']);
     Route::post('/sales', [BookOrderController::class , 'storeSale']);
     Route::get('/sales/stats', [BookOrderController::class , 'salesStats']);
+
+    // ── Author Portal (Transparency) ──
+    Route::middleware('role:Author')->group(function () {
+        Route::get('/author/dashboard', [AuthorPortalController::class , 'dashboard']);
+        Route::get('/author/books', [AuthorPortalController::class , 'books']);
+        Route::get('/author/contracts', [AuthorPortalController::class , 'contracts']);
+        Route::get('/author/royalties', [AuthorPortalController::class , 'royalties']);
+        Route::get('/author/royalties/{id}/report', [AuthorPortalController::class , 'royaltyReport']);
+        Route::get('/author/sales', [AuthorPortalController::class , 'sales']);
+    });
 });
 
 // ── HR Protected Routes (Attendance, Leave, Overtime, Payroll) ──
