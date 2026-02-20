@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Percetakan\JobCardController;
 use App\Http\Controllers\Api\Percetakan\MaterialController;
 use App\Http\Controllers\Api\Percetakan\MachineController;
 use App\Http\Controllers\Api\Percetakan\MaterialUsageController;
+use App\Http\Controllers\Api\Percetakan\CustomerController;
 use App\Http\Controllers\Api\V1\PublishingController;
 use App\Http\Controllers\Api\V1\RoyaltyCalculationController;
 use App\Http\Controllers\Api\V1\SalesImportController;
@@ -167,6 +168,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
         // Material Usage
         Route::get('/material-usage/statistics', [MaterialUsageController::class , 'statistics']);
         Route::apiResource('material-usage', MaterialUsageController::class);
+        
+        // Customers
+        Route::get('/customers/statistics', [CustomerController::class , 'allStatistics']);
+        Route::get('/customers/list', [CustomerController::class , 'list']);
+        Route::get('/customers/{customer}/orders', [CustomerController::class , 'orders']);
+        Route::get('/customers/{customer}/statistics', [CustomerController::class , 'statistics']);
+        Route::apiResource('customers', CustomerController::class);
     });
 });
 
