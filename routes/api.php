@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\V1\LeaveController;
 use App\Http\Controllers\Api\V1\OvertimeController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\Percetakan\OrderController as PercetakanOrderController;
+use App\Http\Controllers\Api\Percetakan\ProductionJobController;
+use App\Http\Controllers\Api\Percetakan\JobCardController;
 use App\Http\Controllers\Api\V1\PublishingController;
 use App\Http\Controllers\Api\V1\RoyaltyCalculationController;
 use App\Http\Controllers\Api\V1\SalesImportController;
@@ -129,6 +131,21 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
         // Orders
         Route::get('/orders/statistics', [PercetakanOrderController::class , 'statistics']);
         Route::apiResource('orders', PercetakanOrderController::class);
+        
+        // Production Jobs
+        Route::get('/production-jobs/statistics', [ProductionJobController::class , 'statistics']);
+        Route::post('/production-jobs/{productionJob}/start', [ProductionJobController::class , 'start']);
+        Route::post('/production-jobs/{productionJob}/complete', [ProductionJobController::class , 'complete']);
+        Route::post('/production-jobs/{productionJob}/hold', [ProductionJobController::class , 'hold']);
+        Route::post('/production-jobs/{productionJob}/reject', [ProductionJobController::class , 'reject']);
+        Route::apiResource('production-jobs', ProductionJobController::class);
+        
+        // Job Cards
+        Route::get('/job-cards/statistics', [JobCardController::class , 'statistics']);
+        Route::post('/job-cards/{jobCard}/start', [JobCardController::class , 'start']);
+        Route::post('/job-cards/{jobCard}/complete', [JobCardController::class , 'complete']);
+        Route::post('/job-cards/{jobCard}/qc', [JobCardController::class , 'qc']);
+        Route::apiResource('job-cards', JobCardController::class);
     });
 });
 
