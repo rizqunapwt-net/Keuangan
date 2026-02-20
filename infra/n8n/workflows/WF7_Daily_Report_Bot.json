@@ -1,0 +1,143 @@
+{
+    "name": "WF7 - Daily Report Bot",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "triggerAtHour": 20
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                200,
+                300
+            ],
+            "name": "Laporan Jam 20:00"
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT COUNT(*) as total FROM books;"
+            },
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                400,
+                200
+            ],
+            "name": "DB: Total Books",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT b.title, a.name as author FROM books b JOIN authors a ON b.author_id = a.author_id LIMIT 3;"
+            },
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                400,
+                400
+            ],
+            "name": "DB: Sample Books",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsCode": "const total = $node[\"DB: Total Books\"].json.total;\nconst samples = Array.isArray($node[\"DB: Sample Books\"].all()) ? $node[\"DB: Sample Books\"].all() : [];\nconst text = `📊 *DAILY REPORT RIZQUNA.ID*\\n\\nTotal Katalog: ${total} judul\\nSample:\\n${samples.map(s => `- ${s.json.title}`).join('\\n')}`;\nreturn [{ json: { text } }];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                650,
+                300
+            ],
+            "name": "Format Report"
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "6285119467138@c.us",
+                "text": "={{ $json.text }}",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                850,
+                300
+            ],
+            "name": "WA: Daily Report",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Laporan Jam 20:00": {
+            "main": [
+                [
+                    {
+                        "node": "DB: Total Books",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "DB: Sample Books",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "DB: Total Books": {
+            "main": [
+                [
+                    {
+                        "node": "Format Report",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "DB: Sample Books": {
+            "main": [
+                [
+                    {
+                        "node": "Format Report",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Report": {
+            "main": [
+                [
+                    {
+                        "node": "WA: Daily Report",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

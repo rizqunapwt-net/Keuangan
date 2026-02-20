@@ -1,0 +1,194 @@
+{
+    "name": "WF3 - Payment Confirmation Bot",
+    "nodes": [
+        {
+            "parameters": {
+                "events": [
+                    "message"
+                ],
+                "options": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.wahaTrigger",
+            "typeVersion": 202502,
+            "position": [
+                200,
+                300
+            ],
+            "id": "trigger",
+            "name": "WAHA Trigger"
+        },
+        {
+            "parameters": {
+                "jsCode": "const payload = $input.first().json.payload;\nconst msg = (payload.body || '').toLowerCase();\nconst hasMedia = !!payload.mediaUrl;\nconst isPayment = msg.includes('transfer') || msg.includes('bukti') || hasMedia;\nreturn [{\n  json: {\n    chatId: payload.from,\n    messageId: payload.id,\n    body: payload.body,\n    mediaUrl: payload.mediaUrl,\n    isPaymentIntent: isPayment\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                400,
+                300
+            ],
+            "name": "Detect Intent"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "boolean": [
+                        {
+                            "value1": "={{ $json.isPaymentIntent }}",
+                            "value2": true
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                600,
+                300
+            ],
+            "name": "Is Payment?"
+        },
+        {
+            "parameters": {
+                "prompt": "={{ $node[\"Detect Intent\"].json.body }}",
+                "systemInstruction": "Kamu Surti. Customer konfirmasi pembayaran. Jika ada bukti (media), ucapkan terima kasih. Jika tidak, minta bukti fotonya."
+            },
+            "type": "n8n-nodes-base.googleGemini",
+            "typeVersion": 1,
+            "position": [
+                800,
+                200
+            ],
+            "name": "Gemini: Payment",
+            "credentials": {
+                "googleGeminiApi": {
+                    "id": "yoIqIRXeNV4Ecfu6"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "INSERT INTO payment_confirmations (customer_phone, image_url, status) VALUES ($1, $2, 'pending_verification') RETURNING confirmation_id;",
+                "arguments": "={{ [$node[\"Detect Intent\"].json.chatId, $node[\"Detect Intent\"].json.mediaUrl] }}"
+            },
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                1000,
+                100
+            ],
+            "name": "Save Payment Proof",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "6285119467138@c.us",
+                "text": "💰 *KONFIRMASI BAYAR BARU*\n\nDari: {{ $node[\"Detect Intent\"].json.chatId }}\nStatus: Menunggu Verifikasi."
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                1200,
+                100
+            ],
+            "name": "Notify Admin",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "={{ $node[\"Detect Intent\"].json.chatId }}",
+                "text": "={{ $json.text }}",
+                "reply_to": "={{ $node[\"Detect Intent\"].json.messageId }}",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                1000,
+                300
+            ],
+            "name": "WA: Reply",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "WAHA Trigger": {
+            "main": [
+                [],
+                [
+                    {
+                        "node": "Detect Intent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Detect Intent": {
+            "main": [
+                [
+                    {
+                        "node": "Is Order?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Is Payment?": {
+            "main": [
+                [
+                    {
+                        "node": "Gemini: Payment",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini: Payment": {
+            "main": [
+                [
+                    {
+                        "node": "Save Payment Proof",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "WA: Reply",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Save Payment Proof": {
+            "main": [
+                [
+                    {
+                        "node": "Notify Admin",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

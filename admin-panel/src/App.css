@@ -1,0 +1,8 @@
+/* Rizquna Elfath — Global Styles */
+/* All layout styles are handled by Ant Design components + index.css overrides */
+/* This file is intentionally minimal */
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}

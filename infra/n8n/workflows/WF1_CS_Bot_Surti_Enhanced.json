@@ -1,0 +1,241 @@
+{
+    "name": "WF1 - CS Bot Surti (Enhanced)",
+    "nodes": [
+        {
+            "parameters": {
+                "events": [
+                    "message"
+                ],
+                "options": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.wahaTrigger",
+            "typeVersion": 202502,
+            "position": [
+                200,
+                300
+            ],
+            "id": "trigger",
+            "name": "WAHA Trigger"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "combinator": "or",
+                    "conditions": [
+                        {
+                            "leftValue": "={{ $json.payload.from }}",
+                            "rightValue": "status@broadcast",
+                            "operator": {
+                                "type": "string",
+                                "operation": "equals"
+                            }
+                        },
+                        {
+                            "leftValue": "={{ $json.payload.fromMe }}",
+                            "rightValue": true,
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "equals"
+                            }
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.filter",
+            "typeVersion": 2,
+            "position": [
+                400,
+                300
+            ],
+            "name": "Filter Spam"
+        },
+        {
+            "parameters": {
+                "jsCode": "const now = new Date();\nconst hour = new Date(now.toLocaleString('en-US', {timeZone: 'Asia/Jakarta'})).getHours();\nconst isOffHours = (hour >= 21 || hour < 7);\nreturn [{\n  json: {\n    chatId: $input.first().json.payload.from,\n    messageId: $input.first().json.payload.id,\n    body: $input.first().json.payload.body,\n    isOffHours,\n    greeting: hour < 11 ? 'Selamat Pagi' : hour < 15 ? 'Selamat Siang' : hour < 18 ? 'Selamat Sore' : 'Selamat Malam'\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                600,
+                300
+            ],
+            "name": "Parse Data"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "boolean": [
+                        {
+                            "value1": "={{ $json.isOffHours }}",
+                            "value2": true
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                800,
+                300
+            ],
+            "name": "Cek Jam"
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "={{ $json.chatId }}",
+                "text": "Assalamualaikum Kak 🙏\n\nTerima kasih sudah menghubungi Rizquna.id. Mohon maaf sedang di luar jam operasional (07:00-21:00).\n\nPesan Kakak akan kami balas besok pagi ya. Jazakumullahu Khairan 🙏",
+                "reply_to": "={{ $json.messageId }}",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                1000,
+                200
+            ],
+            "name": "WA: Off-Hours",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT b.title, a.name as author, b.base_price FROM books b JOIN authors a ON b.author_id = a.author_id WHERE b.title ILIKE '%' || $1 || '%' LIMIT 3;",
+                "arguments": "={{ $json.body }}"
+            },
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                1000,
+                400
+            ],
+            "name": "DB: Search",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "prompt": "={{ $node[\"Parse Data\"].json.body }}",
+                "systemInstruction": "Anda Surti, CS Rizquna.id. Jawab dengan ramah & Islami.\nData Produk: {{ JSON.stringify($json) }}"
+            },
+            "type": "n8n-nodes-base.googleGemini",
+            "typeVersion": 1,
+            "position": [
+                1200,
+                400
+            ],
+            "name": "Gemini: Surti",
+            "credentials": {
+                "googleGeminiApi": {
+                    "id": "yoIqIRXeNV4Ecfu6"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "={{ $node[\"Parse Data\"].json.chatId }}",
+                "text": "={{ $json.text }}",
+                "reply_to": "={{ $node[\"Parse Data\"].json.messageId }}",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                1400,
+                400
+            ],
+            "name": "WA: Reply",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "WAHA Trigger": {
+            "main": [
+                [],
+                [
+                    {
+                        "node": "Filter Spam",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Filter Spam": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Data": {
+            "main": [
+                [
+                    {
+                        "node": "Cek Jam",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Cek Jam": {
+            "main": [
+                [
+                    {
+                        "node": "WA: Off-Hours",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "DB: Search",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "DB: Search": {
+            "main": [
+                [
+                    {
+                        "node": "Gemini: Surti",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini: Surti": {
+            "main": [
+                [
+                    {
+                        "node": "WA: Reply",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

@@ -1,0 +1,161 @@
+{
+    "name": "WF2 - Order Management Bot",
+    "nodes": [
+        {
+            "parameters": {
+                "events": [
+                    "message"
+                ],
+                "options": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.wahaTrigger",
+            "typeVersion": 202502,
+            "position": [
+                200,
+                300
+            ],
+            "id": "trigger",
+            "name": "WAHA Trigger"
+        },
+        {
+            "parameters": {
+                "jsCode": "const msg = ($input.first().json.payload.body || '').toLowerCase();\nconst orderKeywords = ['pesan', 'beli', 'order', 'mau buku', 'mau cetak', 'mau terbit', 'harga paket'];\nconst isOrder = orderKeywords.some(kw => msg.includes(kw));\nreturn [{\n  json: {\n    chatId: $input.first().json.payload.from,\n    messageId: $input.first().json.payload.id,\n    customerName: $input.first().json.payload.notifyName || 'Customer',\n    body: $input.first().json.payload.body,\n    isOrderIntent: isOrder\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                400,
+                300
+            ],
+            "name": "Detect Intent"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "boolean": [
+                        {
+                            "value1": "={{ $json.isOrderIntent }}",
+                            "value2": true
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                600,
+                300
+            ],
+            "name": "Is Order?"
+        },
+        {
+            "parameters": {
+                "prompt": "={{ $node[\"Detect Intent\"].json.body }}",
+                "systemInstruction": "Kamu Surti, CS Rizquna.id. Customer ingin MEMESAN. Ekstrak: Judul Buku/Layanan, Jumlah, Nama, Alamat, No HP. Jika lengkap, kembalikan dalam format JSON. Jika belum lengkap, tanyakan yang kurang saja dengan ramah & Islami."
+            },
+            "type": "n8n-nodes-base.googleGemini",
+            "typeVersion": 1,
+            "position": [
+                800,
+                200
+            ],
+            "name": "Gemini: Order",
+            "credentials": {
+                "googleGeminiApi": {
+                    "id": "yoIqIRXeNV4Ecfu6"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://localhost:5678/webhook/order-adv",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"customer_name\": \"{{ $json.extracted_name }}\",\n  \"customer_phone\": \"{{ $json.extracted_phone }}\",\n  \"items\": \"{{ $json.extracted_items }}\",\n  \"total_amount\": \"{{ $json.total }}\",\n  \"channel\": \"whatsapp\"\n}",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1000,
+                100
+            ],
+            "name": "Trigger: Order Processor"
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "={{ $node[\"Detect Intent\"].json.chatId }}",
+                "text": "={{ $json.text }}",
+                "reply_to": "={{ $node[\"Detect Intent\"].json.messageId }}",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                1200,
+                300
+            ],
+            "name": "WA: Order Reply",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "WAHA Trigger": {
+            "main": [
+                [],
+                [
+                    {
+                        "node": "Detect Intent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Detect Intent": {
+            "main": [
+                [
+                    {
+                        "node": "Is Order?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Is Order?": {
+            "main": [
+                [
+                    {
+                        "node": "Gemini: Order",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini: Order": {
+            "main": [
+                [
+                    {
+                        "node": "Trigger: Order Processor",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "WA: Order Reply",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

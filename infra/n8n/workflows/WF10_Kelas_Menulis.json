@@ -1,0 +1,102 @@
+{
+    "name": "WF10 - Kelas Menulis Automation",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "kelas-menulis-daftar",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                200,
+                300
+            ],
+            "name": "Webhook: Daftar"
+        },
+        {
+            "parameters": {
+                "jsCode": "const body = $input.first().json.body;\nreturn [{\n  json: {\n    nama: body.nama,\n    wa: body.whatsapp,\n    kelas: body.kelas || 'Online'\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                400,
+                300
+            ],
+            "name": "Parse Data"
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "={{ $json.wa }}@c.us",
+                "text": "Assalamualaikum {{ $json.nama }} 🙏\n\nPendaftaran Kelas Menulis ({{ $json.kelas }}) sudah berhasil! Tim kami akan menghubungi Kakak segera.",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                600,
+                200
+            ],
+            "name": "WA: Konfirmasi User",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "6285119467138@c.us",
+                "text": "🎓 *SISWA BARU KELAS MENULIS*\n\nNama: {{ $json.nama }}\nWA: {{ $json.wa }}\nKelas: {{ $json.kelas }}",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                600,
+                400
+            ],
+            "name": "WA: Notif Admin",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Webhook: Daftar": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Data": {
+            "main": [
+                [
+                    {
+                        "node": "WA: Konfirmasi User",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "WA: Notif Admin",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

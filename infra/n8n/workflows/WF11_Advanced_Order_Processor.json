@@ -1,0 +1,156 @@
+{
+    "name": "WF11 - Advanced Order Processor",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "order-adv",
+                "responseMode": "responseNode",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1.1,
+            "position": [
+                250,
+                300
+            ],
+            "name": "Webhook Order Adv"
+        },
+        {
+            "parameters": {
+                "jsCode": "const order = $input.first().json.body;\nif (!order.customer_phone || !order.items) {\n  throw new Error('Data order tidak lengkap');\n}\nreturn [{\n  json: {\n    order_code: order.order_code || `RZQ-${Date.now()}`,\n    customer_name: order.customer_name,\n    customer_phone: order.customer_phone,\n    items: order.items,\n    total_amount: order.total_amount,\n    channel: order.channel || 'whatsapp'\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                450,
+                300
+            ],
+            "name": "Validate & Transform"
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "INSERT INTO customers (name, phone) VALUES ($1, $2) ON CONFLICT (phone) DO UPDATE SET name = EXCLUDED.name RETURNING customer_id;",
+                "arguments": "={{ [$json.customer_name, $json.customer_phone] }}"
+            },
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                650,
+                300
+            ],
+            "name": "Upsert Customer",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "INSERT INTO orders (order_code, customer_id, channel, total_amount, status) VALUES ($1, $2, $3, $4, 'pending') RETURNING order_id;",
+                "arguments": "={{ [$node[\"Validate & Transform\"].json.order_code, $json.customer_id, $node[\"Validate & Transform\"].json.channel, $node[\"Validate & Transform\"].json.total_amount] }}"
+            },
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                850,
+                300
+            ],
+            "name": "Create Order",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "options": {
+                    "responseCode": 200
+                },
+                "responseBody": "={{ { success: true, order_code: $node[\"Validate & Transform\"].json.order_code } }}"
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                1050,
+                200
+            ],
+            "name": "Respond Success"
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "={{ $node[\"Validate & Transform\"].json.customer_phone }}@c.us",
+                "text": "Terima kasih atas pesanan Kakak! ✅\n\nKode Order: *{{ $node[\"Validate & Transform\"].json.order_code }}*\nTotal: Rp {{ $node[\"Validate & Transform\"].json.total_amount }}\n\nPesanan sedang kami proses. Silakan transfer ke BCA 1234567890 a.n Rizquna. 🙏"
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                1050,
+                400
+            ],
+            "name": "WA: Order Confirmation",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Webhook Order Adv": {
+            "main": [
+                [
+                    {
+                        "node": "Validate & Transform",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Validate & Transform": {
+            "main": [
+                [
+                    {
+                        "node": "Upsert Customer",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Upsert Customer": {
+            "main": [
+                [
+                    {
+                        "node": "Create Order",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Create Order": {
+            "main": [
+                [
+                    {
+                        "node": "Respond Success",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "WA: Order Confirmation",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

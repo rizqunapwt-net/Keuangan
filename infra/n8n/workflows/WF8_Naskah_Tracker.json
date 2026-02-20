@@ -1,0 +1,76 @@
+{
+    "name": "WF8 - Naskah Tracker",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "naskah-update",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                200,
+                300
+            ],
+            "name": "Webhook: Update"
+        },
+        {
+            "parameters": {
+                "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst statusMsgs = {\n  'NASKAH_DITERIMA': `Assalamualaikum Kak, naskah sudah kami terima!`,\n  'EDITING': `Naskah Kakak sedang dalam tahap editing.`,\n  'SELESAI': `Selamat! Buku Kakak sudah selesai.`\n};\nreturn [{\n  json: {\n    wa: body.penulis_wa,\n    msg: statusMsgs[body.status] || `Update: ${body.status}`\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                400,
+                300
+            ],
+            "name": "Format Msg"
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "={{ $json.wa }}@c.us",
+                "text": "={{ $json.msg }}",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                600,
+                300
+            ],
+            "name": "WA: Status Update",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Webhook: Update": {
+            "main": [
+                [
+                    {
+                        "node": "Format Msg",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Msg": {
+            "main": [
+                [
+                    {
+                        "node": "WA: Status Update",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

@@ -1,0 +1,138 @@
+{
+    "name": "WF4 - Auto Generate Konten Instagram",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "triggerAtHour": 8
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                200,
+                300
+            ],
+            "name": "Cron: 08:00"
+        },
+        {
+            "parameters": {
+                "jsCode": "const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];\nconst now = new Date();\nconst dayName = days[now.getDay()];\nconst contentMap = {\n  'Senin': 'promo_buku_baru',\n  'Selasa': 'tips_menulis',\n  'Rabu': 'testimoni_penulis',\n  'Kamis': 'promo_buku_baru',\n  'Jumat': 'quote_islami',\n  'Sabtu': 'behind_the_scene',\n  'Minggu': 'quote_islami'\n};\nreturn [{ json: { day: dayName, contentType: contentMap[dayName] } }];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                400,
+                300
+            ],
+            "name": "Tentukan Konten"
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT b.title, a.name as author, b.base_price FROM books b JOIN authors a ON b.author_id = a.author_id ORDER BY RANDOM() LIMIT 1;"
+            },
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                600,
+                300
+            ],
+            "name": "DB: Random Book",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "prompt": "Buatkan caption Instagram untuk hari {{ $node[\"Tentukan Konten\"].json.day }} dengan jenis: {{ $node[\"Tentukan Konten\"].json.contentType }}.\nData: {{ JSON.stringify($json) }}",
+                "systemInstruction": "Kamu Social Media Manager Rizquna.id. Buat caption menarik, sertakan hashtag & CTA WA 0812-9485-6272."
+            },
+            "type": "n8n-nodes-base.googleGemini",
+            "typeVersion": 1,
+            "position": [
+                800,
+                300
+            ],
+            "name": "Gemini: Content",
+            "credentials": {
+                "googleGeminiApi": {
+                    "id": "yoIqIRXeNV4Ecfu6"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "6285119467138@c.us",
+                "text": "📱 *DRAFT KONTEN IG*\n\n{{ $json.text }}\n\n#rizquna #penerbit",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                1000,
+                300
+            ],
+            "name": "WA: Send Draft",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Cron: 08:00": {
+            "main": [
+                [
+                    {
+                        "node": "Tentukan Konten",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Tentukan Konten": {
+            "main": [
+                [
+                    {
+                        "node": "DB: Random Book",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "DB: Random Book": {
+            "main": [
+                [
+                    {
+                        "node": "Gemini: Content",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini: Content": {
+            "main": [
+                [
+                    {
+                        "node": "WA: Send Draft",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
