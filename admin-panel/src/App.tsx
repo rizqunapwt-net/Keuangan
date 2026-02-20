@@ -44,6 +44,7 @@ import {
   TeamOutlined,
   PrinterOutlined,
 } from '@ant-design/icons';
+import logoHorizontal from './assets/logo/logo_horizontal.png';
 
 // Auth pages - loaded eagerly (needed for first paint)
 import LoginPage from './pages/auth/LoginPage';
@@ -369,18 +370,18 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
             onClick={() => navigate('/dashboard')}
           >
-            <div style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 800, fontSize: 16,
-            }}>
-              RE
-            </div>
-            {!collapsed && (
-              <span style={{ fontSize: 20, fontWeight: 700, color: '#4f46e5', letterSpacing: -0.5 }}>
-                NRE Enterprise
-              </span>
+            {collapsed ? (
+              <div style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', fontWeight: 800, fontSize: 16,
+                overflow: 'hidden'
+              }}>
+                <img src={logoHorizontal} alt="R" style={{ width: '150%', height: '150%', objectFit: 'cover' }} />
+              </div>
+            ) : (
+              <img src={logoHorizontal} alt="New Rizquna Elfath" style={{ height: 32, objectFit: 'contain' }} />
             )}
           </div>
         </div>
