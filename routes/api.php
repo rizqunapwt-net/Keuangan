@@ -16,6 +16,9 @@ use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\Percetakan\OrderController as PercetakanOrderController;
 use App\Http\Controllers\Api\Percetakan\ProductionJobController;
 use App\Http\Controllers\Api\Percetakan\JobCardController;
+use App\Http\Controllers\Api\Percetakan\MaterialController;
+use App\Http\Controllers\Api\Percetakan\MachineController;
+use App\Http\Controllers\Api\Percetakan\MaterialUsageController;
 use App\Http\Controllers\Api\V1\PublishingController;
 use App\Http\Controllers\Api\V1\RoyaltyCalculationController;
 use App\Http\Controllers\Api\V1\SalesImportController;
@@ -146,6 +149,24 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
         Route::post('/job-cards/{jobCard}/complete', [JobCardController::class , 'complete']);
         Route::post('/job-cards/{jobCard}/qc', [JobCardController::class , 'qc']);
         Route::apiResource('job-cards', JobCardController::class);
+        
+        // Materials
+        Route::get('/materials/statistics', [MaterialController::class , 'statistics']);
+        Route::get('/materials/low-stock', [MaterialController::class , 'lowStock']);
+        Route::post('/materials/{material}/adjust-stock', [MaterialController::class , 'adjustStock']);
+        Route::apiResource('materials', MaterialController::class);
+        
+        // Machines
+        Route::get('/machines/statistics', [MachineController::class , 'statistics']);
+        Route::get('/machines/needs-maintenance', [MachineController::class , 'needsMaintenance']);
+        Route::post('/machines/{machine}/update-status', [MachineController::class , 'updateStatus']);
+        Route::post('/machines/{machine}/log-maintenance', [MachineController::class , 'logMaintenance']);
+        Route::post('/machines/{machine}/update-hours', [MachineController::class , 'updateOperatingHours']);
+        Route::apiResource('machines', MachineController::class);
+        
+        // Material Usage
+        Route::get('/material-usage/statistics', [MaterialUsageController::class , 'statistics']);
+        Route::apiResource('material-usage', MaterialUsageController::class);
     });
 });
 
