@@ -554,12 +554,12 @@ const AuthorRegisterPage: React.FC = () => {
                             transition={{ delay: 0.5 }}
                         >
                             <Text type="secondary" className="text-xs block mb-2 font-semibold">
-                                🎁 Keuntungan Bergabung:
+                                🎁 Keuntungan Bergabung dengan New Rizquna Elfath:
                             </Text>
                             <ul className="text-xs space-y-1 text-gray-600">
                                 <li className="flex items-start">
                                     <CheckCircleOutlined className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                                    <span>Publikasi buku di platform Rizquna</span>
+                                    <span>Publikasi buku di platform New Rizquna Elfath</span>
                                 </li>
                                 <li className="flex items-start">
                                     <CheckCircleOutlined className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
