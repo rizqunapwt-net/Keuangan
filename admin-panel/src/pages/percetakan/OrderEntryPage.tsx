@@ -12,15 +12,13 @@ import {
     Col,
     Divider,
     Statistic,
-    Steps,
     Alert,
-    Spin,
 } from 'antd';
-import { SaveOutlined, CalculatorOutlined } from '@ant-design/icons';
+import { SaveOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Paragraph } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
@@ -129,10 +127,6 @@ const OrderEntryPage: React.FC = () => {
         }
     };
 
-    const formatCurrency = (value: number) => {
-        return `Rp ${value.toLocaleString('id-ID')}`;
-    };
-
     return (
         <div className="p-6">
             <div className="mb-6">
@@ -169,7 +163,7 @@ const OrderEntryPage: React.FC = () => {
                                     placeholder="Pilih customer"
                                     optionFilterProp="children"
                                     filterOption={(input, option) =>
-                                        (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                                        ((option?.label as string) ?? '').toLowerCase().includes(input.toLowerCase())
                                     }
                                 >
                                     {customers.map((customer: any) => (
@@ -372,7 +366,8 @@ const OrderEntryPage: React.FC = () => {
                                     placeholder="0"
                                     className="w-full"
                                     formatter={(value) => `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-                                    parser={(value) => Number(value?.replace(/Rp\s?|(,*)/g, ''))}
+                                    // @ts-ignore - Ant Design type bug
+                                    parser={(value) => parseFloat(value?.toString().replace(/Rp\s?|(,*)/g, '') || '0')}
                                     onChange={calculatePricing}
                                 />
                             </Form.Item>
@@ -417,7 +412,6 @@ const OrderEntryPage: React.FC = () => {
                                 value={pricing.subtotal}
                                 prefix="Rp"
                                 precision={0}
-                                useGrouping
                             />
                         </Col>
                         <Col xs={12} sm={6}>
@@ -426,7 +420,6 @@ const OrderEntryPage: React.FC = () => {
                                 value={pricing.tax}
                                 prefix="Rp"
                                 precision={0}
-                                useGrouping
                                 valueStyle={{ color: '#cf1322' }}
                             />
                         </Col>
@@ -436,7 +429,6 @@ const OrderEntryPage: React.FC = () => {
                                 value={pricing.deposit}
                                 prefix="Rp"
                                 precision={0}
-                                useGrouping
                                 valueStyle={{ color: '#1890ff' }}
                             />
                         </Col>
@@ -446,7 +438,6 @@ const OrderEntryPage: React.FC = () => {
                                 value={pricing.total}
                                 prefix="Rp"
                                 precision={0}
-                                useGrouping
                                 valueStyle={{ color: '#3f8600', fontWeight: 'bold', fontSize: 20 }}
                             />
                         </Col>

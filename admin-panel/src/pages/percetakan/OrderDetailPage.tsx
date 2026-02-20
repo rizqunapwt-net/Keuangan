@@ -145,7 +145,7 @@ const OrderDetailPage: React.FC = () => {
                         '0%': '#4f46e5',
                         '100%': '#10b981',
                     }}
-                    size="large"
+                    size="small"
                 />
             </Card>
 
@@ -170,7 +170,7 @@ const OrderDetailPage: React.FC = () => {
                                 {dayjs(order.dates.order_date).format('DD MMMM YYYY')}
                             </Descriptions.Item>
                             <Descriptions.Item label="Deadline">
-                                <Text type={dayjs(order.dates.deadline).isBefore(dayjs()) ? 'danger' : ''}>
+                                <Text type={dayjs(order.dates.deadline).isBefore(dayjs()) ? 'danger' : 'secondary'}>
                                     {dayjs(order.dates.deadline).format('DD MMMM YYYY')}
                                 </Text>
                             </Descriptions.Item>
@@ -259,7 +259,6 @@ const OrderDetailPage: React.FC = () => {
                                     value={order.pricing?.subtotal || 0}
                                     prefix="Rp"
                                     precision={0}
-                                    useGrouping
                                 />
                             </Col>
                             <Col span={24}>
@@ -268,7 +267,6 @@ const OrderDetailPage: React.FC = () => {
                                     value={order.pricing?.discount || 0}
                                     prefix="- Rp"
                                     precision={0}
-                                    useGrouping
                                     valueStyle={{ color: '#cf1322' }}
                                 />
                             </Col>
@@ -278,7 +276,6 @@ const OrderDetailPage: React.FC = () => {
                                     value={order.pricing?.tax || 0}
                                     prefix="+ Rp"
                                     precision={0}
-                                    useGrouping
                                 />
                             </Col>
                             <Divider />
@@ -288,7 +285,6 @@ const OrderDetailPage: React.FC = () => {
                                     value={order.pricing?.total || 0}
                                     prefix="Rp"
                                     precision={0}
-                                    useGrouping
                                     valueStyle={{ color: '#3f8600', fontWeight: 'bold', fontSize: 24 }}
                                 />
                             </Col>
@@ -303,7 +299,6 @@ const OrderDetailPage: React.FC = () => {
                                     value={order.payment?.deposit_amount || 0}
                                     prefix="Rp"
                                     precision={0}
-                                    useGrouping
                                 />
                             </Col>
                             <Col span={24}>
@@ -312,7 +307,6 @@ const OrderDetailPage: React.FC = () => {
                                     value={order.payment?.deposit_paid || 0}
                                     prefix="Rp"
                                     precision={0}
-                                    useGrouping
                                     valueStyle={{ color: '#1890ff' }}
                                 />
                             </Col>
@@ -329,7 +323,6 @@ const OrderDetailPage: React.FC = () => {
                                     value={order.payment?.balance_due || 0}
                                     prefix="Rp"
                                     precision={0}
-                                    useGrouping
                                     valueStyle={{ color: '#cf1322', fontWeight: 'bold' }}
                                 />
                             </Col>
