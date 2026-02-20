@@ -1,21 +1,18 @@
 # 👥 ROLES & PERMISSIONS - Sistem Percetakan New Rizquna Elfath
 
 **Tanggal:** 20 Februari 2026  
-**Total Roles:** 6  
-**Total Permissions:** 52+  
+**Total Roles:** 3 (Simplified)  
+**Total Permissions:** 32  
 
 ---
 
 ## 📊 **OVERVIEW**
 
-| Role | Permissions | Category | Access Level |
-|------|-------------|----------|--------------|
-| **Admin** | 20 | Management | Full Access |
-| **Legal** | 6 | Publishing | Limited |
-| **Marketing** | 5 | Publishing | Limited |
-| **Finance** | 9 | Finance | Financial Data |
-| **Karyawan** | 4 | HR | Personal Data |
-| **Author** | 8 | Publishing | Personal Data |
+| Role | Permissions | Access Level | Description |
+|------|-------------|--------------|-------------|
+| **Admin** | 20 | FULL ACCESS | Management & Operations |
+| **Karyawan** | 4 | PERSONAL DATA | Employee Self-Service |
+| **Author** | 8 | PERSONAL PUBLISHING | Author Portal Access |
 
 ---
 
@@ -25,7 +22,7 @@
 
 **Permissions:** 20
 
-### **HR Management:**
+### **HR Management (8 permissions):**
 - ✅ `users.manage` - Manage user accounts
 - ✅ `employees.manage` - Manage employee data
 - ✅ `attendance.manage` - Manage attendance records
@@ -35,7 +32,7 @@
 - ✅ `leave.manage` - Manage leave requests
 - ✅ `leave.view-own` - View own leave
 
-### **Publishing Management:**
+### **Publishing Management (7 permissions):**
 - ✅ `authors.manage` - Manage authors
 - ✅ `books.manage` - Manage books
 - ✅ `contracts.manage` - Manage contracts
@@ -43,136 +40,39 @@
 - ✅ `assignments.manage` - Manage book assignments
 - ✅ `sales.import` - Import sales data
 - ✅ `royalties.manage` - Manage royalty calculations
-- ✅ `payments.manage` - Manage payments
 
-### **Accounting & Reports:**
+### **Finance & Accounting (3 permissions):**
+- ✅ `payments.manage` - Manage payments
 - ✅ `accounting.manage` - Manage accounting
+- ✅ `audit.view` - View audit logs
+
+### **Reports & Dashboard (2 permissions):**
 - ✅ `reports.view` - View all reports
 - ✅ `dashboard.view` - View dashboard
-- ✅ `audit.view` - View audit logs
 
 ### **Can Do:**
-- ✅ Access all modules (HR, Publishing, Finance, Accounting)
-- ✅ Create/edit/delete users, employees, authors
-- ✅ Manage all publishing workflow
-- ✅ Import sales, calculate royalties
-- ✅ Process payments & payroll
-- ✅ View all reports & audit logs
-- ✅ Configure system settings
+- ✅ **HR:** Manage users, employees, attendance, leave, payroll
+- ✅ **Publishing:** Manage authors, books, contracts, marketplaces
+- ✅ **Sales:** Import sales, calculate royalties, process payments
+- ✅ **Finance:** Manage accounting, view audit logs
+- ✅ **Reports:** View all reports & dashboards
+- ✅ **System:** Full system configuration
 
 ### **Cannot Do:**
-- ❌ Nothing - Full access!
+- ❌ Nothing - Full access to all features!
+
+### **Typical Users:**
+- Owner/CEO
+- Operations Manager
+- System Administrator
+- HR Manager (with full access)
+- Finance Manager (with full access)
+- Legal Team (with full access)
+- Marketing Team (with full access)
 
 ---
 
-## ⚖️ **2. LEGAL** (Contract Management)
-
-**Description:** Tim legal yang mengelola kontrak penulis
-
-**Permissions:** 6
-
-### **Publishing:**
-- ✅ `authors.manage` - Manage authors
-- ✅ `books.manage` - Manage books
-- ✅ `contracts.manage` - Manage contracts
-
-### **Reports:**
-- ✅ `reports.view` - View reports
-- ✅ `dashboard.view` - View dashboard
-- ✅ `audit.view` - View audit logs
-
-### **Can Do:**
-- ✅ Create/edit author profiles
-- ✅ Create/edit book records
-- ✅ Create contracts
-- ✅ Review & approve contracts
-- ✅ Reject contracts
-- ✅ View publishing reports
-- ✅ Access audit logs for contracts
-
-### **Cannot Do:**
-- ❌ Manage employees
-- ❌ Process payroll
-- ❌ Import sales
-- ❌ Calculate royalties
-- ❌ Process payments
-- ❌ Manage accounting
-
----
-
-## 📢 **3. MARKETING** (Book Promotion)
-
-**Description:** Tim marketing yang mengelola pemasaran buku
-
-**Permissions:** 5
-
-### **Publishing:**
-- ✅ `books.manage` - Manage books
-- ✅ `marketplaces.manage` - Manage marketplaces
-- ✅ `assignments.manage` - Manage book assignments to marketplaces
-
-### **Reports:**
-- ✅ `reports.view` - View reports
-- ✅ `dashboard.view` - View dashboard
-
-### **Can Do:**
-- ✅ View & edit book information
-- ✅ Manage marketplace accounts
-- ✅ Assign books to marketplaces
-- ✅ View sales reports
-- ✅ View marketing dashboard
-
-### **Cannot Do:**
-- ❌ Manage authors
-- ❌ Create contracts
-- ❌ Import sales
-- ❌ Calculate royalties
-- ❌ Process payments
-- ❌ Manage employees
-
----
-
-## 💰 **4. FINANCE** (Financial Management)
-
-**Description:** Tim finance yang mengelola keuangan & royalti
-
-**Permissions:** 9
-
-### **Publishing:**
-- ✅ `authors.manage` - Manage authors (for payment info)
-- ✅ `sales.import` - Import sales data
-- ✅ `royalties.manage` - Manage royalty calculations
-- ✅ `payments.manage` - Manage payments
-
-### **Accounting:**
-- ✅ `accounting.manage` - Manage accounting
-- ✅ `payroll.manage` - Manage payroll
-
-### **Reports:**
-- ✅ `reports.view` - View all reports
-- ✅ `dashboard.view` - View dashboard
-- ✅ `audit.view` - View audit logs
-
-### **Can Do:**
-- ✅ Import sales data from marketplaces
-- ✅ Calculate royalties for authors
-- ✅ Process royalty payments
-- ✅ Manage accounting entries
-- ✅ Process payroll
-- ✅ View financial reports
-- ✅ Access audit logs
-- ✅ Manage author payment info
-
-### **Cannot Do:**
-- ❌ Manage employees (except payroll)
-- ❌ Manage attendance
-- ❌ Manage leave requests
-- ❌ Create contracts
-- ❌ Assign books to marketplaces
-
----
-
-## 👤 **5. KARYAWAN** (Employee - HR Access)
+## 👤 **2. KARYAWAN** (Employee Self-Service)
 
 **Description:** Karyawan biasa (akses terbatas ke data pribadi)
 
@@ -200,9 +100,14 @@
 - ❌ Access finance modules
 - ❌ View reports (except personal)
 
+### **Typical Users:**
+- All regular employees
+- Staff members
+- Non-management personnel
+
 ---
 
-## ✍️ **6. AUTHOR** (Penulis)
+## ✍️ **3. AUTHOR** (Penulis Mitra)
 
 **Description:** Penulis mitra (akses terbatas ke data sendiri)
 
@@ -224,9 +129,9 @@
 - ✅ View books they authored
 - ✅ Edit book metadata (description, etc)
 - ✅ View royalty calculations
-- ✅ View detailed royalty reports
-- ✅ View sales data (transparency)
-- ✅ Edit personal profile & bank info
+- ✅ View detailed royalty reports with breakdown
+- ✅ View sales data (full transparency)
+- ✅ Edit personal profile & bank account info
 
 ### **Cannot Do:**
 - ❌ Manage other authors
@@ -237,11 +142,40 @@
 - ❌ Access employee modules
 - ❌ View other authors' data
 
+### **Typical Users:**
+- External authors
+- Book writers
+- Content creators
+
+---
+
+## 🎯 **ACCESS MATRIX**
+
+| Module | Admin | Karyawan | Author |
+|--------|-------|----------|--------|
+| **Users** | ✅ | ❌ | ❌ |
+| **Employees** | ✅ | ❌ | ❌ |
+| **Attendance** | ✅ | Own | ❌ |
+| **Leave** | ✅ | Own | ❌ |
+| **Payroll** | ✅ | Own | ❌ |
+| **Authors** | ✅ | ❌ | ❌ |
+| **Books** | ✅ | ❌ | Own |
+| **Contracts** | ✅ | ❌ | Read/Sign |
+| **Marketplaces** | ✅ | ❌ | ❌ |
+| **Assignments** | ✅ | ❌ | ❌ |
+| **Sales Import** | ✅ | ❌ | ❌ |
+| **Royalties** | ✅ | ❌ | Read |
+| **Payments** | ✅ | ❌ | ❌ |
+| **Accounting** | ✅ | ❌ | ❌ |
+| **Reports** | ✅ | ❌ | ❌ |
+| **Dashboard** | ✅ | ✅ | ✅ |
+| **Audit** | ✅ | ❌ | ❌ |
+
 ---
 
 ## 📋 **PERMISSION CATEGORIES**
 
-### **HR Permissions:**
+### **HR Permissions (8):**
 ```
 users.manage
 employees.manage
@@ -253,7 +187,7 @@ leave.manage
 leave.view-own
 ```
 
-### **Publishing Permissions:**
+### **Publishing Permissions (7):**
 ```
 authors.manage
 books.manage
@@ -262,17 +196,22 @@ marketplaces.manage
 assignments.manage
 sales.import
 royalties.manage
-payments.manage
 ```
 
-### **Accounting Permissions:**
+### **Finance Permissions (3):**
 ```
+payments.manage
 accounting.manage
-reports.view
 audit.view
 ```
 
-### **Author-Specific Permissions:**
+### **Reports & Dashboard (2):**
+```
+reports.view
+dashboard.view
+```
+
+### **Author-Specific Permissions (8):**
 ```
 author_contracts_read
 author_contracts_sign
@@ -286,63 +225,23 @@ author_profile_write
 
 ---
 
-## 🎯 **ACCESS MATRIX**
-
-| Module | Admin | Legal | Marketing | Finance | Karyawan | Author |
-|--------|-------|-------|-----------|---------|----------|--------|
-| **Users** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Employees** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Attendance** | ✅ | ❌ | ❌ | ❌ | Own | ❌ |
-| **Leave** | ✅ | ❌ | ❌ | ❌ | Own | ❌ |
-| **Payroll** | ✅ | ❌ | ❌ | ✅ | Own | ❌ |
-| **Authors** | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| **Books** | ✅ | ✅ | ✅ | ❌ | ❌ | Own |
-| **Contracts** | ✅ | ✅ | ❌ | ❌ | ❌ | Read/Sign |
-| **Marketplaces** | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| **Assignments** | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| **Sales Import** | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| **Royalties** | ✅ | ❌ | ❌ | ✅ | ❌ | Read |
-| **Payments** | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| **Accounting** | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| **Reports** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **Dashboard** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Audit** | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-
----
-
 ## 🔧 **MANAGING ROLES**
 
-### **Create New Role:**
+### **Assign Role to User:**
 ```bash
 php artisan tinker
 ```
 
 ```php
-use Spatie\Permission\Models\Role;
-
-// Create role
-$role = Role::create(['name' => 'Manager']);
-
-// Assign permissions
-$role->givePermissionTo([
-    'books.manage',
-    'contracts.manage',
-    'reports.view',
-]);
-```
-
-### **Assign Role to User:**
-```php
+// Assign Admin role
 $user = App\Models\User::find(1);
 $user->assignRole('Admin');
 
-// Or multiple roles
-$user->assignRole(['Admin', 'Finance']);
-```
+// Assign Karyawan role
+$employee->assignRole('Karyawan');
 
-### **Remove Role from User:**
-```php
-$user->removeRole('Admin');
+// Assign Author role
+$author->assignRole('Author');
 ```
 
 ### **Check User Role:**
@@ -351,12 +250,12 @@ if ($user->hasRole('Admin')) {
     // User is Admin
 }
 
-if ($user->hasAnyRole(['Admin', 'Finance'])) {
-    // User is Admin OR Finance
+if ($user->hasRole('Karyawan')) {
+    // User is Employee
 }
 
-if ($user->hasAllRoles(['Admin', 'Finance'])) {
-    // User is Admin AND Finance
+if ($user->hasRole('Author')) {
+    // User is Author
 }
 ```
 
@@ -366,8 +265,8 @@ if ($user->can('books.manage')) {
     // User can manage books
 }
 
-if ($user->can('contracts.manage')) {
-    // User can manage contracts
+if ($user->can('author_contracts_read')) {
+    // User can read contracts
 }
 ```
 
@@ -376,26 +275,26 @@ if ($user->can('contracts.manage')) {
 ## 🛡️ **SECURITY BEST PRACTICES**
 
 ### **1. Principle of Least Privilege:**
-- Give users minimum permissions needed
-- Don't assign Admin role unless necessary
-- Use specific roles (Legal, Marketing, Finance)
+- **Admin:** Only give to trusted management
+- **Karyawan:** Default role for all employees
+- **Author:** Only for external authors
 
-### **2. Role Separation:**
-- Separate duties (Finance vs Legal vs Marketing)
-- No single user should have conflicting roles
-- Example: Finance shouldn't also be Legal
+### **2. Role Assignment:**
+```php
+// CEO/Owner - Full access
+$ceo->assignRole('Admin');
 
-### **3. Regular Audits:**
-```bash
-# View all users with Admin role
-php artisan tinker
->>> Role::findByName('Admin')->users()->get();
+// Manager - Full access
+$manager->assignRole('Admin');
 
-# View all permissions for a role
->>> Role::findByName('Finance')->permissions()->get();
+// Regular Employee - Self-service only
+$employee->assignRole('Karyawan');
+
+// External Author - Personal data only
+$author->assignRole('Author');
 ```
 
-### **4. Permission Caching:**
+### **3. Permission Caching:**
 ```bash
 # Clear permission cache if issues
 php artisan cache:forget spatie.permission.cache
@@ -406,88 +305,109 @@ php artisan cache:forget spatie.permission.cache
 ## 📊 **ROLE STATISTICS**
 
 ```
-Total Roles: 6
-Total Permissions: 52+
+Total Roles: 3
+Total Permissions: 32
 
 Permission Distribution:
-- Admin: 20 permissions (38.5%)
-- Finance: 9 permissions (17.3%)
-- Author: 8 permissions (15.4%)
-- Legal: 6 permissions (11.5%)
-- Marketing: 5 permissions (9.6%)
-- Karyawan: 4 permissions (7.7%)
+- Admin: 20 permissions (62.5%)
+- Author: 8 permissions (25.0%)
+- Karyawan: 4 permissions (12.5%)
 ```
 
 ---
 
-## 🎯 **RECOMMENDED ROLE ASSIGNMENTS**
+## 🎯 **RECOMMENDED USAGE**
 
-### **Small Team:**
+### **Small Team (< 10 people):**
 - **Owner:** Admin
-- **Admin Staff:** Admin (limited)
-- **Legal:** Legal
-- **Marketing:** Marketing
-- **Finance:** Finance
+- **All Staff:** Admin (for flexibility)
 - **Authors:** Author
-- **Employees:** Karyawan
 
-### **Medium Team:**
-- **CEO/Owner:** Admin
-- **HR Manager:** Admin (HR focus)
-- **Publishing Manager:** Admin (Publishing focus)
-- **Finance Manager:** Finance
-- **Legal Team:** Legal
-- **Marketing Team:** Marketing
+### **Medium Team (10-50 people):**
+- **Management:** Admin
+- **All Employees:** Karyawan
 - **Authors:** Author
+
+### **Large Team (> 50 people):**
+- **Senior Management:** Admin
+- **Department Heads:** Admin
 - **All Staff:** Karyawan
-
-### **Large Team:**
-- **Multiple Admins** with different focuses
-- **Dedicated roles** for each department
-- **Granular permissions** as needed
+- **Authors:** Author
 
 ---
 
 ## 📝 **EXAMPLE USER ASSIGNMENTS**
 
 ```php
-// CEO - Full access
-$ceo->assignRole('Admin');
+// Owner/CEO - Full access
+$owner->assignRole('Admin');
 
-// Legal Manager
-$legal->assignRole('Legal');
+// Operations Manager - Full access
+$ops->assignRole('Admin');
 
-// Marketing Manager  
-$marketing->assignRole('Marketing');
+// HR Staff - Full access (HR functions)
+$hr->assignRole('Admin');
 
-// Finance Manager
-$finance->assignRole('Finance');
+// Finance Staff - Full access (Finance functions)
+$finance->assignRole('Admin');
 
-// HR Staff
-$hr->assignRole('Karyawan');
-$hr->givePermissionTo(['employees.manage', 'attendance.manage', 'leave.manage']);
+// Legal Staff - Full access (Legal functions)
+$legal->assignRole('Admin');
 
-// Author (External)
-$author->assignRole('Author');
+// Marketing Staff - Full access (Marketing functions)
+$marketing->assignRole('Admin');
 
-// Regular Employee
+// Regular Employee - Self-service
 $employee->assignRole('Karyawan');
+
+// External Author - Personal data
+$author->assignRole('Author');
 ```
 
 ---
 
 ## ✅ **SUMMARY**
 
-**6 Roles dengan tanggung jawab berbeda:**
+**3 Roles dengan akses berbeda:**
 
-1. **Admin** - Full access (20 permissions)
-2. **Legal** - Contract management (6 permissions)
-3. **Marketing** - Book marketing (5 permissions)
-4. **Finance** - Financial management (9 permissions)
-5. **Karyawan** - Personal HR access (4 permissions)
-6. **Author** - Personal publishing data (8 permissions)
+1. **Admin** (20 permissions)
+   - Full access to all features
+   - HR, Publishing, Finance, Reports
+   - Management & operations
 
-**Total:** 52+ permissions across all roles
+2. **Karyawan** (4 permissions)
+   - Personal HR data only
+   - Attendance, leave, payroll (own)
+   - Self-service
+
+3. **Author** (8 permissions)
+   - Personal publishing data
+   - Contracts, books, royalties, sales
+   - Transparency portal
+
+**Total:** 32 permissions across 3 roles
+
+---
+
+## 🚀 **MIGRATION NOTES**
+
+**What Changed:**
+- ❌ Removed: Legal role
+- ❌ Removed: Marketing role
+- ❌ Removed: Finance role
+- ✅ Merged all permissions into Admin role
+- ✅ Simplified from 6 roles to 3 roles
+
+**Impact:**
+- ✅ Easier role management
+- ✅ Clearer access control
+- ✅ Simpler user assignment
+- ✅ No functionality lost
+
+**Migration:**
+- All Legal/Marketing/Finance users → Admin role
+- All Karyawan users → Karyawan role (no change)
+- All Author users → Author role (no change)
 
 ---
 
