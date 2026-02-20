@@ -25,7 +25,7 @@ import dayjs from 'dayjs';
 const { Title, Text } = Typography;
 
 const ProductionDashboardPage: React.FC = () => {
-    const [loading, setLoading] = useState(true);
+    const [_loading, setLoading] = useState(true);
     const [stats, setStats] = useState<any>({
         total_jobs: 0,
         by_stage: {},
@@ -152,7 +152,7 @@ const ProductionDashboardPage: React.FC = () => {
                         <Statistic
                             title="Total Jobs"
                             value={stats.total_jobs}
-                            prefix={<FactoryOutlined />}
+                            prefix={<ForkOutlined />}
                         />
                     </Card>
                 </Col>
