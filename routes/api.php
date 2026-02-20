@@ -94,11 +94,24 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
 
     // ── Author Portal (Transparency) ──
     Route::middleware('role:Author')->group(function () {
+        // Dashboard & Profile
         Route::get('/author/dashboard', [AuthorPortalController::class , 'dashboard']);
+        Route::get('/author/profile', [AuthorPortalController::class , 'profile']);
+        Route::patch('/author/profile', [AuthorPortalController::class , 'updateProfile']);
+        
+        // Books
         Route::get('/author/books', [AuthorPortalController::class , 'books']);
+        Route::patch('/author/books/{book}', [AuthorPortalController::class , 'updateBook']);
+        
+        // Contracts
         Route::get('/author/contracts', [AuthorPortalController::class , 'contracts']);
+        Route::post('/author/contracts/{contract}/sign', [AuthorPortalController::class , 'signContract']);
+        
+        // Royalties
         Route::get('/author/royalties', [AuthorPortalController::class , 'royalties']);
         Route::get('/author/royalties/{id}/report', [AuthorPortalController::class , 'royaltyReport']);
+        
+        // Sales (transparency)
         Route::get('/author/sales', [AuthorPortalController::class , 'sales']);
     });
 });
