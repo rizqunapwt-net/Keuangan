@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\HrPayrollController;
 use App\Http\Controllers\Api\V1\LeaveController;
 use App\Http\Controllers\Api\V1\OvertimeController;
 use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\Percetakan\OrderController as PercetakanOrderController;
 use App\Http\Controllers\Api\V1\PublishingController;
 use App\Http\Controllers\Api\V1\RoyaltyCalculationController;
 use App\Http\Controllers\Api\V1\SalesImportController;
@@ -122,6 +123,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
     Route::post('/authors/resend-verification', [AuthorAuthController::class , 'resendVerification']);
     Route::post('/authors/forgot-password', [AuthorAuthController::class , 'forgotPassword']);
     Route::post('/authors/reset-password', [AuthorAuthController::class , 'resetPassword']);
+
+    // ── Percetakan (Printing Press) ──
+    Route::prefix('percetakan')->middleware('auth:sanctum')->group(function () {
+        // Orders
+        Route::get('/orders/statistics', [PercetakanOrderController::class , 'statistics']);
+        Route::apiResource('orders', PercetakanOrderController::class);
+    });
 });
 
 // ── HR Protected Routes (Attendance, Leave, Overtime, Payroll) ──
