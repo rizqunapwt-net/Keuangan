@@ -136,12 +136,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
         Route::get('/orders/statistics', [PercetakanOrderController::class , 'statistics']);
         Route::apiResource('orders', PercetakanOrderController::class);
         
-        // Production Jobs
+        // Production Jobs (Simplified - Basic CRUD Only)
         Route::get('/production-jobs/statistics', [ProductionJobController::class , 'statistics']);
-        Route::post('/production-jobs/{productionJob}/start', [ProductionJobController::class , 'start']);
-        Route::post('/production-jobs/{productionJob}/complete', [ProductionJobController::class , 'complete']);
-        Route::post('/production-jobs/{productionJob}/hold', [ProductionJobController::class , 'hold']);
-        Route::post('/production-jobs/{productionJob}/reject', [ProductionJobController::class , 'reject']);
         Route::apiResource('production-jobs', ProductionJobController::class);
 
         // Materials
