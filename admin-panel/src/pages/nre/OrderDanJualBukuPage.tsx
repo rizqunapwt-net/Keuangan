@@ -17,18 +17,15 @@ import {
     Statistic,
     Row,
     Col,
-    Descriptions,
     Popconfirm,
 } from 'antd';
 import {
     PlusOutlined,
     ReloadOutlined,
-    EyeOutlined,
     CheckCircleOutlined,
     CloseCircleOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -56,7 +53,6 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 };
 
 const OrderDanJualBukuPage: React.FC = () => {
-    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('orders');
     const [loading, setLoading] = useState(false);
     const [orders, setOrders] = useState<any[]>([]);
@@ -612,12 +608,12 @@ const OrderDanJualBukuPage: React.FC = () => {
                             <Row gutter={16}>
                                 <Col span={12}>
                                     <Form.Item
-                                            name="quantity"
-                                            label="Jumlah Terjual"
-                                            rules={[{ required: true, message: 'Wajib diisi' }]}
-                                        >
-                                            <InputNumber min={1} style={{ width: '100%' }} />
-                                        </Form.Item>
+                                        name="quantity"
+                                        label="Jumlah Terjual"
+                                        rules={[{ required: true, message: 'Wajib diisi' }]}
+                                    >
+                                        <InputNumber min={1} style={{ width: '100%' }} />
+                                    </Form.Item>
                                 </Col>
                                 <Col span={12}>
                                     <Form.Item

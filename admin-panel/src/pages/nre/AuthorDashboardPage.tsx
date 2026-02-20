@@ -10,8 +10,6 @@ import {
     Tabs,
     Descriptions,
     Button,
-    Progress,
-    Space,
     Alert,
     Divider,
     Spin,
@@ -108,10 +106,8 @@ const AuthorDashboardPage: React.FC = () => {
             published: 'green',
             production: 'blue',
             draft: 'default',
-            // Royalty
             calculated: 'blue',
             paid: 'green',
-            pending: 'orange',
         };
         return colors[status] || 'default';
     };
