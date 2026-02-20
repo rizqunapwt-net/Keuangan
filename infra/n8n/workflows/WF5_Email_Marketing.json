@@ -1,0 +1,102 @@
+{
+    "name": "WF5 - Email Marketing Automation",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "rizquna-email-trigger",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                200,
+                300
+            ],
+            "name": "Webhook Trigger"
+        },
+        {
+            "parameters": {
+                "jsCode": "const body = $input.first().json.body || $input.first().json;\nreturn [{\n  json: {\n    eventType: body.event || 'welcome',\n    email: body.email || '',\n    name: body.name || 'Sahabat Rizquna',\n    bookTitle: body.bookTitle || ''\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                400,
+                300
+            ],
+            "name": "Parse Event"
+        },
+        {
+            "parameters": {
+                "prompt": "Buatkan isi body email HTML sederhana untuk event: {{ $json.eventType }}.\nNama: {{ $json.name }}\nBuku: {{ $json.bookTitle }}",
+                "systemInstruction": "Kamu Tim Marketing Rizquna.id. Tulis HANYA isi body email Islami & ramah."
+            },
+            "type": "n8n-nodes-base.googleGemini",
+            "typeVersion": 1,
+            "position": [
+                600,
+                300
+            ],
+            "name": "Gemini: Email",
+            "credentials": {
+                "googleGeminiApi": {
+                    "id": "yoIqIRXeNV4Ecfu6"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "fromEmail": "cs@rizquna.id",
+                "toEmail": "={{ $node[\"Parse Event\"].json.email }}",
+                "subject": "Update Penting dari Rizquna.id",
+                "emailType": "html",
+                "html": "={{ $json.text }}",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.emailSend",
+            "typeVersion": 2.1,
+            "position": [
+                800,
+                300
+            ],
+            "name": "Kirim Email",
+            "disabled": true
+        }
+    ],
+    "connections": {
+        "Webhook Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Event",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Event": {
+            "main": [
+                [
+                    {
+                        "node": "Gemini: Email",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini: Email": {
+            "main": [
+                [
+                    {
+                        "node": "Kirim Email",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

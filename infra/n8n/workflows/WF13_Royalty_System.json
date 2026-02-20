@@ -1,0 +1,108 @@
+{
+    "name": "WF13 - Royalty System (Monthly)",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "month",
+                            "expression": "1"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.cron",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "name": "Monthly Trigger"
+        },
+        {
+            "parameters": {
+                "jsCode": "const now = new Date();\nconst start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();\nconst end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString();\nreturn [{ json: { start, end } }];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                450,
+                300
+            ],
+            "name": "Calc Period"
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT book_id, author_id FROM books WHERE status = 'active';"
+            },
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                650,
+                300
+            ],
+            "name": "Get Books",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "INSERT INTO royalty_calculations (book_id, author_id, period_start, period_end, total_copies_sold, gross_revenue, royalty_amount) \nSELECT book_id, author_id, $2, $3, SUM(quantity), SUM(total_price), SUM(royalty_amount) \nFROM order_items \nWHERE book_id = $1 \nGROUP BY book_id, author_id \nRETURNING *;",
+                "arguments": "={{ [$json.book_id, $node[\"Calc Period\"].json.start, $node[\"Calc Period\"].json.end] }}"
+            },
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                850,
+                300
+            ],
+            "name": "Save Royalty",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Monthly Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Calc Period",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Calc Period": {
+            "main": [
+                [
+                    {
+                        "node": "Get Books",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Books": {
+            "main": [
+                [
+                    {
+                        "node": "Save Royalty",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

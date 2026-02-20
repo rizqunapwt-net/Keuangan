@@ -1,0 +1,358 @@
+{
+    "name": "WF0 - Integrated Master CS (Agentic Surti)",
+    "nodes": [
+        {
+            "parameters": {
+                "events": [
+                    "message"
+                ],
+                "options": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.wahaTrigger",
+            "typeVersion": 202502,
+            "position": [
+                200,
+                300
+            ],
+            "id": "trigger",
+            "name": "WAHA Trigger"
+        },
+        {
+            "parameters": {
+                "jsCode": "const payload = $input.first().json.payload;\nreturn [{\n  json: {\n    chatId: payload.from,\n    messageId: payload.id,\n    customerName: payload.notifyName || 'Kak',\n    body: payload.body || '',\n    session: $input.first().json.session || 'default'\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                400,
+                300
+            ],
+            "id": "parse-data",
+            "name": "Parse Incoming Data"
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Seen",
+                "chatId": "={{ $json.chatId }}",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                600,
+                200
+            ],
+            "id": "send-seen",
+            "name": "Human: Send Seen",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "amount": 2,
+                "unit": "seconds"
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1,
+            "position": [
+                800,
+                200
+            ],
+            "id": "wait",
+            "name": "Wait (Think Time)"
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Start Typing",
+                "chatId": "={{ $node[\"Parse Incoming Data\"].json.chatId }}",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                1000,
+                200
+            ],
+            "id": "start-typing",
+            "name": "Human: Start Typing",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "={{ $node[\"Parse Incoming Data\"].json.body }}",
+                "options": {
+                    "systemMessage": "Anda adalah Surti, Senior AI Assistant dari Rizquna.id.\n\n🕐 JAM OPERASIONAL:\nSenin-Sabtu: 07:00-21:00 WIB\nMinggu: Libur\n\nJika di luar jam operasional, sampaikan dengan ramah dan tawarkan untuk meninggalkan pesan.\n\n🛠️ TOOLS ANDA:\n1. Katalog_Buku - cari produk (judul, penulis, harga, stok)\n2. Check_Order_Status - cek status pesanan customer\n\n📋 CARA KERJA:\n- Sapa customer dengan 'Kak' atau 'Sahabat Rizquna'.\n- Ramah, sopan, dan Islami (Gunakan salam: Assalamualaikum).\n- PRODUK/BUKU → Katalog_Buku tool\n- STATUS ORDER → Check_Order_Status tool\n- Akhiri: 'Ada lagi yang bisa Surti bantu, Kak?'"
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 1.6,
+            "position": [
+                1250,
+                300
+            ],
+            "id": "agent",
+            "name": "AI Agent (Surti)"
+        },
+        {
+            "parameters": {
+                "modelName": "gemini-1.5-flash",
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                1150,
+                500
+            ],
+            "id": "gemini",
+            "name": "Google Gemini",
+            "credentials": {
+                "googlePalmApi": {
+                    "id": "yoIqIRXeNV4Ecfu6"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "tableName": {
+                    "__rl": true,
+                    "value": "books",
+                    "mode": "list",
+                    "cachedResultName": "books"
+                },
+                "description": "Gunakan tool ini untuk mencari katalog buku (judul, penulis, harga, stok).",
+                "outputType": "string"
+            },
+            "type": "@n8n/n8n-nodes-langchain.toolPostgreSQL",
+            "typeVersion": 1,
+            "position": [
+                1450,
+                500
+            ],
+            "id": "db-tool",
+            "name": "Katalog_Buku",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT order_code, status, total_amount, created_at FROM orders WHERE customer_id = (SELECT customer_id FROM customers WHERE phone = $1) ORDER BY created_at DESC LIMIT 5;",
+                "description": "Cek status pesanan customer berdasarkan nomor HP."
+            },
+            "type": "@n8n/n8n-nodes-langchain.toolPostgreSQL",
+            "typeVersion": 1,
+            "position": [
+                1450,
+                650
+            ],
+            "id": "order-status-tool",
+            "name": "Check_Order_Status",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "sessionIdType": "customKey",
+                "sessionKey": "={{ $node[\"Parse Incoming Data\"].json.chatId }}"
+            },
+            "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+            "typeVersion": 1.3,
+            "position": [
+                1300,
+                500
+            ],
+            "id": "memory",
+            "name": "Postgres Memory",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Stop Typing",
+                "chatId": "={{ $node[\"Parse Incoming Data\"].json.chatId }}",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                1550,
+                300
+            ],
+            "id": "stop-typing",
+            "name": "Human: Stop Typing",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "={{ $node[\"Parse Incoming Data\"].json.chatId }}",
+                "text": "={{ $node[\"AI Agent (Surti)\"].json.output }}",
+                "reply_to": "={{ $node[\"Parse Incoming Data\"].json.messageId }}",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                1750,
+                300
+            ],
+            "id": "send-text",
+            "name": "Final WA Reply",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "WAHA Trigger": {
+            "main": [
+                [],
+                [
+                    {
+                        "node": "Parse Incoming Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Incoming Data": {
+            "main": [
+                [
+                    {
+                        "node": "Human: Send Seen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Human: Send Seen": {
+            "main": [
+                [
+                    {
+                        "node": "Wait (Think Time)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait (Think Time)": {
+            "main": [
+                [
+                    {
+                        "node": "Human: Start Typing",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Human: Start Typing": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent (Surti)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Google Gemini": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Agent (Surti)",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Katalog_Buku": {
+            "ai_tool": [
+                [
+                    {
+                        "node": "AI Agent (Surti)",
+                        "type": "ai_tool",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Check_Order_Status": {
+            "ai_tool": [
+                [
+                    {
+                        "node": "AI Agent (Surti)",
+                        "type": "ai_tool",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Postgres Memory": {
+            "ai_memory": [
+                [
+                    {
+                        "node": "AI Agent (Surti)",
+                        "type": "ai_memory",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Agent (Surti)": {
+            "main": [
+                [
+                    {
+                        "node": "Human: Stop Typing",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Human: Stop Typing": {
+            "main": [
+                [
+                    {
+                        "node": "Final WA Reply",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

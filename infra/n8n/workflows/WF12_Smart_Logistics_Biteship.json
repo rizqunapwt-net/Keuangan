@@ -1,0 +1,109 @@
+{
+    "name": "WF12 - Smart Logistics (Biteship)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "shipping-trigger",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                200,
+                300
+            ],
+            "name": "Webhook: Shipping Trigger"
+        },
+        {
+            "parameters": {
+                "event": "workflow_dispatch"
+            },
+            "type": "n8n-nodes-base.executeWorkflowTrigger",
+            "typeVersion": 1,
+            "position": [
+                200,
+                100
+            ],
+            "name": "Manual Trigger"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://api.biteship.com/v1/orders",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer {{ $env.BITESHIP_API_KEY }}"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                450,
+                300
+            ],
+            "name": "Create Biteship Order"
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "={{ $node[\"Webhook: Shipping Trigger\"].json.body.customer_phone || $node[\"Manual Trigger\"].json.customer_phone }}@c.us",
+                "text": "📚 *Pesanan Dikirim!*\n\nResi: {{ $json.courier.waybill_id }}\nTerima kasih!",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                650,
+                300
+            ],
+            "name": "WA: Send Resi",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Webhook: Shipping Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Create Biteship Order",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Manual Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Create Biteship Order",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Create Biteship Order": {
+            "main": [
+                [
+                    {
+                        "node": "WA: Send Resi",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

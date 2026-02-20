@@ -1,0 +1,143 @@
+{
+    "name": "WF9 - Smart Reminder System",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "triggerAtHour": 9
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                200,
+                300
+            ],
+            "name": "Cron: 09:00"
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT o.order_code, c.name, c.phone, o.total_amount FROM orders o JOIN customers c ON o.customer_id = c.customer_id WHERE o.status = 'pending' AND o.created_at < NOW() - INTERVAL '24 hours' LIMIT 10;"
+            },
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                400,
+                200
+            ],
+            "name": "DB: Pending Payments",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT n.title, a.name, a.phone as whatsapp, n.deadline FROM naskah n JOIN authors a ON n.author_id = a.author_id WHERE n.status = 'EDITING' AND n.deadline <= NOW() + INTERVAL '3 days';"
+            },
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                400,
+                400
+            ],
+            "name": "DB: Deadline Naskah",
+            "credentials": {
+                "postgres": {
+                    "id": "9t1jqUpfC9jdWjjS"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsCode": "const pending = $node[\"DB: Pending Payments\"].all();\nconst deadlines = $node[\"DB: Deadline Naskah\"].all();\nconst reminders = [];\n\npending.forEach(p => reminders.push({ wa: p.json.phone, msg: `Halo Kak ${p.json.name}, pesanan ${p.json.order_code} senilai Rp ${p.json.total_amount} menunggu pembayaran. 🙏` }));\ndeadlines.forEach(d => reminders.push({ wa: d.json.whatsapp, msg: `Assalamualaikum Kak ${d.json.name}, naskah \"${d.json.title}\" mendekati deadline (${d.json.deadline}). Semangat! 🙏` }));\n\nreturn reminders.map(r => ({ json: r }));"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                650,
+                300
+            ],
+            "name": "Compile Reminders"
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "chatId": "={{ $json.wa }}@c.us",
+                "text": "={{ $json.msg }}",
+                "requestOptions": {}
+            },
+            "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+            "typeVersion": 202502,
+            "position": [
+                850,
+                300
+            ],
+            "name": "WA: Send Reminder",
+            "credentials": {
+                "wahaApi": {
+                    "id": "PIacUGMEHqjAT46z"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Cron: 09:00": {
+            "main": [
+                [
+                    {
+                        "node": "DB: Pending Payments",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "DB: Deadline Naskah",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "DB: Pending Payments": {
+            "main": [
+                [
+                    {
+                        "node": "Compile Reminders",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "DB: Deadline Naskah": {
+            "main": [
+                [
+                    {
+                        "node": "Compile Reminders",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Compile Reminders": {
+            "main": [
+                [
+                    {
+                        "node": "WA: Send Reminder",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

@@ -1,0 +1,12 @@
+.env
+*.pem
+data/
+postgres/
+redis/
+waha/
+caddy_config/
+caddy_data/
+uptime-kuma/
+*.backup/
+tmp_insert.sql
+node_modules/
