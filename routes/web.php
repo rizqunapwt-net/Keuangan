@@ -52,3 +52,16 @@ Route::get('/admin/{any?}', function () {
     }
     abort(404, 'Admin panel belum di-build. Jalankan: scripts/build-admin.sh');
 })->where('any', '.*');
+
+// ── Author Public Pages ──
+Route::get('/authors/register', function () {
+    return view('welcome'); // Will be handled by React router
+});
+
+Route::get('/authors/forgot-password', function () {
+    return view('welcome'); // Will be handled by React router
+});
+
+Route::get('/authors/reset-password', function () {
+    return view('welcome'); // Will be handled by React router
+});
