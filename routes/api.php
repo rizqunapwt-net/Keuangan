@@ -157,14 +157,6 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
         Route::post('/materials/{material}/adjust-stock', [MaterialController::class , 'adjustStock']);
         Route::apiResource('materials', MaterialController::class);
         
-        // Machines
-        Route::get('/machines/statistics', [MachineController::class , 'statistics']);
-        Route::get('/machines/needs-maintenance', [MachineController::class , 'needsMaintenance']);
-        Route::post('/machines/{machine}/update-status', [MachineController::class , 'updateStatus']);
-        Route::post('/machines/{machine}/log-maintenance', [MachineController::class , 'logMaintenance']);
-        Route::post('/machines/{machine}/update-hours', [MachineController::class , 'updateOperatingHours']);
-        Route::apiResource('machines', MachineController::class);
-        
         // Material Usage
         Route::get('/material-usage/statistics', [MaterialUsageController::class , 'statistics']);
         Route::apiResource('material-usage', MaterialUsageController::class);
