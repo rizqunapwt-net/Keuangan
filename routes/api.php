@@ -145,11 +145,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
         Route::get('/materials/low-stock', [MaterialController::class , 'lowStock']);
         Route::post('/materials/{material}/adjust-stock', [MaterialController::class , 'adjustStock']);
         Route::apiResource('materials', MaterialController::class);
-        
-        // Material Usage
-        Route::get('/material-usage/statistics', [MaterialUsageController::class , 'statistics']);
-        Route::apiResource('material-usage', MaterialUsageController::class);
-        
+
         // Customers
         Route::get('/customers/statistics', [CustomerController::class , 'allStatistics']);
         Route::get('/customers/list', [CustomerController::class , 'list']);
