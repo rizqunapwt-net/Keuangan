@@ -13,11 +13,11 @@ import {
     Alert,
 } from 'antd';
 import {
-    FactoryOutlined,
     CheckCircleOutlined,
     ClockCircleOutlined,
     WarningOutlined,
     ThunderboltOutlined,
+    ForkOutlined,
 } from '@ant-design/icons';
 import api from '../../api';
 import dayjs from 'dayjs';
@@ -26,7 +26,7 @@ const { Title, Text } = Typography;
 
 const ProductionDashboardPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({
+    const [stats, setStats] = useState<any>({
         total_jobs: 0,
         by_stage: {},
         by_status: {},
