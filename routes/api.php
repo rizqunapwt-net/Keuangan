@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\AuthTokenController;
+use App\Http\Controllers\Api\V1\BookOrderController;
 use App\Http\Controllers\Api\V1\ContractController;
 use App\Http\Controllers\Api\V1\EmployeeController;
 use App\Http\Controllers\Api\V1\HrAuthController;
@@ -80,6 +81,15 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
 
     // ── Publishing: Status Reference ──
     Route::get('/book-statuses', [PublishingController::class , 'statusList']);
+
+    // ── Book Orders & Sales (New) ──
+    Route::get('/print-orders', [BookOrderController::class , 'orders']);
+    Route::post('/print-orders', [BookOrderController::class , 'storeOrder']);
+    Route::patch('/print-orders/{order}/status', [BookOrderController::class , 'updateOrderStatus']);
+
+    Route::get('/sales', [BookOrderController::class , 'sales']);
+    Route::post('/sales', [BookOrderController::class , 'storeSale']);
+    Route::get('/sales/stats', [BookOrderController::class , 'salesStats']);
 });
 
 // ── HR Protected Routes (Attendance, Leave, Overtime, Payroll) ──
