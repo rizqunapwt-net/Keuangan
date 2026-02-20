@@ -3,7 +3,6 @@ import {
     Card,
     Typography,
     Button,
-    Alert,
     Spin,
     Result,
 } from 'antd';
