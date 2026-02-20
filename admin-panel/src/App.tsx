@@ -43,6 +43,7 @@ import {
   PhoneOutlined,
   TeamOutlined,
   PrinterOutlined,
+  FactoryOutlined,
 } from '@ant-design/icons';
 import logoHorizontal from './assets/logo/logo_horizontal.png';
 
@@ -118,6 +119,12 @@ const PenjualanBukuPage = React.lazy(() => import('./pages/nre/PenjualanBukuPage
 const OrderCetakPage = React.lazy(() => import('./pages/nre/OrderCetakPage'));
 const PayrollNREPage = React.lazy(() => import('./pages/nre/PayrollPage'));
 
+// ── Percetakan (Printing Press) Pages ──
+const OrderEntryPage = React.lazy(() => import('./pages/percetakan/OrderEntryPage'));
+const OrderListPage = React.lazy(() => import('./pages/percetakan/OrderListPage'));
+const OrderDetailPage = React.lazy(() => import('./pages/percetakan/OrderDetailPage'));
+const ProductionDashboardPage = React.lazy(() => import('./pages/percetakan/ProductionDashboardPage'));
+
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
     <Spin size="large" />
@@ -177,6 +184,20 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       children: [
         { key: '/printing/manuscripts', label: 'Daftar Naskah Cetak' },
         { key: '/printing/orders', label: 'Order Cetak' },
+      ],
+    },
+    // ── PERCETAKAN (Printing Press System) ──
+    {
+      key: 'percetakan',
+      icon: <FactoryOutlined />,
+      label: '🏭 Percetakan',
+      permission: 'publishing_read',
+      children: [
+        { key: '/percetakan/orders', label: 'Orders' },
+        { key: '/percetakan/production', label: 'Production' },
+        { key: '/percetakan/materials', label: 'Materials' },
+        { key: '/percetakan/machines', label: 'Machines' },
+        { key: '/percetakan/customers', label: 'Customers' },
       ],
     },
     // ── NRE: SDM & HR ──
@@ -661,6 +682,11 @@ const App: React.FC = () => {
                         <Route path="/printing/orders" element={<OrderCetakPage />} />
                         {/* ── NRE: Payroll Route ── */}
                         <Route path="/payroll" element={<PayrollNREPage />} />
+                        {/* ── PERCETAKAN (Printing Press) Routes ── */}
+                        <Route path="/percetakan/orders" element={<OrderListPage />} />
+                        <Route path="/percetakan/orders/new" element={<OrderEntryPage />} />
+                        <Route path="/percetakan/orders/:id" element={<OrderDetailPage />} />
+                        <Route path="/percetakan/production" element={<ProductionDashboardPage />} />
                         {/* 404 */}
                         <Route path="*" element={<NotFoundPage />} />
                       </Routes>
