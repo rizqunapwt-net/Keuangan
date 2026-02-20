@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\AuthTokenController;
+use App\Http\Controllers\Api\V1\AuthorAuthController;
 use App\Http\Controllers\Api\V1\AuthorPortalController;
 use App\Http\Controllers\Api\V1\BookOrderController;
 use App\Http\Controllers\Api\V1\ContractController;
@@ -114,6 +115,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
         // Sales (transparency)
         Route::get('/author/sales', [AuthorPortalController::class , 'sales']);
     });
+
+    // ── Author Auth (Public) ──
+    Route::post('/authors/register', [AuthorAuthController::class , 'register']);
+    Route::post('/authors/forgot-password', [AuthorAuthController::class , 'forgotPassword']);
+    Route::post('/authors/reset-password', [AuthorAuthController::class , 'resetPassword']);
 });
 
 // ── HR Protected Routes (Attendance, Leave, Overtime, Payroll) ──
