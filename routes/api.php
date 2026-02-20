@@ -143,14 +143,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
         Route::post('/production-jobs/{productionJob}/hold', [ProductionJobController::class , 'hold']);
         Route::post('/production-jobs/{productionJob}/reject', [ProductionJobController::class , 'reject']);
         Route::apiResource('production-jobs', ProductionJobController::class);
-        
-        // Job Cards
-        Route::get('/job-cards/statistics', [JobCardController::class , 'statistics']);
-        Route::post('/job-cards/{jobCard}/start', [JobCardController::class , 'start']);
-        Route::post('/job-cards/{jobCard}/complete', [JobCardController::class , 'complete']);
-        Route::post('/job-cards/{jobCard}/qc', [JobCardController::class , 'qc']);
-        Route::apiResource('job-cards', JobCardController::class);
-        
+
         // Materials
         Route::get('/materials/statistics', [MaterialController::class , 'statistics']);
         Route::get('/materials/low-stock', [MaterialController::class , 'lowStock']);
