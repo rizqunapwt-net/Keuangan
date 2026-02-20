@@ -106,13 +106,13 @@ const LoginPage: React.FC = () => {
                                 whileHover={{ scale: 1.1, rotate: 5 }}
                                 transition={{ type: "spring", stiffness: 300 }}
                             >
-                                RE
+                                NRE
                             </motion.div>
                             <Title level={2} className="!mb-2 !text-white text-3xl md:text-4xl">
-                                Selamat Datang
+                                New Rizquna Elfath
                             </Title>
                             <Paragraph className="!text-white/90 text-sm md:text-base">
-                                Login untuk melanjutkan ke dashboard
+                                Enterprise Resource Planning System
                             </Paragraph>
                         </motion.div>
                     </div>
@@ -250,20 +250,20 @@ const LoginPage: React.FC = () => {
                             transition={{ delay: 0.5 }}
                         >
                             <Text type="secondary" className="text-xs block mb-2 font-semibold">
-                                🎁 Keuntungan Login:
+                                🏢 New Rizquna Elfath - Enterprise System
                             </Text>
                             <ul className="text-xs space-y-1 text-gray-600">
                                 <li className="flex items-start">
                                     <span className="text-green-500 mr-2">✓</span>
-                                    <span>Kelola buku dan kontrak</span>
+                                    <span>Order Management System</span>
                                 </li>
                                 <li className="flex items-start">
                                     <span className="text-green-500 mr-2">✓</span>
-                                    <span>Track penjualan real-time</span>
+                                    <span>Production Tracking</span>
                                 </li>
                                 <li className="flex items-start">
                                     <span className="text-green-500 mr-2">✓</span>
-                                    <span>Terima pembayaran royalti</span>
+                                    <span>Inventory & Material Management</span>
                                 </li>
                             </ul>
                         </motion.div>
