@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Statistic, Table, Tag, Typography, Spin } from 'antd';
+import { Card, Row, Col, Table, Tag, Typography, Spin } from 'antd';
 import {
   TrendingUp,
   ArrowUpRight,

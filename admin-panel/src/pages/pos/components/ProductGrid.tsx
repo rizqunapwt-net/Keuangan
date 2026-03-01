@@ -78,7 +78,7 @@ const ProductGrid: React.FC = () => {
                   <Text strong ellipsis={{ tooltip: product.name }} style={{ display: 'block' }}>
                     {product.name}
                   </Text>
-                  <Text type="secondary" size="small" style={{ fontSize: '11px' }}>
+                  <Text type="secondary" style={{ fontSize: '11px' }}>
                     SKU: {product.sku}
                   </Text>
                 </div>
