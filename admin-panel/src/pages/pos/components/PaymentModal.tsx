@@ -14,7 +14,7 @@ interface PaymentModalProps {
 
 const PaymentModal: React.FC<PaymentModalProps> = ({ open, onClose, onSuccess }) => {
   const { items, total, clear } = useCartStore();
-  const [method, setMethod] = useState<'cash' | 'transfer'>('cash');
+  const [method, setMethod] = useState<'cash' | 'qris' | 'transfer' | 'midtrans'>('cash');
   const [paidAmount, setPaidAmount] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
   const inputRef = useRef<any>(null);
@@ -57,18 +57,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ open, onClose, onSuccess })
       if (['qris', 'transfer', 'midtrans'].includes(method) || sale.snap_token) {
         if ((window as any).snap) {
           (window as any).snap.pay(sale.snap_token, {
-            onSuccess: (result: any) => {
+            onSuccess: () => {
               message.success('Pembayaran Berhasil!');
               clear();
               onSuccess();
               window.open(`/api/v1/finance/receipts/${sale.id}`, '_blank');
             },
-            onPending: (result: any) => {
+            onPending: () => {
               message.info('Menunggu pembayaran...');
               clear();
               onSuccess();
             },
-            onError: (result: any) => {
+            onError: () => {
               message.error('Pembayaran gagal!');
             },
             onClose: () => {
@@ -150,7 +150,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ open, onClose, onSuccess })
                 style={{ width: '100%', height: '50px', fontSize: '20px' }}
                 placeholder="Rp 0"
                 formatter={(v) => `Rp ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-                parser={(v) => v!.replace(/Rp\s?|(\.*)/g, '')}
+                parser={(v) => Number((v ?? '').replace(/Rp\s?|\./g, '')) || 0}
                 value={paidAmount}
                 onChange={(v) => setPaidAmount(v || 0)}
                 onPressEnter={handleSubmit}

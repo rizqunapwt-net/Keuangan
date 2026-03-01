@@ -98,24 +98,24 @@ class PaymentController extends Controller
     }
 
     /**
-     * Print receipt for a payment.
+     * Print receipt for a sale transaction.
      *
-     * GET /api/v1/finance/receipts/{paymentId}
+     * GET /api/v1/finance/receipts/{saleId}
      */
-    public function printReceipt(int $paymentId): JsonResponse
+    public function printReceipt(int $saleId): JsonResponse
     {
-        $payment = \App\Models\Payment::with(['user:id,name'])->find($paymentId);
+        $sale = Sale::with(['user:id,name', 'items.product'])->find($saleId);
 
-        if (! $payment) {
+        if (! $sale) {
             return response()->json([
                 'success' => false,
-                'message' => 'Payment not found.',
+                'message' => 'Sale not found.',
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $payment,
+            'data' => $sale,
         ]);
     }
 }

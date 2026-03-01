@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Tabs, DatePicker, Button, Table, Typography, Space, Divider, Row, Col, Spin, Alert } from 'antd';
-import { Download, FileText, BarChart3, TrendingUp, Wallet, ArrowUpRight } from 'lucide-react';
+import { Download, BarChart3, TrendingUp, Wallet } from 'lucide-react';
 import dayjs, { Dayjs } from 'dayjs';
 import api from '../../../api';
 

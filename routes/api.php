@@ -136,7 +136,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
             Route::get('/reports/profit-loss/pdf', [FinanceController::class, 'exportProfitLossPdf']);
             
             // POS Receipt
-            Route::get('/receipts/{paymentId}', [PaymentController::class, 'printReceipt']);
+            Route::get('/receipts/{saleId}', [PaymentController::class, 'printReceipt']);
         });
     });
 

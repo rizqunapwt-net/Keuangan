@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 
 const mockNavigate = vi.fn();
@@ -108,7 +107,7 @@ describe('DashboardPage', () => {
     });
 
     it('displays loading spinner while fetching data', () => {
-        mockApiGet.mockImplementation((url: string) => {
+        mockApiGet.mockImplementation(() => {
             return new Promise(() => {}); // Never resolves to keep loading state
         });
         renderDashboard();
