@@ -1,205 +1,147 @@
 <?php
 
-use App\Http\Controllers\Api\V1\AttendanceController;
-use App\Http\Controllers\Api\V1\AuthTokenController;
-use App\Http\Controllers\Api\V1\AuthorAuthController;
-use App\Http\Controllers\Api\V1\AuthorPortalController;
-use App\Http\Controllers\Api\V1\BookOrderController;
-use App\Http\Controllers\Api\V1\ContractController;
-use App\Http\Controllers\Api\V1\EmployeeController;
-use App\Http\Controllers\Api\V1\HrAuthController;
-use App\Http\Controllers\Api\V1\HrNotificationController;
-use App\Http\Controllers\Api\V1\HrPayrollController;
-use App\Http\Controllers\Api\V1\LeaveController;
-use App\Http\Controllers\Api\V1\OvertimeController;
+use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\AccountController;
+use App\Http\Controllers\Api\V1\AdminDashboardController;
+use App\Http\Controllers\Api\V1\FinanceController;
+use App\Http\Controllers\Api\V1\Finance\ExpenseController;
+use App\Http\Controllers\Api\V1\Finance\BankController;
+use App\Http\Controllers\Api\V1\Finance\ProductController;
+use App\Http\Controllers\Api\V1\Finance\WarehouseController;
+use App\Http\Controllers\Api\V1\Finance\DeliveryController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PaymentController;
-use App\Http\Controllers\Api\Percetakan\OrderController as PercetakanOrderController;
-use App\Http\Controllers\Api\Percetakan\ProductionJobController;
-use App\Http\Controllers\Api\Percetakan\JobCardController;
-use App\Http\Controllers\Api\Percetakan\MaterialController;
-use App\Http\Controllers\Api\Percetakan\MachineController;
-use App\Http\Controllers\Api\Percetakan\MaterialUsageController;
-use App\Http\Controllers\Api\Percetakan\CustomerController;
-use App\Http\Controllers\Api\V1\PublishingController;
-use App\Http\Controllers\Api\V1\RoyaltyCalculationController;
-use App\Http\Controllers\Api\V1\SalesImportController;
+use App\Http\Controllers\Api\V1\SaleController;
+use App\Http\Controllers\Api\V1\SessionController;
+use App\Http\Controllers\Api\V1\PaymentWebhookController;
+use App\Http\Controllers\UnifiedLoginController;
 use Illuminate\Support\Facades\Route;
 
-/*
- |--------------------------------------------------------------------------
- | API v1 Routes — Unified NRE Enterprise
- |--------------------------------------------------------------------------
- |
- | Two subsystems share the same Laravel API:
- |   1. ERP (Publishing/Royalties) — Sanctum + Filament
- |   2. HR  (Attendance/Payroll)   — Sanctum token-based
- |
- */
-
+// ══════════════════════════════════════════════════════════════════════════
+// PUBLIC APIs (No Authentication Required)
+// ══════════════════════════════════════════════════════════════════════════
 Route::prefix('v1')->group(function (): void {
+    Route::get('/health', [HealthController::class, 'health']);
+    Route::get('/ready', [HealthController::class, 'ready']);
+    Route::get('/live', [HealthController::class, 'live']);
 
-    // ── Unified Auth (email or username + password → Sanctum token) ──
-    Route::post('/auth/login', AuthTokenController::class)->middleware('throttle:auth');
-    Route::post('/auth/token', AuthTokenController::class)->middleware('throttle:auth'); // compatibility alias
+    Route::post('/webhooks/payment', [\App\Http\Controllers\Api\V1\PaymentController::class, 'webhook']);
 
-    // ── Public Tracking ──
-    Route::get('/tracking', [\App\Http\Controllers\Api\V1\PublicTrackingController::class , 'track']);
+    // Authentication
+    Route::post('/auth/login', [UnifiedLoginController::class, 'apiLogin'])->middleware('throttle:10,1');
+    Route::post('/auth/register', [UnifiedLoginController::class, 'register'])->middleware('throttle:10,1');
+    Route::post('/auth/forgot-password', [UnifiedLoginController::class, 'forgotPassword'])->middleware('throttle:5,1');
+    Route::post('/auth/reset-password', [UnifiedLoginController::class, 'resetPassword'])->middleware('throttle:5,1');
+
 });
 
-// ── ERP Protected Routes ──
+// ══════════════════════════════════════════════════════════════════════════
+// PROTECTED APIs (Authentication Required)
+// ══════════════════════════════════════════════════════════════════════════
 Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
-    Route::post('/contracts', [ContractController::class , 'store'])->middleware('role:Admin|Legal');
-    Route::put('/contracts/{contract}/approve', [ContractController::class , 'approve'])->middleware('role:Admin|Legal');
-    Route::put('/contracts/{contract}/reject', [ContractController::class , 'reject'])->middleware('role:Admin|Legal');
 
-    Route::post('/sales/import', SalesImportController::class)->middleware(['role:Finance', 'throttle:sales-import']);
+    // ── Auth ──
+    Route::get('/auth/me', [UnifiedLoginController::class, 'me'])->name('auth.me');
+    Route::post('/auth/logout', [UnifiedLoginController::class, 'logout'])->name('auth.logout');
+    Route::post('/auth/change-password', [UnifiedLoginController::class, 'changePassword'])->name('auth.change-password');
 
-    Route::post('/royalties/calculate', [RoyaltyCalculationController::class , 'calculate'])->middleware('role:Finance');
-    Route::put('/royalties/{royaltyCalculation}/finalize', [RoyaltyCalculationController::class , 'finalize'])->middleware('role:Finance');
-    Route::post('/royalties/{royaltyCalculation}/invoice', [RoyaltyCalculationController::class , 'invoice'])->middleware('role:Finance');
+    // ══════════════════════════════════════════════════════════════════════
+    // ADMIN PANEL — Unified Access
+    // ══════════════════════════════════════════════════════════════════════
+    Route::middleware(['password.changed'])->group(function () {
 
-    Route::put('/payments/{payment}/mark-paid', [PaymentController::class , 'markPaid'])->middleware('role:Finance');
-
-    // ── Publishing: Books ──
-    Route::get('/books', [PublishingController::class , 'books']);
-    Route::get('/books/isbn-tracking', [PublishingController::class , 'isbnTracking']);
-    Route::get('/books/{id}', [PublishingController::class , 'bookDetail']);
-    Route::post('/books', [PublishingController::class , 'storeBook']);
-    Route::patch('/books/{id}', [PublishingController::class , 'updateBook']);
-    Route::patch('/books/{id}/status', [PublishingController::class , 'updateBookStatus']);
-    Route::get('/books/{id}/files', [PublishingController::class , 'bookFiles']);
-    Route::post('/books/{id}/files', [PublishingController::class , 'uploadBookFile']);
-    Route::get('/books/{id}/logs', [PublishingController::class , 'bookStatusLogs']);
-
-    // ── Publishing: Print Orders ──
-    Route::get('/print-orders', [PublishingController::class , 'printOrders']);
-    Route::post('/print-orders', [PublishingController::class , 'storePrintOrder']);
-    Route::patch('/print-orders/{id}', [PublishingController::class , 'updatePrintOrder']);
-
-    // ── Publishing: Authors ──
-    Route::get('/authors', [PublishingController::class , 'authors']);
-    Route::post('/authors', [PublishingController::class , 'storeAuthor']);
-
-    // ── Publishing: Contracts ──
-    Route::get('/contracts', [PublishingController::class , 'contracts']);
-    Route::get('/contracts/{id}', [PublishingController::class , 'contractDetail']);
-    Route::post('/contracts', [ContractController::class , 'store']);
-    Route::patch('/contracts/{id}', [PublishingController::class , 'updateContract']);
-    Route::put('/contracts/{id}/approve', [PublishingController::class , 'approveContract']);
-    Route::put('/contracts/{id}/reject', [PublishingController::class , 'rejectContract']);
-
-    // ── Publishing: Status Reference ──
-    Route::get('/book-statuses', [PublishingController::class , 'statusList']);
-
-    // ── Book Orders & Sales (New) ──
-    Route::get('/print-orders', [BookOrderController::class , 'orders']);
-    Route::post('/print-orders', [BookOrderController::class , 'storeOrder']);
-    Route::patch('/print-orders/{order}/status', [BookOrderController::class , 'updateOrderStatus']);
-
-    Route::get('/sales', [BookOrderController::class , 'sales']);
-    Route::post('/sales', [BookOrderController::class , 'storeSale']);
-    Route::get('/sales/stats', [BookOrderController::class , 'salesStats']);
-
-    // ── Author Portal (Transparency) ──
-    Route::middleware('role:Author')->group(function () {
-        // Dashboard & Profile
-        Route::get('/author/dashboard', [AuthorPortalController::class , 'dashboard']);
-        Route::get('/author/profile', [AuthorPortalController::class , 'profile']);
-        Route::patch('/author/profile', [AuthorPortalController::class , 'updateProfile']);
+        // ── Dashboard & Stats ──
+        Route::get('/admin/dashboard-stats', [AdminDashboardController::class, 'bookStats']);
         
-        // Books
-        Route::get('/author/books', [AuthorPortalController::class , 'books']);
-        Route::patch('/author/books/{book}', [AuthorPortalController::class , 'updateBook']);
-        
-        // Contracts
-        Route::get('/author/contracts', [AuthorPortalController::class , 'contracts']);
-        Route::post('/author/contracts/{contract}/sign', [AuthorPortalController::class , 'signContract']);
-        
-        // Royalties
-        Route::get('/author/royalties', [AuthorPortalController::class , 'royalties']);
-        Route::get('/author/royalties/{id}/report', [AuthorPortalController::class , 'royaltyReport']);
-        
-        // Sales (transparency)
-        Route::get('/author/sales', [AuthorPortalController::class , 'sales']);
+        // ── User Management ──
+        Route::get('/admin/users', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'index']);
+        Route::get('/admin/users/roles', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'roles']);
+        Route::get('/admin/users/{user}', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'show']);
+        Route::post('/admin/users', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'store']);
+        Route::put('/admin/users/{user}', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'update']);
+        Route::patch('/admin/users/{user}/toggle-active', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'toggleActive']);
+        Route::delete('/admin/users/{user}', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'destroy']);
+
+        // ── Sales (Inventory System) ──
+        Route::apiResource('sales', SaleController::class)->except(['update', 'edit']);
+        Route::post('sales/{sale}/snap-token', [\App\Http\Controllers\Api\V1\PaymentController::class, 'snapToken']);
+
+        // ── Finance (Core) ──
+        Route::prefix('finance')->group(function () {
+            Route::get('/summary', [FinanceController::class, 'summary']);
+            Route::get('/invoices', [FinanceController::class, 'invoices']);
+            Route::get('/journals', [FinanceController::class, 'journals']);
+            Route::post('/journals', [FinanceController::class, 'storeJournal']);
+            Route::put('/journals/{journal}/reverse', [FinanceController::class, 'reverseJournal']);
+            Route::get('/sales-orders', [FinanceController::class, 'salesOrders']);
+            Route::get('/payments', [PaymentController::class, 'index']);
+
+            // Contacts
+            Route::get('/contacts', [FinanceController::class, 'contacts']);
+            Route::get('/contacts/{contactId}', [FinanceController::class, 'contactDetail']);
+            Route::post('/contacts', [FinanceController::class, 'storeContact']);
+            Route::delete('/contacts/{contactId}', [FinanceController::class, 'destroyContact']);
+
+            // Chart of Accounts
+            Route::get('/accounts/categories', [AccountController::class, 'categories']);
+            Route::get('/accounts', [AccountController::class, 'index']);
+            Route::post('/accounts', [AccountController::class, 'store']);
+            Route::put('/accounts/{id}', [AccountController::class, 'update']);
+            Route::delete('/accounts/{id}', [AccountController::class, 'destroy']);
+
+            // Expenses
+            Route::get('/expenses', [ExpenseController::class, 'index']);
+            Route::post('/expenses', [ExpenseController::class, 'store']);
+            Route::get('/expenses/{expense}', [ExpenseController::class, 'show']);
+            Route::put('/expenses/{expense}', [ExpenseController::class, 'update']);
+            Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy']);
+            Route::put('/expenses/{expense}/void', [ExpenseController::class, 'void']);
+
+            // Banks
+            Route::get('/banks', [BankController::class, 'index']);
+            Route::post('/banks', [BankController::class, 'store']);
+            Route::get('/banks/{bank}', [BankController::class, 'show']);
+            Route::put('/banks/{bank}', [BankController::class, 'update']);
+            Route::delete('/banks/{bank}', [BankController::class, 'destroy']);
+
+            // Products
+            Route::get('/products', [ProductController::class, 'index']);
+            Route::post('/products', [ProductController::class, 'store']);
+            Route::get('/products/{product}', [ProductController::class, 'show']);
+            Route::put('/products/{product}', [ProductController::class, 'update']);
+            Route::delete('/products/{product}', [ProductController::class, 'destroy']);
+
+            // Warehouses
+            Route::get('/warehouses', [WarehouseController::class, 'index']);
+            Route::post('/warehouses', [WarehouseController::class, 'store']);
+            Route::get('/warehouses/{warehouse}', [WarehouseController::class, 'show']);
+            Route::put('/warehouses/{warehouse}', [WarehouseController::class, 'update']);
+            Route::delete('/warehouses/{warehouse}', [WarehouseController::class, 'destroy']);
+
+            // Deliveries
+            Route::get('/deliveries', [DeliveryController::class, 'index']);
+            Route::post('/deliveries', [DeliveryController::class, 'store']);
+            Route::get('/deliveries/{delivery}', [DeliveryController::class, 'show']);
+            Route::put('/deliveries/{delivery}', [DeliveryController::class, 'update']);
+            Route::delete('/deliveries/{delivery}', [DeliveryController::class, 'destroy']);
+
+            // Purchases
+            Route::get('/purchases', [FinanceController::class, 'purchases']);
+            Route::post('/purchases', [FinanceController::class, 'storePurchase']);
+            
+            // Reports
+            Route::get('/reports/profit-loss', [FinanceController::class, 'profitAndLoss']);
+            Route::get('/reports/balance-sheet', [FinanceController::class, 'balanceSheet']);
+            Route::get('/reports/cash-flow', [FinanceController::class, 'cashFlow']);
+            Route::get('/reports/profit-loss/pdf', [FinanceController::class, 'exportProfitLossPdf']);
+            
+            // POS Receipt
+            Route::get('/receipts/{paymentId}', [PaymentController::class, 'printReceipt']);
+        });
     });
 
-    // ── Author Auth (Public) ──
-    Route::post('/authors/register', [AuthorAuthController::class , 'register']);
-    Route::post('/authors/forgot-password', [AuthorAuthController::class , 'forgotPassword']);
-    Route::post('/authors/reset-password', [AuthorAuthController::class , 'resetPassword']);
-
-    // ── Percetakan (Printing Press) ──
-    Route::prefix('percetakan')->middleware('auth:sanctum')->group(function () {
-        // Orders
-        Route::get('/orders/statistics', [PercetakanOrderController::class , 'statistics']);
-        Route::apiResource('orders', PercetakanOrderController::class);
-        
-        // Production Jobs (Simplified - Basic CRUD Only)
-        Route::get('/production-jobs/statistics', [ProductionJobController::class , 'statistics']);
-        Route::apiResource('production-jobs', ProductionJobController::class);
-
-        // Materials
-        Route::get('/materials/statistics', [MaterialController::class , 'statistics']);
-        Route::get('/materials/low-stock', [MaterialController::class , 'lowStock']);
-        Route::post('/materials/{material}/adjust-stock', [MaterialController::class , 'adjustStock']);
-        Route::apiResource('materials', MaterialController::class);
-
-        // Customers
-        Route::get('/customers/statistics', [CustomerController::class , 'allStatistics']);
-        Route::get('/customers/list', [CustomerController::class , 'list']);
-        Route::get('/customers/{customer}/orders', [CustomerController::class , 'orders']);
-        Route::get('/customers/{customer}/statistics', [CustomerController::class , 'statistics']);
-        Route::apiResource('customers', CustomerController::class);
-    });
+    // Notifications & Sessions
+    Route::get('/user/notifications', [NotificationController::class, 'index']);
+    Route::get('/user/sessions', [SessionController::class, 'index']);
+    Route::delete('/user/sessions/{id}', [SessionController::class, 'destroy']);
 });
-
-// ── HR Protected Routes (Attendance, Leave, Overtime, Payroll) ──
-Route::prefix('v1/hr')->middleware('auth:sanctum')->group(function (): void {
-
-    // Auth
-    Route::post('/auth/logout', [HrAuthController::class , 'logout']);
-    Route::post('/auth/biometric', [HrAuthController::class , 'biometric']);
-    Route::get('/auth/me', [HrAuthController::class , 'me']);
-
-    // Attendance
-    Route::get('/attendance/status', [AttendanceController::class , 'status']);
-    Route::get('/attendance/history', [AttendanceController::class , 'history']);
-    Route::get('/attendance/summary', [AttendanceController::class , 'summary']);
-    Route::post('/attendance/check-in', [AttendanceController::class , 'checkIn']);
-    Route::post('/attendance/check-out', [AttendanceController::class , 'checkOut']);
-    Route::put('/attendance/{id}/correct', [AttendanceController::class , 'correct']);
-
-    // Employees — Admin/HR/Owner only
-    Route::middleware('role:Admin|HR|Owner')->group(function () {
-            Route::get('/employees', [EmployeeController::class , 'index']);
-            Route::post('/employees', [EmployeeController::class , 'store']);
-            Route::get('/employees/{id}', [EmployeeController::class , 'show']);
-            Route::patch('/employees/{id}', [EmployeeController::class , 'update']);
-            Route::delete('/employees/{id}', [EmployeeController::class , 'destroy']);
-            Route::get('/employees/{id}/leave-balance', [LeaveController::class , 'balance']);
-
-            // Admin-only status changes
-            Route::patch('/leave-requests/{id}/status', [LeaveController::class , 'updateStatus']);
-            Route::patch('/overtime-requests/{id}/status', [OvertimeController::class , 'updateStatus']);
-
-            // Payroll — generate is admin-only
-            Route::post('/payrolls/generate', [HrPayrollController::class , 'generate']);
-        }
-        );
-
-        // Leave & Overtime — any authenticated employee can list/create their own
-        Route::get('/leave-types', [LeaveController::class , 'types']);
-        Route::get('/leave-requests', [LeaveController::class , 'index']);
-        Route::post('/leave-requests', [LeaveController::class , 'store']);
-
-        Route::get('/overtime-requests', [OvertimeController::class , 'index']);
-        Route::post('/overtime-requests', [OvertimeController::class , 'store']);
-
-        // Payroll — any authenticated user can view their own payroll
-        Route::get('/payrolls', [HrPayrollController::class , 'index']);
-
-        // Notifications — any authenticated user
-        Route::get('/notifications', [HrNotificationController::class , 'index']);
-        Route::patch('/notifications/{id}/read', [HrNotificationController::class , 'markRead']);
-        Route::patch('/notifications/read-all', [HrNotificationController::class , 'markAllRead']);
-    });
