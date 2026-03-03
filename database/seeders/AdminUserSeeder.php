@@ -5,25 +5,28 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class AdminUserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $admin = User::query()->firstOrCreate(
-        ['email' => 'admin@rizquna.id'],
-        [
-            'name' => 'Rizquna Admin',
-            'username' => 'admin',
-            'password' => Hash::make('password'),
-            'role' => 'ADMIN',
-            'is_active' => true,
-        ],
+        $admin = User::query()->updateOrCreate(
+            ['email' => 'admin@rizquna.id'],
+            [
+                'name' => 'Rizquna Finance Admin',
+                'username' => 'admin',
+                'password' => 'password',
+                'is_active' => true,
+                'must_change_password' => false,
+            ],
         );
 
-        $admin->syncRoles(['Admin']);
+        $role = Role::query()->firstOrCreate([
+            'name' => 'Admin',
+            'guard_name' => 'web',
+        ]);
+
+        $admin->syncRoles([$role->name]);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Services\Accounting;
 
-use App\Models\Accounting\Period;
 use App\Models\Accounting\Journal;
+use App\Models\Accounting\Period;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -17,7 +17,7 @@ class PeriodService
     public function closePeriod(string $periodMonth, ?string $notes = null): Period
     {
         // Validate format YYYY-MM
-        if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $periodMonth)) {
+        if (! preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $periodMonth)) {
             throw ValidationException::withMessages(['period_month' => 'Format harus YYYY-MM.']);
         }
 
@@ -29,19 +29,19 @@ class PeriodService
 
         if ($hasDrafts) {
             throw ValidationException::withMessages([
-                'period_month' => "Periode $periodMonth tidak dapat ditutup karena masih ada jurnal berstatus 'Draft'."
+                'period_month' => "Periode $periodMonth tidak dapat ditutup karena masih ada jurnal berstatus 'Draft'.",
             ]);
         }
 
         return DB::transaction(function () use ($periodMonth, $notes) {
             return Period::updateOrCreate(
-            ['period_month' => $periodMonth],
-            [
-                'status' => 'closed',
-                'closed_at' => now(),
-                'closed_by' => auth()->id(),
-                'notes' => $notes,
-            ]
+                ['period_month' => $periodMonth],
+                [
+                    'status' => 'closed',
+                    'closed_at' => now(),
+                    'closed_by' => auth()->id(),
+                    'notes' => $notes,
+                ]
             );
         });
     }
@@ -53,8 +53,9 @@ class PeriodService
     {
         $period = Period::where('period_month', $periodMonth)->first();
 
-        if (!$period)
+        if (! $period) {
             return false;
+        }
 
         return $period->update([
             'status' => 'open',

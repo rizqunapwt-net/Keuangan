@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Percetakan;
 
+use App\Enums\PrintOrderStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateOrderRequest extends FormRequest
 {
@@ -23,7 +25,7 @@ class UpdateOrderRequest extends FormRequest
             'customer_id' => ['sometimes', 'exists:percetakan_customers,id'],
             'product_id' => ['sometimes', 'exists:percetakan_products,id'],
             'quantity' => ['sometimes', 'integer', 'min:1'],
-            'status' => ['sometimes', Rule::in(['inquiry', 'quoted', 'confirmed', 'in_production', 'completed', 'ready_delivery', 'delivered', 'cancelled'])],
+            'status' => ['sometimes', Rule::in(PrintOrderStatus::values())],
             'deadline' => ['nullable', 'date'],
             'priority' => ['nullable', Rule::in(['low', 'normal', 'high', 'urgent'])],
             'is_rush_order' => ['boolean'],

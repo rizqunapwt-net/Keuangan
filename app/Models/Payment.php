@@ -13,6 +13,7 @@ class Payment extends Model
 {
     /** @use HasFactory<\Database\Factories\PaymentFactory> */
     use HasFactory;
+
     use LogsActivity;
 
     protected $fillable = [
@@ -35,6 +36,11 @@ class Payment extends Model
         ];
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function calculation(): BelongsTo
     {
         return $this->belongsTo(RoyaltyCalculation::class, 'royalty_calculation_id');
@@ -42,7 +48,7 @@ class Payment extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->user();
     }
 
     public function getActivitylogOptions(): LogOptions

@@ -27,7 +27,8 @@ const BanksPage: React.FC = () => {
         queryFn: async () => {
             try {
                 const res = await api.get('/finance/banks');
-                return res.data;
+                const payload = res.data?.data;
+                return Array.isArray(payload) ? payload : (payload?.data ?? []);
             } catch {
                 return [];
             }

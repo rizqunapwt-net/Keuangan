@@ -43,8 +43,10 @@ const ChartOfAccountsPage: React.FC = () => {
                 api.get('/finance/accounts'),
                 api.get('/finance/accounts/categories'),
             ]);
-            setAccounts(accRes.data);
-            setCategories(catRes.data);
+            const accPayload = accRes.data?.data;
+            const catPayload = catRes.data?.data;
+            setAccounts(Array.isArray(accPayload) ? accPayload : (Array.isArray(accRes.data) ? accRes.data : []));
+            setCategories(Array.isArray(catPayload) ? catPayload : (Array.isArray(catRes.data) ? catRes.data : []));
         } catch {
             message.error('Gagal memuat data akun');
         } finally {

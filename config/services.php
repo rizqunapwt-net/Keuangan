@@ -3,16 +3,16 @@
 return [
 
     /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
+     |--------------------------------------------------------------------------
+     | Third Party Services
+     |--------------------------------------------------------------------------
+     |
+     | This file is for storing the credentials for third party services such
+     | as Mailgun, Postmark, AWS and more. This file provides the de facto
+     | location for this type of information, allowing packages to have
+     | a conventional file to locate the various service credentials.
+     |
+     */
 
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
@@ -37,6 +37,20 @@ return [
 
     'n8n' => [
         'contract_expiry_webhook' => env('N8N_CONTRACT_EXPIRY_WEBHOOK'),
+    ],
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+        'service_account_json' => env('GOOGLE_SERVICE_ACCOUNT_JSON'),
+        'drive' => [
+            'covers_folder_id' => env('GOOGLE_DRIVE_COVERS_FOLDER_ID'),
+            'pdfs_folder_id' => env('GOOGLE_DRIVE_PDFS_FOLDER_ID'),
+        ],
+        'sheets' => [
+            'library_id' => env('GOOGLE_SHEETS_LIBRARY_ID'),
+        ],
     ],
 
 ];

@@ -30,7 +30,7 @@ class CustomerResource extends JsonResource
             'full_address' => $this->getFullAddress(),
             'credit' => [
                 'limit' => $this->credit_limit,
-                'formatted_limit' => 'Rp ' . number_format($this->credit_limit, 0, ',', '.'),
+                'formatted_limit' => 'Rp '.number_format($this->credit_limit, 0, ',', '.'),
                 'payment_terms_days' => $this->payment_terms_days,
                 'discount_percentage' => $this->discount_percentage,
             ],
@@ -40,8 +40,8 @@ class CustomerResource extends JsonResource
             'is_corporate' => $this->isCorporate(),
             'user' => [
                 'id' => $this->user_id,
-                'name' => $this->when($this->user, fn() => $this->user->name),
-                'email' => $this->when($this->user, fn() => $this->user->email),
+                'name' => $this->when($this->user, fn () => $this->user->name),
+                'email' => $this->when($this->user, fn () => $this->user->email),
             ],
             'orders_count' => $this->whenCounted('orders'),
             'recent_orders' => OrderResource::collection($this->whenLoaded('orders')),
@@ -63,6 +63,6 @@ class CustomerResource extends JsonResource
             $this->postal_code,
         ]);
 
-        return !empty($parts) ? implode(', ', $parts) : null;
+        return ! empty($parts) ? implode(', ', $parts) : null;
     }
 }

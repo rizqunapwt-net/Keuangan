@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Card, Button, Space, Tag, DatePicker, message, Tooltip } from 'antd';
 import { PlusOutlined, StopOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import api from '../../api';
+import JournalFormDrawer from './JournalFormDrawer';
 
 const { RangePicker } = DatePicker;
 
@@ -26,7 +26,7 @@ const JournalEntriesPage: React.FC = () => {
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [dateRange, setDateRange] = useState<[string, string] | null>(null);
-    const navigate = useNavigate();
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -37,7 +37,8 @@ const JournalEntriesPage: React.FC = () => {
                 params.endDate = dateRange[1];
             }
             const res = await api.get('/finance/journals', { params });
-            setEntries(res.data);
+            const payload = res.data?.data;
+            setEntries(Array.isArray(payload) ? payload : (Array.isArray(res.data) ? res.data : []));
         } catch {
             message.error('Gagal memuat jurnal');
         } finally {
@@ -121,7 +122,7 @@ const JournalEntriesPage: React.FC = () => {
                             }
                         }}
                     />
-                    <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/accounts/journals/add')}>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={() => setDrawerOpen(true)}>
                         Buat Jurnal
                     </Button>
                 </Space>
@@ -149,6 +150,7 @@ const JournalEntriesPage: React.FC = () => {
                     ),
                 }}
             />
+            <JournalFormDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
         </Card>
     );
 };

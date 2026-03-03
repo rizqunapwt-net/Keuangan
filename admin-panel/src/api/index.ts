@@ -1,8 +1,15 @@
 import axios from 'axios';
+import { API_V1_BASE } from './base';
+
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || '/api/v1',
+    baseURL: API_V1_BASE,
     timeout: 15000,
+    withCredentials: true,
+    headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json',
+    },
 });
 
 // Interceptor to add JWT token
@@ -24,7 +31,7 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             localStorage.removeItem('token');
             if (!window.location.pathname.includes('/login')) {
-                window.location.href = '/admin/login';
+                window.location.href = '/login';
             }
         }
         return Promise.reject(error);

@@ -1,67 +1,56 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect('/admin/login');
-});
+/*
+ |--------------------------------------------------------------------------
+ | Web Routes — SPA Fallback
+ |--------------------------------------------------------------------------
+ | Serve React SPA for all routes except /api/*
+ | API routes handled by routes/api.php via RouteServiceProvider
+ |--------------------------------------------------------------------------
+ */
 
-// ── Single Login Door: React SPA ──
-// All login attempts funnel to the React admin-panel login page
-Route::redirect('/panel/login', '/admin/login')->name('filament.admin.auth.login');
-
-Route::get('/dashboard', function () {
-    /** @var \App\Models\User $user */
-    $user = auth()->user();
-
-    if ($user->isKaryawan()) {
-        $token = $user->createToken('auth_token')->plainTextToken;
-        $frontendUrl = config('app.frontend_url', 'https://nre.infiatin.cloud');
-        return redirect()->away($frontendUrl . '/?token=' . $token);
+// SPA fallback — catch all non-API routes
+Route::get('/{any}', function () {
+    // Testing: return simple HTML response
+    if (app()->environment('testing')) {
+        return response('<html><body>Test Response</body></html>')
+            ->header('Content-Type', 'text/html');
     }
 
-    return redirect()->route('filament.admin.pages.dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    // Serve React SPA from either admin-panel build output or Laravel build output.
+    $candidates = [
+        ['path' => public_path('admin/index.html'), 'rewrite_assets' => true],
+        ['path' => public_path('build/index.html'), 'rewrite_assets' => false],
+    ];
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class , 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class , 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class , 'destroy'])->name('profile.destroy');
-});
+    foreach ($candidates as $candidate) {
+        $path = $candidate['path'];
+        if (! file_exists($path)) {
+            continue;
+        }
 
-// Logout via GET (used by Next.js frontend - matches Nginx ^/logout pattern)
-Route::get('/logout-clear', function () {
-    auth()->logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-    return redirect('/admin/login');
-});
+        $html = file_get_contents($path);
+        if (! is_string($html)) {
+            continue;
+        }
 
-require __DIR__ . '/auth.php';
+        // Vite admin build commonly emits "/assets/*" while files live in "/admin/assets/*".
+        if ($candidate['rewrite_assets']) {
+            $html = preg_replace('/([\'"])\/assets\//', '$1/admin/assets/', $html) ?? $html;
+            $html = preg_replace('/([\'"])\/vite\.svg/', '$1/admin/vite.svg', $html) ?? $html;
+            
+            // Fix double /admin/admin/ if it happens
+            $html = str_replace('/admin/admin/', '/admin/', $html);
+        }
 
-// ── React Admin SPA catch-all ──
-// Serves public/admin/index.html for all /admin/* routes not matched by Laravel
-// This enables client-side routing in the React SPA
-Route::get('/admin/{any?}', function () {
-    $indexPath = public_path('admin/index.html');
-    if (file_exists($indexPath)) {
-        return response()->file($indexPath, [
-        'Content-Type' => 'text/html',
-        ]);
+        return response($html)
+            ->header('Content-Type', 'text/html; charset=UTF-8');
     }
-    abort(404, 'Admin panel belum di-build. Jalankan: scripts/build-admin.sh');
-})->where('any', '.*');
 
-// ── Author Public Pages ──
-Route::get('/authors/register', function () {
-    return view('welcome'); // Will be handled by React router
-});
-
-Route::get('/authors/forgot-password', function () {
-    return view('welcome'); // Will be handled by React router
-});
-
-Route::get('/authors/reset-password', function () {
-    return view('welcome'); // Will be handled by React router
-});
+    return response('App not built yet. Run: cd admin-panel && npm run build', 503);
+})->where(
+    'any',
+    '^(?!api|assets|build|css|js|images|storage|fonts|favicon|robots\.txt|sitemap\.xml|admin/assets|admin/vite\.svg).*$'
+);

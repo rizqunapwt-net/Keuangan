@@ -3,26 +3,25 @@
 namespace Database\Factories;
 
 use App\Models\Author;
+use App\Models\RoyaltyCalculation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\RoyaltyCalculation>
+ * @extends Factory<RoyaltyCalculation>
  */
 class RoyaltyCalculationFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = RoyaltyCalculation::class;
+
     public function definition(): array
     {
         return [
             'period_month' => now()->format('Y-m'),
             'author_id' => Author::factory(),
-            'total_amount' => fake()->randomFloat(2, 0, 1000000),
+            'total_amount' => fake()->randomFloat(2, 10000, 2000000),
             'status' => 'draft',
-            'calculated_at' => now(),
+            'finalized_by' => null,
+            'finalized_at' => null,
         ];
     }
 }

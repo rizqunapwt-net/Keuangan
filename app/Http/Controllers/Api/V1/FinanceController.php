@@ -2,25 +2,22 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Finance\Services\AccountingService;
+use App\Domain\Finance\Services\ReportService;
 use App\Http\Controllers\Controller;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Expense;
 use App\Models\Accounting\Journal;
-use App\Models\Accounting\JournalEntry;
+use App\Models\Contact;
 use App\Models\Payment;
-use App\Models\Sale;
-use App\Models\Supplier;
 use App\Models\PurchaseOrder;
-use App\Domain\Finance\Services\ReportService;
-use App\Domain\Inventory\Actions\CreatePurchaseAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class FinanceController extends Controller
 {
     protected \App\Domain\Finance\Services\AccountingService $accountingService;
+
     protected ReportService $reportService;
 
     public function __construct(
@@ -78,22 +75,45 @@ class FinanceController extends Controller
         $report = $this->reportService->getProfitAndLoss($startDate, $endDate);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.profit_loss_pdf', ['data' => $report]);
-        
+
         return $pdf->download("laporan-laba-rugi-{$startDate}-{$endDate}.pdf");
+    }
+
+    public function exportProfitLossExcel(Request $request)
+    {
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+
+        $report = $this->reportService->getProfitAndLoss($startDate, $endDate);
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\ProfitLossExport($report, $startDate, $endDate),
+            "laba-rugi-{$startDate}-{$endDate}.xlsx"
+        );
+    }
+
+    public function exportBalanceSheetExcel(Request $request)
+    {
+        $asOfDate = $request->input('as_of', now()->format('Y-m-d'));
+
+        $report = $this->reportService->getBalanceSheet($asOfDate);
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\BalanceSheetExport($report, $asOfDate),
+            "neraca-{$asOfDate}.xlsx"
+        );
     }
 
     // ═══════ EXPENSES ═══════
 
     public function expenses(Request $request): JsonResponse
     {
-        $query = Expense::with(['account', 'payFromAccount'])
-            ->latest('date');
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $expenses = $query->get();
+        $expenses = Expense::with(['account', 'payFromAccount'])
+            ->latest('date')
+            ->when($request->filled('status'), function ($q) use ($request) {
+                return $q->where('status', '=', (string)$request->status);
+            })
+            ->get();
 
         $transformed = $expenses->map(fn ($e) => [
             'id' => $e->id,
@@ -139,64 +159,19 @@ class FinanceController extends Controller
 
     public function summary(): JsonResponse
     {
-        $monthlySales = Sale::whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->selectRaw('SUM(total_amount) as revenue')
-            ->first();
+        $start = now()->startOfMonth()->toDateString();
+        $end = now()->endOfMonth()->toDateString();
 
-        $monthlyExpenses = Expense::where('status', 'recorded')
-            ->whereMonth('date', now()->month)
-            ->whereYear('date', now()->year)
-            ->sum('amount');
+        $pl = $this->reportService->getProfitAndLoss($start, $end);
 
         return response()->json([
             'success' => true,
             'data' => [
-                'monthly_revenue' => (float) ($monthlySales->revenue ?? 0),
-                'monthly_expenses' => (float) $monthlyExpenses,
-                'net_profit' => (float) (($monthlySales->revenue ?? 0) - $monthlyExpenses),
+                'monthly_revenue' => (float) $pl['revenues']['total'],
+                'monthly_expenses' => (float) $pl['expenses']['total'],
+                'net_profit' => (float) $pl['net_profit'],
             ],
         ]);
-    }
-
-    public function purchases(Request $request): JsonResponse
-    {
-        $purchases = PurchaseOrder::with(['supplier', 'items.product'])
-            ->latest()
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $purchases,
-        ]);
-    }
-
-    public function storePurchase(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_cost' => 'required|numeric|min:0',
-            'total_amount' => 'required|numeric|min:0',
-        ]);
-
-        try {
-            $action = app(CreatePurchaseAction::class);
-            $purchase = $action->execute($validated);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Pembelian stok berhasil dicatat.',
-                'data' => $purchase,
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-        }
     }
 
     // ═══════ ACCOUNTING ═══════
@@ -211,7 +186,7 @@ class FinanceController extends Controller
 
     public function journals(): JsonResponse
     {
-        $journals = Journal::with('entries.account')
+        $journals = Journal::with(['entries.account', 'user'])
             ->latest('date')
             ->get();
 
@@ -221,67 +196,185 @@ class FinanceController extends Controller
         ]);
     }
 
-    public function invoices(): JsonResponse
+    public function invoices(Request $request): JsonResponse
     {
+        $query = Payment::with([
+            'calculation.author:id,name',
+            'user:id,name',
+        ])->latest();
+
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+            $query->where(function ($sub) use ($search) {
+                $sub->where('invoice_number', 'like', "%{$search}%")
+                    ->orWhere('payment_reference', 'like', "%{$search}%");
+            });
+        }
+
+        $payments = $query->get()->map(function ($p) {
+            $status = $p->status instanceof \BackedEnum
+                ? $p->status->value
+                : strtolower((string) $p->status);
+
+            return [
+                'id' => $p->id,
+                'type' => 'royalty',
+                'refNumber' => $p->invoice_number,
+                'number' => $p->invoice_number,
+                'total' => (float) $p->amount,
+                'paidAmount' => $status === 'paid' ? (float) $p->amount : 0,
+                'status' => $status,
+                'transDate' => $p->created_at->toISOString(),
+                'date' => $p->created_at->toDateString(),
+                'contactName' => $p->calculation?->author?->name ?? $p->user?->name ?? 'Author',
+                'contact' => ['name' => $p->calculation?->author?->name ?? $p->user?->name ?? 'Author'],
+                'ref' => $p->payment_reference,
+            ];
+        });
+
         return response()->json([
             'success' => true,
-            'data' => [],
+            'data' => $payments,
         ]);
     }
 
-    public function storeJournal(Request $request): JsonResponse
+    public function storeJournal(Request $request, AccountingService $accounting): JsonResponse
     {
-        return response()->json([
-            'success' => false,
-            'message' => 'Not implemented yet.',
-        ], 501);
-    }
-
-    public function reverseJournal(int $journalId): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => 'Not implemented yet.',
-        ], 501);
-    }
-
-    public function salesOrders(): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'data' => [],
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'description' => 'required|string|max:500',
+            'reference' => 'nullable|string|max:100',
+            'items' => 'required|array|min:2',
+            'items.*.account_id' => 'required|exists:accounting_accounts,id',
+            'items.*.type' => 'required|in:debit,credit',
+            'items.*.amount' => 'required|numeric|min:0',
         ]);
+
+        $debitTotal = collect($request->items)->filter(fn ($i) => $i['type'] === 'debit')->sum('amount');
+        $creditTotal = collect($request->items)->filter(fn ($i) => $i['type'] === 'credit')->sum('amount');
+
+        if ($debitTotal != $creditTotal) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Total Debit dan Credit tidak seimbang.',
+            ], 422);
+        }
+
+        try {
+            $journal = $accounting->recordJournal($validated, auth()->id());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Jurnal berhasil dicatat.',
+                'data' => $journal,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mencatat jurnal: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function contacts(): JsonResponse
+    public function reverseJournal(int $journalId, AccountingService $accounting): JsonResponse
     {
+        $journal = Journal::findOrFail($journalId);
+
+        try {
+            $reversed = $accounting->reverseJournal($journal, auth()->id());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Jurnal berhasil dibalik.',
+                'data' => $reversed,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membalik jurnal: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function contacts(Request $request): JsonResponse
+    {
+        $query = Contact::latest();
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%")
+                    ->orWhere('company_name', 'like', "%{$request->search}%")
+                    ->orWhere('email', 'like', "%{$request->search}%");
+            });
+        }
+
         return response()->json([
             'success' => true,
-            'data' => [],
+            'data' => $query->get(),
         ]);
     }
 
     public function contactDetail(int $contactId): JsonResponse
     {
+        $contact = Contact::find($contactId);
+
+        if (! $contact) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kontak tidak ditemukan.',
+            ], 404);
+        }
+
         return response()->json([
-            'success' => false,
-            'message' => 'Contact not found.',
-        ], 404);
+            'success' => true,
+            'data' => $contact,
+        ]);
     }
 
     public function storeContact(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'company_name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'type' => 'required|in:customer,vendor,both',
+            'tax_number' => 'nullable|string|max:50',
+            'notes' => 'nullable|string',
+        ]);
+
+        $validated['created_by'] = auth()->id();
+
+        $contact = Contact::create($validated);
+
         return response()->json([
-            'success' => false,
-            'message' => 'Not implemented yet.',
-        ], 501);
+            'success' => true,
+            'message' => 'Kontak berhasil dibuat.',
+            'data' => $contact,
+        ], 201);
     }
 
     public function destroyContact(int $contactId): JsonResponse
     {
+        $contact = Contact::find($contactId);
+
+        if (! $contact) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kontak tidak ditemukan.',
+            ], 404);
+        }
+
+        $contact->delete();
+
         return response()->json([
-            'success' => false,
-            'message' => 'Not implemented yet.',
-        ], 501);
+            'success' => true,
+            'message' => 'Kontak berhasil dihapus.',
+        ]);
     }
 }

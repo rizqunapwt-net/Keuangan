@@ -20,8 +20,8 @@ class MaterialResource extends JsonResource
             'category_label' => ucfirst($this->category),
             'type' => $this->type,
             'specification' => $this->specification,
-            'full_specification' => $this->type && $this->specification 
-                ? "{$this->type} {$this->specification}" 
+            'full_specification' => $this->type && $this->specification
+                ? "{$this->type} {$this->specification}"
                 : ($this->type ?? $this->specification),
             'unit' => $this->unit,
             'stock' => [
@@ -34,14 +34,14 @@ class MaterialResource extends JsonResource
             ],
             'pricing' => [
                 'unit_cost' => $this->unit_cost,
-                'formatted_unit_cost' => 'Rp ' . number_format($this->unit_cost, 0, ',', '.'),
+                'formatted_unit_cost' => 'Rp '.number_format($this->unit_cost, 0, ',', '.'),
                 'last_purchase_price' => $this->last_purchase_price,
-                'formatted_last_purchase' => $this->last_purchase_price 
-                    ? 'Rp ' . number_format($this->last_purchase_price, 0, ',', '.') 
+                'formatted_last_purchase' => $this->last_purchase_price
+                    ? 'Rp '.number_format($this->last_purchase_price, 0, ',', '.')
                     : null,
             ],
             'inventory_value' => $this->current_stock * $this->unit_cost,
-            'formatted_inventory_value' => 'Rp ' . number_format($this->current_stock * $this->unit_cost, 0, ',', '.'),
+            'formatted_inventory_value' => 'Rp '.number_format($this->current_stock * $this->unit_cost, 0, ',', '.'),
             'supplier' => [
                 'id' => $this->supplier_id,
             ],

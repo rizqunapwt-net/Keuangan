@@ -10,7 +10,7 @@ Aplikasi internal ERP Publishing untuk PT Rizquna Pustaka.
 - Kalkulasi royalti bulanan
 - Generate invoice PDF + payment tracking
 - Dashboard KPI (Filament)
-- RBAC (Admin, Legal, Marketing, Finance)
+- RBAC (Admin, User)
 - Audit trail (Spatie Activitylog)
 
 ## Tech Stack
@@ -79,12 +79,12 @@ Body:
 ```
 
 ### Contracts
-- `POST /contracts` (Legal/Admin)
-- `PUT /contracts/{id}/approve` (Legal/Admin)
-- `PUT /contracts/{id}/reject` (Legal/Admin)
+- `POST /contracts` (Admin)
+- `PUT /contracts/{id}/approve` (Admin)
+- `PUT /contracts/{id}/reject` (Admin)
 
 ### Sales
-- `POST /sales/import` (Finance)
+- `POST /sales/import` (Admin)
 
 CSV kolom wajib:
 - `period_month`
@@ -96,12 +96,12 @@ CSV kolom wajib:
 - `status`
 
 ### Royalties
-- `POST /royalties/calculate` (Finance)
-- `PUT /royalties/{id}/finalize` (Finance)
-- `POST /royalties/{id}/invoice` (Finance)
+- `POST /royalties/calculate` (Admin)
+- `PUT /royalties/{id}/finalize` (Admin)
+- `POST /royalties/{id}/invoice` (Admin)
 
 ### Payments
-- `PUT /payments/{id}/mark-paid` (Finance)
+- `PUT /payments/{id}/mark-paid` (Admin)
 
 ## Response Envelope
 Success:
@@ -165,3 +165,4 @@ Saat ini mencakup test untuk:
 - Import CSV sales
 - Invoice + mark paid flow
 - Guard assignment tanpa kontrak approved
+
