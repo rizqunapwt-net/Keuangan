@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
-import { Drawer, Form, Input, Button, Select, DatePicker, message, Space, InputNumber, Typography, Divider } from 'antd';
+import { Drawer, Form, Input, Button, Select, DatePicker, message, Space, InputNumber, Typography, Divider, Row, Col } from 'antd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-    InfoCircleOutlined, 
-    UserOutlined, 
-    CalendarOutlined, 
-    DollarOutlined, 
-    FileTextOutlined 
+import {
+    InfoCircleOutlined,
+    UserOutlined,
+    CalendarOutlined,
+    DollarOutlined,
+    FileTextOutlined,
+    ClockCircleOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../api';
@@ -133,7 +134,7 @@ const InvoiceFormDrawer: React.FC<InvoiceFormDrawerProps> = ({ open, onClose }) 
                     </Form.Item>
                 </div>
 
-                <Divider orientation="left" style={{ marginTop: 0 }}>
+                <Divider orientationMargin={0} style={{ marginTop: 0 }}>
                     <Text type="secondary" style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Detail Waktu & Nominal</Text>
                 </Divider>
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Typography, Space, DatePicker, Row, Col, Statistic, Breadcrumb, message, Button } from 'antd';
-import { DollarOutlined, PrinterOutlined, ExportOutlined } from '@ant-design/icons';
+import { DollarOutlined, PrinterOutlined, ExportOutlined, FileExcelOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import api from '../../api';
 
@@ -46,6 +46,19 @@ const CashFlowPage: React.FC = () => {
                         onChange={(val) => val && setDates(val as [Dayjs, Dayjs])}
                         className="rounded-lg"
                     />
+                    <Button
+                        icon={<FileExcelOutlined />}
+                        className="text-green-600 border-green-600 hover:bg-green-50"
+                        onClick={() => {
+                            const params = new URLSearchParams({
+                                start_date: dates[0].format('YYYY-MM-DD'),
+                                end_date: dates[1].format('YYYY-MM-DD')
+                            });
+                            window.open(`${import.meta.env.VITE_API_URL}/finance/reports/cash-flow/excel?${params.toString()}`, '_blank');
+                        }}
+                    >
+                        Export Excel
+                    </Button>
                     <Button icon={<PrinterOutlined />} onClick={() => window.print()}>Cetak</Button>
                     <Button
                         type="primary"

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, DatePicker, Table, Tag, Typography, Row, Col, Statistic, Divider, Spin, Space, Button } from 'antd';
-import { BarChartOutlined, CheckCircleOutlined, WarningOutlined, FileExcelOutlined } from '@ant-design/icons';
+import { BarChartOutlined, CheckCircleOutlined, WarningOutlined, FileExcelOutlined, ExportOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api';
 import dayjs from 'dayjs';
@@ -41,6 +41,18 @@ const BalanceSheetPage: React.FC = () => {
                         }}
                     >
                         Export Excel
+                    </Button>
+                    <Button
+                        type="primary"
+                        icon={<ExportOutlined />}
+                        onClick={() => {
+                            const params = new URLSearchParams({
+                                as_of: asOfDate.format('YYYY-MM-DD')
+                            });
+                            window.open(`${import.meta.env.VITE_API_URL}/finance/reports/balance-sheet/pdf?${params.toString()}`, '_blank');
+                        }}
+                    >
+                        Export PDF
                     </Button>
                 </Space>
             </div>

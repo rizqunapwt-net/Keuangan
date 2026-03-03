@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Table, Button, Tag, Card, Typography, Row, Col, Statistic, Breadcrumb, Space, Input, Popconfirm, message, Select } from 'antd';
-import { PlusOutlined, SearchOutlined, FilterOutlined, DollarOutlined, ArrowUpOutlined, ArrowDownOutlined, WalletOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, FilterOutlined, ArrowUpOutlined, ArrowDownOutlined, WalletOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../api';
 import dayjs from 'dayjs';

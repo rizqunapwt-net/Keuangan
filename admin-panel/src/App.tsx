@@ -224,7 +224,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           }}
         >
           <div style={{ fontWeight: 600, fontSize: 18, color: '#1e293b' }}>
-            {menuItems.find((item: any) => item?.key === location.pathname)?.label || 'Dashboard'}
+            {(menuItems.find((item: any) => item?.key === location.pathname) as any)?.label || 'Dashboard'}
           </div>
 
           <Dropdown menu={{ items: userMenuItems, onClick: ({ key }) => key === 'logout' ? logout() : navigate(key) }} placement="bottomRight" trigger={['click']}>
