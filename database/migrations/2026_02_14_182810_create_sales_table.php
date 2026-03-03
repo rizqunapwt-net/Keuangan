@@ -13,20 +13,13 @@ return new class extends Migration
     {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sales_import_id')->nullable()->constrained('sales_imports')->nullOnDelete();
-            $table->foreignId('marketplace_id')->constrained()->restrictOnDelete();
-            $table->foreignId('book_id')->constrained()->restrictOnDelete();
-            $table->string('transaction_id');
-            $table->string('period_month', 7);
-            $table->unsignedInteger('quantity');
-            $table->decimal('net_price', 14, 2);
-            $table->string('status')->default('completed');
-            $table->foreignId('imported_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('user_id')->constrained();
+            $table->string('customer_name')->nullable();
+            $table->decimal('total_amount', 15, 2)->default(0);
+            $table->string('payment_method')->nullable();
+            $table->enum('payment_status', ['pending', 'paid', 'failed', 'refunded'])->default('pending');
+            $table->text('notes')->nullable();
             $table->timestamps();
-
-            $table->unique(['marketplace_id', 'transaction_id']);
-            $table->index(['period_month', 'book_id']);
-            $table->index('status');
         });
     }
 

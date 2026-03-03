@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, DatePicker, Table, Tag, Typography, Row, Col, Statistic, Divider, Spin } from 'antd';
-import { BarChartOutlined, CheckCircleOutlined, WarningOutlined } from '@ant-design/icons';
+import { Card, DatePicker, Table, Tag, Typography, Row, Col, Statistic, Divider, Spin, Space, Button } from 'antd';
+import { BarChartOutlined, CheckCircleOutlined, WarningOutlined, FileExcelOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api';
 import dayjs from 'dayjs';
@@ -28,7 +28,21 @@ const BalanceSheetPage: React.FC = () => {
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                 <h1 style={{ margin: 0 }}><BarChartOutlined /> Neraca (Balance Sheet)</h1>
-                <DatePicker value={asOfDate} onChange={(d) => d && setAsOfDate(d)} format="DD/MM/YYYY" />
+                <Space>
+                    <DatePicker value={asOfDate} onChange={(d) => d && setAsOfDate(d)} format="DD/MM/YYYY" />
+                    <Button
+                        icon={<FileExcelOutlined />}
+                        className="text-green-600 border-green-600 hover:bg-green-50"
+                        onClick={() => {
+                            const params = new URLSearchParams({
+                                as_of: asOfDate.format('YYYY-MM-DD')
+                            });
+                            window.open(`${import.meta.env.VITE_API_URL}/finance/reports/balance-sheet/excel?${params.toString()}`, '_blank');
+                        }}
+                    >
+                        Export Excel
+                    </Button>
+                </Space>
             </div>
 
             {isLoading ? <Spin size="large" /> : data && (

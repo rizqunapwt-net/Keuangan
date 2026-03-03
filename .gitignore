@@ -22,3 +22,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/public/admin
+/admin-panel/.npm-cache
+/reports
+.DS_Store

@@ -2,10 +2,10 @@
 
 namespace App\Models\Accounting;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\User;
 
 class Period extends Model
 {
@@ -27,7 +27,7 @@ class Period extends Model
 
     public function closer(): BelongsTo
     {
-        return $this->belongsTo(User::class , 'closed_by');
+        return $this->belongsTo(User::class, 'closed_by');
     }
 
     /**

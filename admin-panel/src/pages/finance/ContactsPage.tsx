@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Typography, Card, Breadcrumb, Tag, Input, message, Tabs, Row, Col, Statistic, Popconfirm } from 'antd';
 import { PlusOutlined, SearchOutlined, PrinterOutlined, ExportOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 import AccessControl from '../../components/AccessControl';
+import ContactFormDrawer from './ContactFormDrawer';
 
 const { Title, Text } = Typography;
 
@@ -21,13 +21,14 @@ const ContactsPage: React.FC = () => {
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('all');
-    const navigate = useNavigate();
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     const fetchContacts = async () => {
         setLoading(true);
         try {
             const res = await api.get('/finance/contacts');
-            setContacts(res.data?.data || res.data || []);
+            const payload = res.data?.data;
+            setContacts(Array.isArray(payload) ? payload : (Array.isArray(res.data) ? res.data : []));
         } catch {
             message.error('Gagal mengambil data kontak');
         } finally {
@@ -61,10 +62,10 @@ const ContactsPage: React.FC = () => {
             dataIndex: 'name',
             key: 'name',
             sorter: true,
-            render: (text: string, record: Contact) => (
-                <a onClick={() => navigate(`/contacts/${record.id}`)} style={{ fontWeight: 600, color: '#1890ff' }}>
+            render: (text: string) => (
+                <span style={{ fontWeight: 600, color: '#1890ff' }}>
                     {text}
-                </a>
+                </span>
             ),
         },
         {
@@ -129,7 +130,7 @@ const ContactsPage: React.FC = () => {
                     <Button icon={<PrinterOutlined />} size="small" onClick={() => message.info('Fitur cetak segera hadir')}>Print</Button>
                     <Button icon={<ExportOutlined />} size="small" onClick={() => message.info('Fitur export segera hadir')}>Export</Button>
                     <AccessControl permission="contacts_create">
-                        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/contacts/add')}>
+                        <Button type="primary" icon={<PlusOutlined />} onClick={() => setDrawerOpen(true)}>
                             Tambah Kontak
                         </Button>
                     </AccessControl>
@@ -229,6 +230,7 @@ const ContactsPage: React.FC = () => {
                     size="small"
                 />
             </Card>
+            <ContactFormDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
         </div>
     );
 };

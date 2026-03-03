@@ -12,9 +12,6 @@ class JournalEntry extends Model
 
     protected $table = 'accounting_journal_entries';
 
-    // No timestamps needed for details if main journal has them
-    public $timestamps = false;
-
     protected $fillable = [
         'journal_id',
         'account_id',
@@ -23,17 +20,20 @@ class JournalEntry extends Model
         'memo', // line item description
     ];
 
-    protected $casts = [
-        'amount' => 'decimal:2',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'amount' => 'decimal:2',
+        ];
+    }
 
     public function journal(): BelongsTo
     {
-        return $this->belongsTo(Journal::class , 'journal_id');
+        return $this->belongsTo(Journal::class, 'journal_id');
     }
 
     public function account(): BelongsTo
     {
-        return $this->belongsTo(Account::class , 'account_id');
+        return $this->belongsTo(Account::class, 'account_id');
     }
 }

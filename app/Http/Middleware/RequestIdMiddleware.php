@@ -14,8 +14,9 @@ class RequestIdMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Get existing request ID or generate a new one
-        $requestId = $request->header('X-Request-ID') ?: (string)Str::uuid();
+        // Use client-provided ID only if it's a valid UUID; otherwise generate a new one
+        $clientId = $request->header('X-Request-ID', '');
+        $requestId = Str::isUuid($clientId) ? $clientId : (string) Str::uuid();
 
         // Add it to the request so it can be used in logs if needed
         $request->headers->set('X-Request-ID', $requestId);

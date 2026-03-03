@@ -1,1 +1,0 @@
-import{u,j as r}from"./index-CYYV8pJM.js";const a=({permission:s,children:n,fallback:t=null})=>{const{hasPermission:e,loading:o}=u();return o?null:e(s)?r.jsx(r.Fragment,{children:n}):r.jsx(r.Fragment,{children:t})};export{a as A};

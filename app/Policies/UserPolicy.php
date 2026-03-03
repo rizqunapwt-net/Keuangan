@@ -11,26 +11,26 @@ class UserPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->hasRole('Admin');
+        return $this->isAdmin($user);
     }
 
     public function view(User $user, User $model): bool
     {
-        return $user->hasRole('Admin') || $user->id === $model->id;
+        return $this->isAdmin($user) || $user->id === $model->id;
     }
 
     public function create(User $user): bool
     {
-        return $user->hasRole('Admin');
+        return $this->isAdmin($user);
     }
 
     public function update(User $user, User $model): bool
     {
-        return $user->hasRole('Admin');
+        return $this->isAdmin($user);
     }
 
     public function delete(User $user, User $model): bool
     {
-        return $user->hasRole('Admin') && $user->id !== $model->id;
+        return $this->isAdmin($user) && $user->id !== $model->id;
     }
 }

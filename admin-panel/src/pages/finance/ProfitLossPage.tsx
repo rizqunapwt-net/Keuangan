@@ -1,5 +1,5 @@
 import { Card, Typography, Space, DatePicker, Row, Col, Statistic, Table, Breadcrumb, message, Button } from 'antd';
-import { PrinterOutlined, ExportOutlined } from '@ant-design/icons';
+import { ExportOutlined, FileExcelOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import api from '../../api';
 import { useState, useEffect } from 'react';
@@ -35,7 +35,7 @@ const ProfitLossPage: React.FC = () => {
 
     useEffect(() => {
         fetchReport();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dates]);
 
     const reportItems = [
@@ -55,8 +55,32 @@ const ProfitLossPage: React.FC = () => {
                         onChange={(val) => val && setDates(val as [Dayjs, Dayjs])}
                         className="rounded-lg"
                     />
-                    <Button icon={<PrinterOutlined />}>Cetak</Button>
-                    <Button type="primary" icon={<ExportOutlined />}>Export PDF</Button>
+                    <Button
+                        icon={<FileExcelOutlined />}
+                        className="text-green-600 border-green-600 hover:bg-green-50"
+                        onClick={() => {
+                            const params = new URLSearchParams({
+                                start_date: dates[0].format('YYYY-MM-DD'),
+                                end_date: dates[1].format('YYYY-MM-DD')
+                            });
+                            window.open(`${import.meta.env.VITE_API_URL}/finance/reports/profit-loss/excel?${params.toString()}`, '_blank');
+                        }}
+                    >
+                        Export Excel
+                    </Button>
+                    <Button
+                        type="primary"
+                        icon={<ExportOutlined />}
+                        onClick={() => {
+                            const params = new URLSearchParams({
+                                start_date: dates[0].format('YYYY-MM-DD'),
+                                end_date: dates[1].format('YYYY-MM-DD')
+                            });
+                            window.open(`${import.meta.env.VITE_API_URL}/finance/reports/profit-loss/pdf?${params.toString()}`, '_blank');
+                        }}
+                    >
+                        Export PDF
+                    </Button>
                 </Space>
             </div>
 

@@ -23,7 +23,7 @@ class AccountingSeeder extends Seeder
             // LIABILITIES (2000 - 2999)
             ['code' => '2000', 'name' => 'HUTANG USAHA', 'type' => 'liability', 'description' => 'Hutang ke supplier cetak'],
             ['code' => '2100', 'name' => 'HUTANG ROYALTI', 'type' => 'liability', 'description' => 'Kewajiban pembayaran ke penulis'],
-            ['code' => '2200', 'name' => 'HUTANG GAJI', 'type' => 'liability', 'description' => 'Gaji karyawan belum dibayar'],
+            ['code' => '2200', 'name' => 'HUTANG GAJI', 'type' => 'liability', 'description' => 'Gaji tim internal belum dibayar'],
             ['code' => '2300', 'name' => 'HUTANG PAJAK', 'type' => 'liability', 'description' => 'PPN/PPh terhutang'],
 
             // EQUITY (3000 - 3999)

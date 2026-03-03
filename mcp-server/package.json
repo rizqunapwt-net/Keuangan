@@ -1,0 +1,16 @@
+{
+    "name": "rizquna-mcp",
+    "version": "1.0.0",
+    "description": "Unified Context Provider for Rizquna Kasir ERP",
+    "main": "src/index.js",
+    "type": "module",
+    "bin": {
+        "rizquna-mcp": "./src/index.js"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.1.0"
+    },
+    "scripts": {
+        "start": "node src/index.js"
+    }
+}

@@ -46,8 +46,20 @@ const CashFlowPage: React.FC = () => {
                         onChange={(val) => val && setDates(val as [Dayjs, Dayjs])}
                         className="rounded-lg"
                     />
-                    <Button icon={<PrinterOutlined />}>Cetak</Button>
-                    <Button type="primary" icon={<ExportOutlined />}>Export PDF</Button>
+                    <Button icon={<PrinterOutlined />} onClick={() => window.print()}>Cetak</Button>
+                    <Button
+                        type="primary"
+                        icon={<ExportOutlined />}
+                        onClick={() => {
+                            const params = new URLSearchParams({
+                                start_date: dates[0].format('YYYY-MM-DD'),
+                                end_date: dates[1].format('YYYY-MM-DD')
+                            });
+                            window.open(`${import.meta.env.VITE_API_URL}/finance/reports/cash-flow/pdf?${params.toString()}`, '_blank');
+                        }}
+                    >
+                        Export PDF
+                    </Button>
                 </Space>
             </div>
 

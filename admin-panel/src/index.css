@@ -2,75 +2,84 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@layer base {
+  :root {
+    --primary-blue: #0ea5e9;
+    --primary-indigo: #2563eb;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background-color: #f5f5f5;
+/* Ant Design Overrides */
+.ant-btn {
+  @apply rounded-xl shadow-none font-medium transition-all;
 }
 
-#root {
-  width: 100%;
-  min-height: 100vh;
+.ant-btn-primary {
+  @apply bg-blue-600 border-none shadow-md shadow-blue-500/20 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 active:scale-[0.98] !important;
 }
 
-/* App-specific overrides */
-.ant-layout-sider {
-  background: #fff !important;
-}
-
-.ant-menu-inline {
-  border-right: none !important;
-}
-
-.ant-menu-item {
-  border-radius: 6px !important;
-  margin: 2px 8px !important;
-}
-
-.ant-menu-submenu-title {
-  border-radius: 6px !important;
-  margin: 2px 8px !important;
-}
-
-.ant-menu-item-selected {
-  background: #f0f5ff !important;
-  color: #4f46e5 !important;
-}
-
-.ant-breadcrumb {
-  margin-bottom: 12px !important;
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #d9d9d9;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #bfbfbf;
-}
-
-/* Card hover effect */
 .ant-card {
-  transition: box-shadow 0.2s ease;
+  @apply border-slate-200 shadow-sm rounded-3xl !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ant-card:hover {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  @apply border-blue-100 shadow-xl shadow-slate-200/50 -translate-y-[2px] !important;
+}
+
+.ant-menu-light .ant-menu-item-selected {
+  @apply bg-blue-50 text-blue-600 font-semibold !important;
+}
+
+.ant-menu-item {
+  @apply rounded-xl mx-2 my-1 !important;
+}
+
+.ant-input {
+  @apply rounded-xl border-slate-200 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 !important;
+}
+
+.ant-table {
+  @apply text-slate-700 !important;
+}
+
+.ant-table-thead>tr>th {
+  @apply bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b-slate-100 !important;
+}
+
+.ant-table-tbody>tr>td {
+  @apply border-b-slate-50 py-4 !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  @apply w-1.5 h-1.5;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400;
+}
+
+/* Animations */
+.glass-effect {
+  @apply bg-white/80 backdrop-blur-md border border-white/20;
 }

@@ -21,27 +21,26 @@ class ProductionJobResource extends JsonResource
             'status_label' => $this->getStatusLabel(),
             'order' => [
                 'id' => $this->order_id,
-                'order_number' => $this->when($this->order, fn() => $this->order->order_number),
-                'customer_name' => $this->when($this->order, fn() => $this->order->customer?->name),
+                'order_number' => $this->when($this->order, fn () => $this->order->order_number),
+                'customer_name' => $this->when($this->order, fn () => $this->order->customer?->name),
             ],
             'machine' => [
                 'id' => $this->machine_id,
-                'name' => $this->when($this->machine, fn() => $this->machine->name),
-                'code' => $this->when($this->machine, fn() => $this->machine->code),
+                'name' => $this->when($this->machine, fn () => $this->machine->name),
             ],
             'operator' => [
                 'id' => $this->operator_id,
-                'name' => $this->when($this->operator, fn() => $this->operator->name),
+                'name' => $this->when($this->operator, fn () => $this->operator->name),
             ],
             'supervisor' => [
                 'id' => $this->supervisor_id,
-                'name' => $this->when($this->supervisor, fn() => $this->supervisor->name),
+                'name' => $this->when($this->supervisor, fn () => $this->supervisor->name),
             ],
             'timing' => [
                 'started_at' => $this->started_at?->format('Y-m-d H:i'),
                 'completed_at' => $this->completed_at?->format('Y-m-d H:i'),
-                'duration_hours' => $this->started_at && $this->completed_at 
-                    ? round($this->started_at->diffInHours($this->completed_at), 2) 
+                'duration_hours' => $this->started_at && $this->completed_at
+                    ? round($this->started_at->diffInHours($this->completed_at), 2)
                     : null,
             ],
             'quantity' => [
@@ -52,7 +51,6 @@ class ProductionJobResource extends JsonResource
             ],
             'instructions' => $this->instructions,
             'notes' => $this->notes,
-            'job_cards_count' => $this->whenCounted('jobCards'),
             'created_at' => $this->created_at->format('Y-m-d H:i'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i'),
         ];

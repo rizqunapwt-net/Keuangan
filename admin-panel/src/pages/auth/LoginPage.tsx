@@ -1,274 +1,168 @@
 import React, { useState } from 'react';
-import {
-    Form,
-    Input,
-    Button,
-    Card,
-    Typography,
-    message,
-    Checkbox,
-    Divider,
-} from 'antd';
-import {
-    UserOutlined,
-    LockOutlined,
-    GoogleOutlined,
-    FacebookOutlined,
-} from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Form, Input, Button, Card, Typography, message } from 'antd';
+import { UserOutlined, LockOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import api from '../../api';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 const LoginPage: React.FC = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
     const [loading, setLoading] = useState(false);
-    const [passwordVisible, setPasswordVisible] = useState(false);
-    const [form] = Form.useForm();
-
-    const fromState = location.state as any;
-    const registeredEmail = fromState?.registeredEmail || '';
 
     const onFinish = async (values: Record<string, unknown>) => {
         setLoading(true);
         try {
-            const response = await api.post('/auth/login', {
-                login: values.username,
-                password: values.password,
-            });
-
-            const token = response.data.access_token || response.data.token;
+            const response = await api.post('/auth/login', values);
+            const token = response.data.data?.access_token || response.data.access_token;
             localStorage.setItem('token', token);
-
-            message.success({
-                content: '🎉 Login berhasil! Selamat datang kembali.',
-                duration: 3,
-            });
-
-            setTimeout(() => {
-                window.location.href = '/admin/dashboard';
-            }, 1000);
+            message.success('Selamat Datang Kembali!');
+            window.location.href = '/dashboard';
         } catch (error: any) {
-            const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Login gagal';
-            message.error({
-                content: errorMsg,
-                duration: 5,
-            });
+            message.error(error.response?.data?.message || 'Email atau Kata Sandi salah');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-2 sm:p-4 md:p-6 lg:p-8">
-            {/* Animated background */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <motion.div
-                    className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70"
-                    animate={{
-                        scale: [1, 1.2, 1],
-                        rotate: [0, 90, 0],
-                    }}
-                    transition={{ duration: 20, repeat: Infinity }}
-                />
-                <motion.div
-                    className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-70"
-                    animate={{
-                        scale: [1, 1.3, 1],
-                        rotate: [0, -90, 0],
-                    }}
-                    transition={{ duration: 25, repeat: Infinity }}
-                />
-            </div>
+        <div style={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+            position: 'relative',
+            overflow: 'hidden',
+        }}>
+            {/* Background Decorative Circles */}
+            <div style={{
+                position: 'absolute',
+                top: '-10%',
+                right: '-10%',
+                width: '400px',
+                height: '400px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)',
+            }} />
+            <div style={{
+                position: 'absolute',
+                bottom: '-10%',
+                left: '-10%',
+                width: '400px',
+                height: '400px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%)',
+            }} />
 
             <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full max-w-md relative z-10"
             >
-                <Card 
-                    className="shadow-2xl rounded-3xl border-none overflow-hidden"
-                    bodyStyle={{ padding: 0 }}
+                <Card
+                    style={{
+                        width: 420,
+                        borderRadius: 24,
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.7)',
+                        backdropFilter: 'blur(10px)',
+                        background: 'rgba(255, 255, 255, 0.8)',
+                    }}
+                    bodyStyle={{ padding: '40px' }}
                 >
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 md:p-8 text-white">
-                        <motion.div
-                            initial={{ y: -20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="text-center"
-                        >
-                            <motion.div
-                                className="w-20 h-20 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-4xl font-bold shadow-lg"
-                                whileHover={{ scale: 1.1, rotate: 5 }}
-                                transition={{ type: "spring", stiffness: 300 }}
-                            >
-                                NRE
-                            </motion.div>
-                            <Title level={2} className="!mb-2 !text-white text-3xl md:text-4xl">
-                                New Rizquna Elfath
-                            </Title>
-                            <Paragraph className="!text-white/90 text-sm md:text-base">
-                                Enterprise Resource Planning System
-                            </Paragraph>
-                        </motion.div>
+                    <div style={{ textAlign: 'center', marginBottom: 40 }}>
+                        <div style={{
+                            width: 56,
+                            height: 56,
+                            borderRadius: 16,
+                            background: 'linear-gradient(135deg, #0ea5e9, #2563eb)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 20px',
+                            boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)',
+                        }}>
+                            <SafetyCertificateOutlined style={{ fontSize: 28, color: '#fff' }} />
+                        </div>
+                        <Title level={2} style={{ margin: 0, color: '#0f172a', fontWeight: 800, fontSize: 32 }}>
+                            Rizquna Kasir
+                        </Title>
+                        <Text style={{ color: '#64748b', fontSize: 16 }}>
+                            Sistem POS & Keuangan Pintar
+                        </Text>
                     </div>
 
-                    {/* Form */}
-                    <div className="p-6 md:p-8">
-                        {registeredEmail && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="mb-6"
-                            >
-                                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                                    <Text className="text-green-800 text-sm block">
-                                        ✅ Pendaftaran berhasil! Silakan login dengan email:
-                                    </Text>
-                                    <Text className="text-green-900 font-semibold block mt-1">
-                                        {registeredEmail}
-                                    </Text>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        <Form
-                            form={form}
-                            name="login"
-                            onFinish={onFinish}
-                            layout="vertical"
-                            size="large"
-                            initialValues={{
-                                remember: true,
-                                username: registeredEmail,
-                            }}
-                            autoComplete="off"
+                    <Form
+                        name="modern_login"
+                        layout="vertical"
+                        size="large"
+                        onFinish={onFinish}
+                        autoComplete="off"
+                    >
+                        <Form.Item
+                            name="email"
+                            rules={[
+                                { required: true, message: 'Harap masukkan Email Anda' },
+                                { type: 'email', message: 'Harap masukkan Email yang valid' }
+                            ]}
                         >
-                            <Form.Item
-                                name="username"
-                                label={<span className="font-medium">Username atau Email</span>}
-                                rules={[{ required: true, message: 'Username atau email wajib diisi' }]}
-                            >
-                                <Input 
-                                    prefix={<UserOutlined className="text-gray-400" />} 
-                                    placeholder="Username atau email" 
-                                    className="h-12"
-                                    allowClear
-                                />
-                            </Form.Item>
+                            <Input
+                                prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
+                                placeholder="Alamat Email"
+                                style={{ borderRadius: 12, height: 48 }}
+                            />
+                        </Form.Item>
 
-                            <Form.Item
-                                name="password"
-                                label={<span className="font-medium">Password</span>}
-                                rules={[{ required: true, message: 'Password wajib diisi' }]}
-                            >
-                                <Input.Password 
-                                    prefix={<LockOutlined className="text-gray-400" />} 
-                                    placeholder="Password" 
-                                    className="h-12"
-                                    visibilityToggle={{ visible: passwordVisible, onVisibleChange: setPasswordVisible }}
-                                />
-                            </Form.Item>
+                        <Form.Item
+                            name="password"
+                            rules={[{ required: true, message: 'Harap masukkan Kata Sandi' }]}
+                        >
+                            <Input.Password
+                                prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
+                                placeholder="Kata Sandi"
+                                style={{ borderRadius: 12, height: 48 }}
+                            />
+                        </Form.Item>
 
-                            <Form.Item>
-                                <div className="flex justify-between items-center">
-                                    <Form.Item name="remember" valuePropName="checked" noStyle>
-                                        <Checkbox className="text-sm">Ingat saya</Checkbox>
-                                    </Form.Item>
-                                    <Button 
-                                        type="link" 
-                                        onClick={() => navigate('/admin/forgot-password')}
-                                        className="!p-0 text-sm text-indigo-600 hover:text-indigo-800"
-                                    >
-                                        Lupa password?
-                                    </Button>
-                                </div>
-                            </Form.Item>
-
-                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                <Button 
-                                    type="primary" 
-                                    htmlType="submit" 
-                                    loading={loading}
-                                    block 
-                                    size="large"
-                                    className="h-14 text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 border-none"
-                                >
-                                    {loading ? 'Logging in...' : 'Masuk'}
-                                </Button>
-                            </motion.div>
-                        </Form>
-
-                        <Divider className="my-6">atau login dengan</Divider>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <Button 
-                                    block 
-                                    size="large"
-                                    icon={<GoogleOutlined />}
-                                    className="h-12"
-                                >
-                                    Google
-                                </Button>
-                            </motion.div>
-                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <Button 
-                                    block 
-                                    size="large"
-                                    icon={<FacebookOutlined />}
-                                    className="h-12"
-                                >
-                                    Facebook
-                                </Button>
-                            </motion.div>
-                        </div>
-
-                        <Divider className="my-6" />
-
-                        <div className="text-center">
-                            <Text type="secondary" className="text-sm">
-                                Belum punya akun?{' '}
-                                <Button 
-                                    type="link" 
-                                    onClick={() => navigate('/authors/register')} 
-                                    className="!p-0 font-semibold text-indigo-600 hover:text-indigo-800"
-                                >
-                                    Daftar sekarang
-                                </Button>
+                        <div style={{ marginBottom: 24, textAlign: 'right' }}>
+                            <Text style={{ color: '#2563eb', cursor: 'pointer', fontSize: 14 }}>
+                                Lupa Kata Sandi?
                             </Text>
                         </div>
 
-                        <motion.div 
-                            className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-100"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5 }}
-                        >
-                            <Text type="secondary" className="text-xs block mb-2 font-semibold">
-                                🏢 New Rizquna Elfath - Enterprise System
-                            </Text>
-                            <ul className="text-xs space-y-1 text-gray-600">
-                                <li className="flex items-start">
-                                    <span className="text-green-500 mr-2">✓</span>
-                                    <span>Order Management System</span>
-                                </li>
-                                <li className="flex items-start">
-                                    <span className="text-green-500 mr-2">✓</span>
-                                    <span>Production Tracking</span>
-                                </li>
-                                <li className="flex items-start">
-                                    <span className="text-green-500 mr-2">✓</span>
-                                    <span>Inventory & Material Management</span>
-                                </li>
-                            </ul>
-                        </motion.div>
+                        <Form.Item style={{ marginBottom: 0 }}>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                loading={loading}
+                                style={{
+                                    width: '100%',
+                                    height: 48,
+                                    borderRadius: 12,
+                                    background: 'linear-gradient(135deg, #0ea5e9, #2563eb)',
+                                    border: 'none',
+                                    fontSize: 16,
+                                    fontWeight: 600,
+                                    boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.2)',
+                                }}
+                            >
+                                Masuk ke Dashboard
+                            </Button>
+                        </Form.Item>
+                    </Form>
+
+                    <div style={{ marginTop: 40, textAlign: 'center' }}>
+                        <Text style={{ color: '#64748b' }}>
+                            Butuh akses akun? <strong style={{ color: '#2563eb', cursor: 'pointer' }}>Hubungi Admin</strong>
+                        </Text>
                     </div>
                 </Card>
+
+                <div style={{ marginTop: 24, textAlign: 'center' }}>
+                    <Text style={{ color: '#94a3b8', fontSize: 12 }}>
+                        © 2026 Rizquna Kasir. v4.0.0 Refactor Premium Edition.
+                    </Text>
+                </div>
             </motion.div>
         </div>
     );

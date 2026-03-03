@@ -2,59 +2,50 @@
 
 namespace Tests\Feature;
 
-use App\Models\Payment;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class RoleAccessMatrixApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_marketing_cannot_import_sales(): void
+    public function test_default_user_cannot_access_books_endpoint(): void
     {
         $this->seed(RolePermissionSeeder::class);
 
-        $marketing = User::factory()->create();
-        $marketing->assignRole('Marketing');
-        Sanctum::actingAs($marketing);
+        $user = User::factory()->create();
+        $user->assignRole('User');
+        $this->actingAs($user);
 
-        $response = $this->postJson('/api/v1/sales/import', []);
+        $response = $this->getJson('/api/v1/books');
 
         $response->assertStatus(403);
     }
 
-    public function test_finance_can_access_royalty_calculation_endpoint(): void
+    public function test_admin_can_access_books_endpoint(): void
     {
         $this->seed(RolePermissionSeeder::class);
 
-        $finance = User::factory()->create();
-        $finance->assignRole('Finance');
-        Sanctum::actingAs($finance);
+        $admin = User::factory()->create();
+        $this->actingAsWithRole($admin, 'Admin');
 
-        $response = $this->postJson('/api/v1/royalties/calculate', [
-            'period_month' => '2026-02',
-        ]);
+        $response = $this->getJson('/api/v1/books');
 
         $response->assertOk()
             ->assertJsonPath('success', true);
     }
 
-    public function test_legal_cannot_mark_payment_paid(): void
+    public function test_default_user_cannot_access_authors_endpoint(): void
     {
         $this->seed(RolePermissionSeeder::class);
 
-        $legal = User::factory()->create();
-        $legal->assignRole('Legal');
-        Sanctum::actingAs($legal);
+        $user = User::factory()->create();
+        $user->assignRole('User');
+        $this->actingAs($user);
 
-        $payment = Payment::factory()->create();
-
-        $response = $this->putJson("/api/v1/payments/{$payment->id}/mark-paid", [
-            'payment_reference' => 'REF-001',
-        ]);
+        $response = $this->getJson('/api/v1/authors');
 
         $response->assertStatus(403);
     }

@@ -2,10 +2,10 @@ import React from 'react';
 import { Table, Button, Tag, Card, Typography, Row, Col, Statistic, Breadcrumb, Space, Input, Popconfirm, message } from 'antd';
 import { PlusOutlined, SearchOutlined, PrinterOutlined, ExportOutlined, FilterOutlined, StopOutlined } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 import AccessControl from '../../components/AccessControl';
 import dayjs from 'dayjs';
+import ExpenseFormDrawer from './ExpenseFormDrawer';
 
 const { Title, Text } = Typography;
 
@@ -13,12 +13,16 @@ const statusColors: Record<string, string> = { recorded: 'green', void: 'red', u
 const statusLabels: Record<string, string> = { recorded: 'Tercatat', void: 'Void', unpaid: 'Belum Bayar' };
 
 const ExpensesPage: React.FC = () => {
-    const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const { data = [], isLoading } = useQuery({
+    const [drawerOpen, setDrawerOpen] = React.useState(false);
+    const { data: rawData = [], isLoading } = useQuery({
         queryKey: ['expenses'],
-        queryFn: async () => (await api.get('/finance/expenses')).data,
+        queryFn: async () => {
+            const res = await api.get('/finance/expenses');
+            return res.data?.data || res.data || [];
+        },
     });
+    const data = Array.isArray(rawData) ? rawData : [];
 
     const handleVoid = async (id: number) => {
         try {
@@ -113,7 +117,7 @@ const ExpensesPage: React.FC = () => {
                     <Button icon={<PrinterOutlined />} size="small" onClick={() => message.info('Fitur cetak segera hadir')}>Print</Button>
                     <Button icon={<ExportOutlined />} size="small" onClick={() => message.info('Fitur export segera hadir')}>Export</Button>
                     <AccessControl permission="expenses_create">
-                        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/expenses/add')}>
+                        <Button type="primary" icon={<PlusOutlined />} onClick={() => setDrawerOpen(true)}>
                             Catat Biaya
                         </Button>
                     </AccessControl>
@@ -186,6 +190,7 @@ const ExpensesPage: React.FC = () => {
                     size="small"
                 />
             </Card>
+            <ExpenseFormDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
         </div>
     );
 };
