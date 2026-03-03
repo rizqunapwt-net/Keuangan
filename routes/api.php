@@ -101,8 +101,6 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
             Route::put('/banks/{bank}', [BankController::class, 'update'])->middleware('throttle:20,1');
             Route::delete('/banks/{bank}', [BankController::class, 'destroy'])->middleware('throttle:10,1');
 
-            Route::delete('/banks/{bank}', [BankController::class, 'destroy'])->middleware('throttle:10,1');
-
             // Reports
             Route::get('/reports/profit-loss', [FinanceController::class, 'profitAndLoss']);
             Route::get('/reports/balance-sheet', [FinanceController::class, 'balanceSheet']);
@@ -110,10 +108,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
             Route::get('/reports/profit-loss/pdf', [FinanceController::class, 'exportProfitLossPdf']);
             Route::get('/reports/profit-loss/excel', [FinanceController::class, 'exportProfitLossExcel']);
             Route::get('/reports/balance-sheet/excel', [FinanceController::class, 'exportBalanceSheetExcel']);
+            Route::get('/reports/balance-sheet/pdf', [FinanceController::class, 'exportBalanceSheetPdf']);
+            Route::get('/reports/cash-flow/pdf', [FinanceController::class, 'exportCashFlowPdf']);
+            Route::get('/reports/cash-flow/excel', [FinanceController::class, 'exportCashFlowExcel']);
 
             // Debts & Receivables
             Route::get('/debts', [DebtController::class, 'index']);
-            // Route::get('/debts/{debt}', [DebtController::class, 'show']); // handled by route binding
             Route::post('/debts', [DebtController::class, 'store']);
             Route::get('/debts/{debt}', [DebtController::class, 'show']);
             Route::put('/debts/{debt}', [DebtController::class, 'update']);

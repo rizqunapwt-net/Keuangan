@@ -30,3 +30,6 @@ yarn-error.log
 # Large deploy archives
 nre_deploy.zip
 ssh.md
+
+# Node modules
+mcp-stitch/node_modules/

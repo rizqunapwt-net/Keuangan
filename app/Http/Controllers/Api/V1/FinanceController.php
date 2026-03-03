@@ -10,18 +10,17 @@ use App\Models\Accounting\Expense;
 use App\Models\Accounting\Journal;
 use App\Models\Contact;
 use App\Models\Payment;
-use App\Models\PurchaseOrder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class FinanceController extends Controller
 {
-    protected \App\Domain\Finance\Services\AccountingService $accountingService;
+    protected AccountingService $accountingService;
 
     protected ReportService $reportService;
 
     public function __construct(
-        \App\Domain\Finance\Services\AccountingService $accountingService,
+        AccountingService $accountingService,
         ReportService $reportService
     ) {
         $this->accountingService = $accountingService;
@@ -102,6 +101,49 @@ class FinanceController extends Controller
             new \App\Exports\BalanceSheetExport($report, $asOfDate),
             "neraca-{$asOfDate}.xlsx"
         );
+    }
+
+    public function exportCashFlowPdf(Request $request)
+    {
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+
+        $report = $this->reportService->getCashFlow($startDate, $endDate);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.cash_flow_pdf', [
+            'data' => $report,
+            'start' => $startDate,
+            'end' => $endDate,
+        ]);
+
+        return $pdf->download("laporan-arus-kas-{$startDate}-{$endDate}.pdf");
+    }
+
+    public function exportCashFlowExcel(Request $request)
+    {
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+
+        $report = $this->reportService->getCashFlow($startDate, $endDate);
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\CashFlowExport($report, $startDate, $endDate),
+            "arus-kas-{$startDate}-{$endDate}.xlsx"
+        );
+    }
+
+    public function exportBalanceSheetPdf(Request $request)
+    {
+        $asOfDate = $request->input('as_of', now()->format('Y-m-d'));
+
+        $report = $this->reportService->getBalanceSheet($asOfDate);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.balance_sheet_pdf', [
+            'data' => $report,
+            'asOf' => $asOfDate,
+        ]);
+
+        return $pdf->download("neraca-{$asOfDate}.pdf");
     }
 
     // ═══════ EXPENSES ═══════

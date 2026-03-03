@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Row, Col, Card, Typography, Space, Button, Avatar, Badge, Spin, Divider } from 'antd';
+import { Row, Col, Card, Typography, Space, Button, Badge, Spin } from 'antd';
 import {
     ArrowUpOutlined,
     ArrowDownOutlined,
     DollarOutlined,
     ShoppingCartOutlined,
     ShoppingOutlined,
-    DashboardOutlined,
     CalendarOutlined,
     MoreOutlined,
-    TrendingUpOutlined,
     FileExcelOutlined,
+    RiseOutlined,
 } from '@ant-design/icons';
 import {
     AreaChart,
@@ -98,7 +97,7 @@ const DashboardPage: React.FC = () => {
             { title: 'Total Penjualan', value: totalSales, icon: <ShoppingCartOutlined />, color: '#0fb9b1', trend: calcTrend(totalSales, prevRevenue) },
             { title: 'Total Pembelian', value: totalPurchases, icon: <ShoppingOutlined />, color: '#f59e0b', trend: calcTrend(totalPurchases, prevRevenue) },
             { title: 'Total Biaya', value: totalExpenses, icon: <DollarOutlined />, color: '#ef4444', trend: calcTrend(totalExpenses, prevExpense) },
-            { title: 'Laba Bersih', value: netProfit, icon: <TrendingUpOutlined />, color: '#20bf6b', trend: calcTrend(netProfit, prevNetProfit) },
+            { title: 'Laba Bersih', value: netProfit, icon: <RiseOutlined />, color: '#20bf6b', trend: calcTrend(netProfit, prevNetProfit) },
         ];
     }, [data, prevMonthSummary]);
 
