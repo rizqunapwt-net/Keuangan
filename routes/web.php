@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Route;
  |--------------------------------------------------------------------------
  */
 
+// Explicit redirects for root and legacy paths
+Route::redirect('/', '/admin/dashboard');
+Route::redirect('/login', '/admin/login');
+Route::redirect('/dashboard', '/admin/dashboard');
+Route::redirect('/panel/login', '/admin/login');
+
 // SPA fallback — catch all non-API routes
 Route::get('/{any}', function () {
     // Testing: return simple HTML response
