@@ -129,9 +129,10 @@ return new class extends Migration
         //    4001 "Pendapatan Penjualan Buku (Publishing)"
         //    5101 "Beban Royalti Penulis"
         //    2101 "Hutang Royalti Penulis"
+        //    1200 "Piutang Marketplace"
         // =====================================================
         // Only remove if no journal entries reference them
-        $unusedPublishingAccounts = ['4001', '5101', '2101'];
+        $unusedPublishingAccounts = ['4001', '5101', '2101', '1200'];
         foreach ($unusedPublishingAccounts as $code) {
             $accountId = DB::table('accounting_accounts')->where('code', $code)->value('id');
             if ($accountId) {

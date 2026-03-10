@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Table, Button, Tag, Card, Typography, Row, Col, Space, Input, Popconfirm, message, Select } from 'antd';
+import { fmtRp } from '../../utils/formatters';
 import { PlusOutlined, SearchOutlined, ArrowUpOutlined, ArrowDownOutlined, WalletOutlined, DeleteOutlined, HistoryOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../api';
@@ -100,7 +101,7 @@ const CashBookPage: React.FC = () => {
             key: 'income',
             align: 'right' as const,
             render: (_: any, record: any) => record.type === 'income' ? (
-                <Text strong style={{ color: '#10b981', fontSize: 13 }}>+ {Number(record.amount).toLocaleString('id-ID')}</Text>
+                <Text strong style={{ color: '#10b981', fontSize: 13 }}>+ {fmtRp(record.amount).slice(3)}</Text>
             ) : null
         },
         {
@@ -108,7 +109,7 @@ const CashBookPage: React.FC = () => {
             key: 'expense',
             align: 'right' as const,
             render: (_: any, record: any) => record.type === 'expense' ? (
-                <Text strong style={{ color: '#ef4444', fontSize: 13 }}>- {Number(record.amount).toLocaleString('id-ID')}</Text>
+                <Text strong style={{ color: '#ef4444', fontSize: 13 }}>- {fmtRp(record.amount).slice(3)}</Text>
             ) : null
         },
         {
@@ -116,7 +117,7 @@ const CashBookPage: React.FC = () => {
             dataIndex: 'running_balance',
             key: 'running_balance',
             align: 'right' as const,
-            render: (v: number) => <Text strong style={{ fontSize: 13, color: '#333' }}>Rp{Number(v).toLocaleString('id-ID')}</Text>
+            render: (v: number) => <Text strong style={{ fontSize: 13, color: '#333' }}>{fmtRp(v)}</Text>
         },
         {
             title: '',
@@ -163,7 +164,7 @@ const CashBookPage: React.FC = () => {
                                 <div style={{ flex: 1 }}>
                                     <Text style={{ fontSize: 10, fontWeight: 700, color: '#aaa', letterSpacing: '0.8px', display: 'block' }}>{card.title}</Text>
                                     <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#333' }}>
-                                        Rp{card.value.toLocaleString('id-ID')}
+                                        {fmtRp(card.value)}
                                     </Title>
                                 </div>
                             </div>

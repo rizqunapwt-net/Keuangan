@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Modal, Button, Space } from 'antd';
 import { PrinterOutlined } from '@ant-design/icons';
+import { fmtRp, fmtDate } from '../../utils/formatters';
 
 interface InvoiceItem {
     nama_produk: string;
@@ -14,12 +15,14 @@ interface InvoiceData {
     id: number;
     refNumber: string;
     number: string;
-    total: number;
-    paidAmount: number;
+    total_amount: number;
+    paid_amount: number;
     status: string;
     date: string;
-    dueDate?: string;
-    contactName: string;
+    due_date?: string;
+    contact?: {
+        name: string;
+    };
     description?: string;
     items?: InvoiceItem[];
 }
@@ -28,6 +31,7 @@ interface InvoicePrintModalProps {
     open: boolean;
     onClose: () => void;
     invoice: InvoiceData | null;
+    settings?: any;
     companyName?: string;
     companyAddress?: string;
     companyPhone?: string;
@@ -43,21 +47,19 @@ interface InvoicePrintModalProps {
     bankHolder?: string;
 }
 
-
-
 const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
-    open, onClose, invoice,
-    companyName = 'CV. RIZQUNA MANDIRI',
-    companyEmail = 'cv.rizquna@gmail.com',
-    companyWebsite = 'www.rizquna.id',
-    companyIG = '@penerbit_rizquna',
-    companyLogo = '/admin/logo-nre.png',
-    companySignature,
-    authorizedName,
-    authorizedTitle,
-    bankName = 'Bank BTPN / SMBC (kode 213)',
-    bankAccount = '902-4013-3956',
-    bankHolder = 'FITRIANTO',
+    open, onClose, invoice, settings,
+    companyName = settings?.company_name || 'CV. RIZQUNA MANDIRI',
+    companyEmail = settings?.company_email || 'cv.rizquna@gmail.com',
+    companyWebsite = settings?.company_website || 'www.rizquna.id',
+    companyIG = settings?.company_ig || '@penerbit_rizquna',
+    companyLogo = settings?.logo_url || '/admin/logo-nre.png',
+    companySignature = settings?.signature_url,
+    authorizedName = settings?.authorized_name,
+    authorizedTitle = settings?.authorized_title,
+    bankName = settings?.bank_name || 'Bank BTPN / SMBC (kode 213)',
+    bankAccount = settings?.bank_account || '902-4013-3956',
+    bankHolder = settings?.bank_holder || 'FITRIANTO',
 }) => {
     const printRef = useRef<HTMLDivElement>(null);
 
@@ -67,7 +69,7 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
 
     const items: InvoiceItem[] = invoice.items && invoice.items.length > 0
         ? invoice.items
-        : [{ nama_produk: invoice.description || 'Penjualan / Jasa', jumlah: 1, satuan: 'unit', harga: Number(invoice.total), diskon: 0 }];
+        : [{ nama_produk: invoice.description || 'Penjualan / Jasa', jumlah: 1, satuan: 'unit', harga: Number(invoice.total_amount), diskon: 0 }];
 
     const totalAmount = items.reduce((s, item) => s + (item.harga * item.jumlah - item.diskon), 0);
 
@@ -90,9 +92,6 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
         pw.document.close();
     };
 
-    const fmt = (n: number) => `Rp ${Number(n).toLocaleString('id-ID')}`;
-    const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
-
     return (
         <Modal open={open} onCancel={onClose} width={780}
             footer={<Space>
@@ -104,7 +103,6 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
             <div ref={printRef}>
                 <div style={{ maxWidth: 700, margin: '0 auto', padding: '16px 0', position: 'relative', color: '#000' }}>
 
-                    {/* ===== CENTERED LOGO & HEADER ===== */}
                     <div style={{ textAlign: 'center', marginBottom: 10 }}>
                         {companyLogo && (
                             <img src={companyLogo} alt="Logo" style={{ maxHeight: 85, maxWidth: '100%', objectFit: 'contain', marginBottom: 6 }} />
@@ -114,10 +112,8 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Separator line */}
                     <div style={{ borderTop: '2px solid #000', marginBottom: 8 }} />
 
-                    {/* Invoice ID and Date Section */}
                     <div style={{ 
                         borderTop: '1px solid #000', 
                         borderBottom: '1px solid #000', 
@@ -132,13 +128,11 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                         <span>Tanggal order: {fmtDate(invoice.date)}</span>
                     </div>
 
-                    {/* Recipient Info */}
                     <div style={{ marginBottom: 16, fontSize: 13 }}>
-                        <div style={{ fontWeight: 800 }}>Kepada Yth: {invoice.contactName}</div>
+                        <div style={{ fontWeight: 800 }}>Kepada Yth: {invoice.contact?.name || 'Umum'}</div>
                         <div>berikut adalah Detail Order Anda:</div>
                     </div>
 
-                    {/* Paid Stamp */}
                     {isPaid && (
                         <div style={{
                             position: 'absolute', top: 120, right: 20,
@@ -152,7 +146,6 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                         </div>
                     )}
 
-                    {/* Items Table */}
                     <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 20, borderTop: '1px solid #000', borderBottom: '1px solid #000' }}>
                         <thead>
                             <tr style={{ borderBottom: '1px solid #000' }}>
@@ -172,21 +165,20 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                                     <td style={{ padding: '8px', borderRight: '1px solid #000' }}>{item.nama_produk}</td>
                                     <td style={{ padding: '8px', textAlign: 'center', borderRight: '1px solid #000' }}>{item.jumlah}</td>
                                     <td style={{ padding: '8px', textAlign: 'center', borderRight: '1px solid #000' }}>{item.satuan}</td>
-                                    <td style={{ padding: '8px', textAlign: 'right', borderRight: '1px solid #000' }}>{fmt(item.harga)}</td>
-                                    <td style={{ padding: '8px', textAlign: 'right', borderRight: '1px solid #000' }}>{item.diskon > 0 ? fmt(item.diskon) : 'Rp.0'}</td>
-                                    <td style={{ padding: '8px', textAlign: 'right' }}>{fmt(item.harga * item.jumlah - item.diskon)}</td>
+                                    <td style={{ padding: '8px', textAlign: 'right', borderRight: '1px solid #000' }}>{fmtRp(item.harga)}</td>
+                                    <td style={{ padding: '8px', textAlign: 'right', borderRight: '1px solid #000' }}>{item.diskon > 0 ? fmtRp(item.diskon) : 'Rp.0'}</td>
+                                    <td style={{ padding: '8px', textAlign: 'right' }}>{fmtRp(item.harga * item.jumlah - item.diskon)}</td>
                                 </tr>
                             ))}
                         </tbody>
                         <tfoot>
                             <tr style={{ borderTop: '1px solid #000', fontWeight: 800 }}>
                                 <td colSpan={6} style={{ padding: '8px', textAlign: 'left' }}>TOTAL</td>
-                                <td style={{ padding: '8px', textAlign: 'right' }}>{fmt(totalAmount || Number(invoice.total))}</td>
+                                <td style={{ padding: '8px', textAlign: 'right' }}>{fmtRp(totalAmount || Number(invoice.total_amount))}</td>
                             </tr>
                         </tfoot>
                     </table>
 
-                    {/* Signature and Footer */}
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: 20, fontSize: 13 }}>
                         <div>Dibuat pada tanggal : {fmtDate(invoice.date)}</div>
                         <div style={{ marginBottom: 12 }}>Terima kasih atas kepercayaan Anda kepada kami:</div>
@@ -202,7 +194,6 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                         </div>
                     </div>
 
-                    {/* QR Code and Bank Info (Optional add-on not in original PDF but useful) */}
                     {!isPaid && (
                         <div style={{ marginTop: 24, fontSize: 11, color: '#666', borderTop: '1px dotted #ccc', paddingTop: 8 }}>
                             <div style={{ fontWeight: 700 }}>Pembayaran via:</div>

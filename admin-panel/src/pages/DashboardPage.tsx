@@ -23,6 +23,7 @@ import {
 import api from '../api';
 import dayjs from 'dayjs';
 import { motion } from 'framer-motion';
+import { fmtRpCompact } from '../utils/formatters';
 
 const { Title, Text } = Typography;
 
@@ -221,7 +222,7 @@ const DashboardPage: React.FC = () => {
                                             {stat.title}
                                         </Text>
                                         <Title level={3} style={{ margin: 0, fontWeight: 800, fontSize: 22, color: '#333', marginTop: 2 }}>
-                                            Rp{(stat.value > 1000000 ? (stat.value / 1000000).toFixed(1) + ' jt' : stat.value.toLocaleString('id-ID'))}
+                                            Rp{(stat.value > 1000000 ? (stat.value / 1000000).toFixed(1) + ' jt' : fmtRpCompact(stat.value).slice(2))}
                                         </Title>
                                     </div>
                                 </div>
@@ -282,7 +283,7 @@ const DashboardPage: React.FC = () => {
                                     <YAxis axisLine={false} tickLine={false} tick={{ fill: '#bbb', fontSize: 11 }} tickFormatter={(v) => `${v / 1000000}jt`} dx={-10} />
                                     <Tooltip
                                         contentStyle={{ borderRadius: 16, border: 'none', boxShadow: '0 15px 35px rgba(0,0,0,0.1)', padding: 12, fontFamily: "'Poppins', sans-serif" }}
-                                        formatter={(v: any) => `Rp${Number(v).toLocaleString('id-ID')}`}
+                                        formatter={(v: any) => fmtRpCompact(v)}
                                     />
                                     <Area
                                         type="monotone"
@@ -360,7 +361,7 @@ const DashboardPage: React.FC = () => {
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
                                             <Text strong style={{ color: tx.type === 'SALE' ? '#10b981' : '#333', fontSize: 14 }}>
-                                                {tx.type === 'SALE' ? '+' : '-'}Rp{(tx.total || tx.amount || 0).toLocaleString('id-ID')}
+                                                {tx.type === 'SALE' ? '+' : '-'}{fmtRpCompact(tx.total || tx.amount || 0)}
                                             </Text>
                                         </div>
                                     </div>

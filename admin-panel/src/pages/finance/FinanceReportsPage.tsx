@@ -4,6 +4,7 @@ import { BarChartOutlined, LineChartOutlined, PieChartOutlined } from '@ant-desi
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api';
 import dayjs from 'dayjs';
+import { fmtRp } from '../../utils/formatters';
 
 const { Title, Text } = Typography;
 
@@ -57,14 +58,14 @@ const FinanceReportsPage: React.FC = () => {
                         dataIndex: 'income',
                         key: 'income',
                         align: 'right',
-                        render: (v) => <Text type="success">Rp {Number(v).toLocaleString('id-ID')}</Text>
+                        render: (v) => <Text type="success">{fmtRp(v)}</Text>
                     },
                     {
                         title: 'Pengeluaran',
                         dataIndex: 'expense',
                         key: 'expense',
                         align: 'right',
-                        render: (v) => <Text type="danger">Rp {Number(v).toLocaleString('id-ID')}</Text>
+                        render: (v) => <Text type="danger">{fmtRp(v)}</Text>
                     },
                     {
                         title: 'Selisih',
@@ -72,7 +73,7 @@ const FinanceReportsPage: React.FC = () => {
                         align: 'right',
                         render: (_, record: any) => {
                             const diff = Number(record.income) - Number(record.expense);
-                            return <Text strong type={diff >= 0 ? 'success' : 'danger'}>Rp {diff.toLocaleString('id-ID')}</Text>
+                            return <Text strong type={diff >= 0 ? 'success' : 'danger'}>{fmtRp(diff)}</Text>
                         }
                     },
                 ]}
@@ -107,14 +108,14 @@ const FinanceReportsPage: React.FC = () => {
                         dataIndex: 'income',
                         key: 'income',
                         align: 'right',
-                        render: (v) => <Text type="success">Rp {Number(v).toLocaleString('id-ID')}</Text>
+                        render: (v) => <Text type="success">{fmtRp(v)}</Text>
                     },
                     {
                         title: 'Pengeluaran',
                         dataIndex: 'expense',
                         key: 'expense',
                         align: 'right',
-                        render: (v) => <Text type="danger">Rp {Number(v).toLocaleString('id-ID')}</Text>
+                        render: (v) => <Text type="danger">{fmtRp(v)}</Text>
                     },
                     {
                         title: 'Selisih',
@@ -122,7 +123,7 @@ const FinanceReportsPage: React.FC = () => {
                         align: 'right',
                         render: (_, record: any) => {
                             const diff = Number(record.income) - Number(record.expense);
-                            return <Text strong type={diff >= 0 ? 'success' : 'danger'}>Rp {diff.toLocaleString('id-ID')}</Text>
+                            return <Text strong type={diff >= 0 ? 'success' : 'danger'}>{fmtRp(diff)}</Text>
                         }
                     },
                 ]}
@@ -143,14 +144,14 @@ const FinanceReportsPage: React.FC = () => {
                     dataIndex: 'income',
                     key: 'income',
                     align: 'right',
-                    render: (v) => <Text type="success">Rp {Number(v).toLocaleString('id-ID')}</Text>
+                    render: (v) => <Text type="success">{fmtRp(v)}</Text>
                 },
                 {
                     title: 'Pengeluaran',
                     dataIndex: 'expense',
                     key: 'expense',
                     align: 'right',
-                    render: (v) => <Text type="danger">Rp {Number(v).toLocaleString('id-ID')}</Text>
+                    render: (v) => <Text type="danger">{fmtRp(v)}</Text>
                 },
                 {
                     title: 'Selisih',
@@ -158,7 +159,7 @@ const FinanceReportsPage: React.FC = () => {
                     align: 'right',
                     render: (_, record: any) => {
                         const diff = Number(record.income) - Number(record.expense);
-                        return <Text strong type={diff >= 0 ? 'success' : 'danger'}>Rp {diff.toLocaleString('id-ID')}</Text>
+                        return <Text strong type={diff >= 0 ? 'success' : 'danger'}>{fmtRp(diff)}</Text>
                     }
                 },
             ]}

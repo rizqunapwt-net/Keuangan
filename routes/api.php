@@ -11,7 +11,7 @@ use App\Http\Controllers\Api\V1\Finance\ExpenseController;
 use App\Http\Controllers\Api\V1\FinanceController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\NotificationController;
-use App\Http\Controllers\Api\V1\PercetakanController;
+
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\UnifiedLoginController;
 use Illuminate\Support\Facades\Route;
@@ -120,13 +120,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
 
         });
 
-        // ── Percetakan ──
-        Route::prefix('percetakan')->group(function (): void {
-            Route::get('/customers', [PercetakanController::class, 'customers']);
-            Route::get('/materials', [PercetakanController::class, 'materials']);
-            Route::get('/orders', [PercetakanController::class, 'orders']);
-            Route::patch('/orders/{orderId}/status', [PercetakanController::class, 'updateOrderStatus']);
-        });
+
 
         // ── Audit Logs (Security) ──
         Route::prefix('audit')->group(function () {

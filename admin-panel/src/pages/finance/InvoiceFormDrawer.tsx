@@ -17,9 +17,10 @@ const { Title, Text } = Typography;
 interface InvoiceFormDrawerProps {
     open: boolean;
     onClose: () => void;
+    onSuccess?: () => void;
 }
 
-const InvoiceFormDrawer: React.FC<InvoiceFormDrawerProps> = ({ open, onClose }) => {
+const InvoiceFormDrawer: React.FC<InvoiceFormDrawerProps> = ({ open, onClose, onSuccess }) => {
     const [form] = Form.useForm();
     const queryClient = useQueryClient();
 
@@ -63,6 +64,7 @@ const InvoiceFormDrawer: React.FC<InvoiceFormDrawerProps> = ({ open, onClose }) 
         onSuccess: () => {
             message.success('Invoice berhasil dibuat!');
             queryClient.invalidateQueries({ queryKey: ['invoices'] });
+            if (onSuccess) onSuccess();
             onClose();
         },
         onError: (err: any) => {

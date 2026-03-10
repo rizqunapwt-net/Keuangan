@@ -1,5 +1,6 @@
 import React from 'react';
 import { Table, Button, Tag, Card, Typography, Row, Col, Space, Input, Popconfirm, message } from 'antd';
+import { fmtRp } from '../../utils/formatters';
 import { PlusOutlined, SearchOutlined, PrinterOutlined, ExportOutlined, StopOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api';
@@ -95,7 +96,7 @@ const ExpensesPage: React.FC = () => {
             key: 'amount',
             align: 'right' as const,
             sorter: true,
-            render: (v: number) => <Text strong style={{ fontSize: 14, color: '#333' }}>Rp{Number(v).toLocaleString('id-ID')}</Text>,
+            render: (v: number) => <Text strong style={{ fontSize: 14, color: '#333' }}>{fmtRp(v)}</Text>,
         },
         {
             title: '',
@@ -160,8 +161,8 @@ const ExpensesPage: React.FC = () => {
                                 </div>
                                 <div style={{ flex: 1 }}>
                                     <Text style={{ fontSize: 10, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'block' }}>{stat.title}</Text>
-                                    <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#333' }}>
-                                        Rp{stat.value.toLocaleString('id-ID')}
+                                    <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#333', marginTop: 2 }}>
+                                        {fmtRp(stat.value)}
                                     </Title>
                                 </div>
                             </div>
