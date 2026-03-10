@@ -73,7 +73,11 @@ class UnifiedLoginController extends Controller
             $this->logAuthEvent('login_success', $identifier, $user->id, 'success', $request);
             $user->update(['last_login_at' => now()]);
 
-            $token = $user->createToken($validated['device_name'] ?? 'unified-token', ['*'])->plainTextToken;
+            $token = $user->createToken(
+                $validated['device_name'] ?? 'unified-token',
+                ['*'],
+                now()->addHours(24)
+            )->plainTextToken;
 
             return $this->success([
                 'access_token' => $token,

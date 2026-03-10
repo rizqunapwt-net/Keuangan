@@ -11,6 +11,7 @@ use App\Support\ApiResponse;
 use App\Traits\Auditable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ExpenseController extends Controller
 {
@@ -18,6 +19,8 @@ class ExpenseController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        Gate::authorize('viewAny', Expense::class);
+        
         $query = Expense::query();
 
         if ($request->has('status')) {
@@ -39,6 +42,8 @@ class ExpenseController extends Controller
 
     public function store(StoreExpenseRequest $request): JsonResponse
     {
+        Gate::authorize('create', Expense::class);
+        
         $data = $request->validated();
 
         if ($request->hasFile('attachment_path')) {
@@ -52,11 +57,15 @@ class ExpenseController extends Controller
 
     public function show(Expense $expense): JsonResponse
     {
+        Gate::authorize('view', $expense);
+        
         return $this->success($expense->load('account', 'creator', 'approver', 'voidedBy'));
     }
 
     public function update(UpdateExpenseRequest $request, Expense $expense): JsonResponse
     {
+        Gate::authorize('update', $expense);
+        
         $data = $request->validated();
         if ($request->hasFile('attachment_path')) {
             $data['attachment_path'] = $request->file('attachment_path')->store('expenses', 'public');
@@ -69,6 +78,8 @@ class ExpenseController extends Controller
 
     public function void(Request $request, Expense $expense): JsonResponse
     {
+        Gate::authorize('void', $expense);
+        
         $request->validate([
             'void_reason' => 'required|string|max:500',
         ]);
@@ -90,6 +101,8 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense): JsonResponse
     {
+        Gate::authorize('delete', $expense);
+        
         // Log audit sebelum delete
         $this->logDelete(
             $expense,

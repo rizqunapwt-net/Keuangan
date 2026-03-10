@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Gate;
 
 class PercetakanController extends Controller
 {
@@ -58,6 +59,8 @@ class PercetakanController extends Controller
 
     public function orders(Request $request): JsonResponse
     {
+        Gate::authorize('viewAny', \App\Models\Percetakan\Order::class);
+        
         $query = DB::table('percetakan_orders as o')
             ->leftJoin('percetakan_customers as c', 'c.id', '=', 'o.customer_id')
             ->leftJoin('users as u', 'u.id', '=', 'o.sales_id')
@@ -103,6 +106,8 @@ class PercetakanController extends Controller
         if (! $order) {
             return $this->error('Order percetakan tidak ditemukan.', 404);
         }
+
+        Gate::authorize('updateStatus', $order);
 
         $newStatus = PrintOrderStatus::from((string) $request->string('status'));
         $currentStatus = PrintOrderStatus::tryFrom((string) $order->status);
@@ -168,7 +173,8 @@ class PercetakanController extends Controller
         ?PrintOrderStatus $currentStatus,
         PrintOrderStatus $newStatus,
         string $notes = ''
-    ): void {
+    ): void
+    {
         $reportStatus = match ($newStatus) {
             PrintOrderStatus::COMPLETED,
             PrintOrderStatus::DELIVERED => 'completed',

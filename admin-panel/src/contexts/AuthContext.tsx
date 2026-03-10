@@ -31,17 +31,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const fetchProfile = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            setLoading(false);
-            return;
-        }
-
         try {
             const response = await api.get('/auth/me');
             setUser(response.data.data?.user || response.data.user || response.data);
         } catch {
-            localStorage.removeItem('token');
+            // Session expired or user not authenticated
             setUser(null);
         } finally {
             setLoading(false);
@@ -53,10 +47,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return !!user;
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        setUser(null);
-        window.location.href = '/login';
+    const logout = async () => {
+        try {
+            await api.post('/auth/logout');
+        } catch {
+            // Continue even if logout fails
+        } finally {
+            localStorage.removeItem('access_token');
+            setUser(null);
+            window.location.href = '/login';
+        }
     };
 
     return (

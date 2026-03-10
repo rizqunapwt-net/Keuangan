@@ -11,6 +11,7 @@ use App\Support\ApiResponse;
 use App\Traits\Auditable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class BankController extends Controller
 {
@@ -18,6 +19,8 @@ class BankController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        Gate::authorize('viewAny', Bank::class);
+        
         $query = Bank::query();
 
         if ($request->has('status')) {
@@ -35,6 +38,8 @@ class BankController extends Controller
 
     public function store(StoreBankRequest $request): JsonResponse
     {
+        Gate::authorize('create', Bank::class);
+        
         $bank = Bank::create($request->validated());
 
         return $this->success($bank->load('account', 'manager'), 201);
@@ -42,11 +47,15 @@ class BankController extends Controller
 
     public function show(Bank $bank): JsonResponse
     {
+        Gate::authorize('view', $bank);
+        
         return $this->success($bank->load('account', 'manager'));
     }
 
     public function update(UpdateBankRequest $request, Bank $bank): JsonResponse
     {
+        Gate::authorize('update', $bank);
+        
         $bank->update($request->validated());
 
         return $this->success($bank->load('account', 'manager'));
@@ -54,6 +63,8 @@ class BankController extends Controller
 
     public function destroy(Bank $bank): JsonResponse
     {
+        Gate::authorize('delete', $bank);
+        
         // Log audit sebelum delete
         $this->logDelete(
             $bank,

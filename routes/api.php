@@ -49,26 +49,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
 
         // ── Dashboard & Stats ──
         Route::get('/admin/dashboard-stats', [AdminDashboardController::class, 'salesStats']);
-        Route::get('/dashboard/books/stats', [AdminDashboardController::class, 'bookStats']);
-        Route::get('/dashboard/authors/stats', [AdminDashboardController::class, 'authorStats']);
-
-        // ── Publishing ──
-        Route::get('/books', [AdminDashboardController::class, 'books']);
-        Route::get('/authors', [AdminDashboardController::class, 'authors']);
-
-        // ── User Management ──
-        Route::get('/admin/users', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'index']);
-        Route::get('/admin/users/roles', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'roles']);
-        Route::get('/admin/users/{user}', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'show']);
-        Route::post('/admin/users', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'store']);
-        Route::put('/admin/users/{user}', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'update']);
-        Route::patch('/admin/users/{user}/toggle-active', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'toggleActive']);
-        Route::delete('/admin/users/{user}', [\App\Http\Controllers\Api\V1\UserManagementController::class, 'destroy']);
 
         // ── Finance (Core) ──
         Route::prefix('finance')->middleware(['throttle:60,1'])->group(function () {
             Route::get('/summary', [FinanceController::class, 'summary']);
             Route::get('/invoices', [FinanceController::class, 'invoices']);
+            Route::post('/invoices', [FinanceController::class, 'storeInvoice'])->middleware('throttle:30,1');
             Route::get('/journals', [FinanceController::class, 'journals']);
             Route::post('/journals', [FinanceController::class, 'storeJournal'])->middleware('throttle:30,1');
             Route::put('/journals/{journal}/reverse', [FinanceController::class, 'reverseJournal']);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Row, Col, Card, Typography, Space, Button, Badge, Spin } from 'antd';
+import { Row, Col, Card, Typography, Button, Badge, Spin } from 'antd';
 import {
     ArrowUpOutlined,
     ArrowDownOutlined,
@@ -8,8 +8,8 @@ import {
     ShoppingOutlined,
     CalendarOutlined,
     MoreOutlined,
-    FileExcelOutlined,
     RiseOutlined,
+    RocketOutlined,
 } from '@ant-design/icons';
 import {
     AreaChart,
@@ -94,10 +94,10 @@ const DashboardPage: React.FC = () => {
         const prevNetProfit = prevMonthSummary ? Number(prevMonthSummary.net_profit ?? 0) : null;
 
         return [
-            { title: 'Total Penjualan', value: totalSales, icon: <ShoppingCartOutlined />, color: '#0fb9b1', trend: calcTrend(totalSales, prevRevenue) },
-            { title: 'Total Pembelian', value: totalPurchases, icon: <ShoppingOutlined />, color: '#f59e0b', trend: calcTrend(totalPurchases, prevRevenue) },
-            { title: 'Total Biaya', value: totalExpenses, icon: <DollarOutlined />, color: '#ef4444', trend: calcTrend(totalExpenses, prevExpense) },
-            { title: 'Laba Bersih', value: netProfit, icon: <RiseOutlined />, color: '#20bf6b', trend: calcTrend(netProfit, prevNetProfit) },
+            { title: 'TOTAL PENJUALAN', value: totalSales, icon: <ShoppingCartOutlined />, color: '#0fb9b1', trend: calcTrend(totalSales, prevRevenue) },
+            { title: 'TOTAL PEMBELIAN', value: totalPurchases, icon: <ShoppingOutlined />, color: '#f59e0b', trend: calcTrend(totalPurchases, prevRevenue) },
+            { title: 'TOTAL BIAYA', value: totalExpenses, icon: <DollarOutlined />, color: '#ef4444', trend: calcTrend(totalExpenses, prevExpense) },
+            { title: 'LABA BERSIH', value: netProfit, icon: <RiseOutlined />, color: '#20bf6b', trend: calcTrend(netProfit, prevNetProfit) },
         ];
     }, [data, prevMonthSummary]);
 
@@ -131,88 +131,115 @@ const DashboardPage: React.FC = () => {
     );
 
     return (
-        <div style={{ paddingBottom: 40 }}>
-            {/* Header Section */}
-            <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}
-            >
-                <div>
-                    <Text style={{ color: '#64748b', fontSize: 16, fontWeight: 500 }}>Selamat Siang, Administrator</Text>
-                    <Title level={1} style={{ margin: 0, fontWeight: 800, fontSize: 40, color: '#0f172a', letterSpacing: '-1px' }}>
-                        Pusat Kontrol <span style={{ color: '#0fb9b1' }}>Finansial</span>
-                    </Title>
+        <div style={{ paddingBottom: 40, fontFamily: "'Poppins', sans-serif" }}>
+            
+            {/* Fillow-style Header with Dates */}
+            <div style={{ marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Title level={3} style={{ margin: 0, fontWeight: 700, letterSpacing: '-0.3px' }}>Dashboard</Title>
+                <div style={{ background: '#fff', padding: '8px 16px', borderRadius: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <CalendarOutlined style={{ color: '#0fb9b1' }} />
+                    <Text strong style={{ fontSize: 13, color: '#333' }}>{dayjs().format('DD MMMM YYYY')}</Text>
                 </div>
-                <Space size="middle">
-                    <Button
-                        icon={<CalendarOutlined />}
-                        size="large"
-                        className="glass-effect"
-                        style={{ borderRadius: 16, fontWeight: 600 }}
-                    >
-                        {dayjs().format('MMMM YYYY')}
-                    </Button>
-                    <Button
-                        type="primary"
-                        size="large"
-                        icon={<FileExcelOutlined />}
-                        onClick={() => {
-                            const params = new URLSearchParams({
-                                start_date: dayjs().startOf('month').format('YYYY-MM-DD'),
-                                end_date: dayjs().endOf('month').format('YYYY-MM-DD'),
-                            });
-                            window.open(`${import.meta.env.VITE_API_URL}/finance/reports/profit-loss/excel?${params.toString()}`, '_blank');
-                        }}
-                    >
-                        Export Laporan
-                    </Button>
-                </Space>
+            </div>
+
+            {/* Fillow-style Hero Banner */}
+            <motion.div 
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{ marginBottom: 32 }}
+            >
+                <Card 
+                    style={{ 
+                        borderRadius: 24, 
+                        background: 'linear-gradient(135deg, #0fb9b1 0%, #20bf6b 100%)',
+                        border: 'none',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        padding: '12px 0'
+                    }}
+                >
+                    <div style={{ 
+                        position: 'absolute', right: '-40px', bottom: '-40px', opacity: 0.15, fontSize: 240, color: 'white', transform: 'rotate(-15deg)'
+                    }}>
+                        <RocketOutlined />
+                    </div>
+                    <Row align="middle" gutter={40} style={{ padding: '24px 40px' }}>
+                        <Col xs={24} md={16}>
+                            <Title level={2} style={{ color: 'white', margin: 0, fontWeight: 800, fontSize: 32, letterSpacing: '-0.5px' }}>
+                                Selamat Datang Kembali!
+                            </Title>
+                            <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 16, display: 'block', marginTop: 8, maxWidth: 500, lineHeight: 1.6 }}>
+                                Pantau kesehatan finansial Rizquna Kasir Anda dalam satu tampilan cerdas. Semua data diperbarui secara real-time.
+                            </Text>
+                            <div style={{ marginTop: 24 }}>
+                                <Button 
+                                    size="large" 
+                                    style={{ borderRadius: 14, fontWeight: 700, height: 48, padding: '0 32px', color: '#0fb9b1', border: 'none' }}
+                                    onClick={() => {
+                                        const params = new URLSearchParams({
+                                            start_date: dayjs().startOf('month').format('YYYY-MM-DD'),
+                                            end_date: dayjs().endOf('month').format('YYYY-MM-DD'),
+                                        });
+                                        window.open(`${import.meta.env.VITE_API_URL}/finance/reports/profit-loss/excel?${params.toString()}`, '_blank');
+                                    }}
+                                >
+                                    Export Laporan Excel
+                                </Button>
+                            </div>
+                        </Col>
+                    </Row>
+                </Card>
             </motion.div>
 
-            {/* KPI Cards */}
+            {/* KPI Cards — Fillow Style (Spacious & Soft) */}
             <Row gutter={[24, 24]} style={{ marginBottom: 40 }}>
                 {stats.map((stat, idx) => (
                     <Col xs={24} sm={12} lg={6} key={idx}>
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
+                            transition={{ delay: 0.1 + (idx * 0.1) }}
                         >
-                            <Card className="premium-card" bodyStyle={{ padding: 28 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                            <Card className="premium-card" style={{ borderRadius: 20 }} bodyStyle={{ padding: '30px 24px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
                                     <div style={{
-                                        width: 56,
-                                        height: 56,
-                                        borderRadius: 18,
-                                        background: `linear-gradient(135deg, ${stat.color}20, ${stat.color}10)`,
+                                        width: 52,
+                                        height: 52,
+                                        borderRadius: 16,
+                                        background: `${stat.color}10`,
                                         color: stat.color,
-                                        fontSize: 24,
+                                        fontSize: 22,
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        boxShadow: `0 8px 16px ${stat.color}10`
+                                        flexShrink: 0
                                     }}>
                                         {stat.icon}
                                     </div>
+                                    <div style={{ flex: 1 }}>
+                                        <Text style={{ color: '#aaa', fontSize: 11, fontWeight: 700, letterSpacing: '0.8px', display: 'block' }}>
+                                            {stat.title}
+                                        </Text>
+                                        <Title level={3} style={{ margin: 0, fontWeight: 800, fontSize: 22, color: '#333', marginTop: 2 }}>
+                                            Rp{(stat.value > 1000000 ? (stat.value / 1000000).toFixed(1) + ' jt' : stat.value.toLocaleString('id-ID'))}
+                                        </Title>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f8f8f8', paddingTop: 12 }}>
                                     <Badge 
                                         count={stat.trend} 
                                         style={{ 
                                             backgroundColor: stat.trend.startsWith('+') ? '#dcfce7' : '#fee2e2', 
-                                            color: stat.trend.startsWith('+') ? '#166534' : '#991b1b',
+                                            color: stat.trend.startsWith('+') ? '#10b981' : '#ef4444',
                                             fontWeight: 700,
                                             padding: '0 8px',
-                                            borderRadius: 8
+                                            borderRadius: 8,
+                                            fontSize: 11,
+                                            boxShadow: 'none',
+                                            border: 'none'
                                         }} 
                                     />
-                                </div>
-                                <Text style={{ color: '#64748b', fontSize: 14, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                    {stat.title}
-                                </Text>
-                                <div style={{ marginTop: 8 }}>
-                                    <Title level={2} style={{ margin: 0, fontWeight: 800, fontSize: 28, color: '#0f172a' }}>
-                                        Rp{stat.value.toLocaleString('id-ID')}
-                                    </Title>
+                                    <Text style={{ fontSize: 11, color: '#ccc', fontWeight: 500 }}>Bulan lalu</Text>
                                 </div>
                             </Card>
                         </motion.div>
@@ -231,37 +258,37 @@ const DashboardPage: React.FC = () => {
                         <Card
                             className="premium-card"
                             title={
-                                <div style={{ padding: '8px 0' }}>
-                                    <Title level={4} style={{ margin: 0, fontWeight: 700 }}>Arus Kas Bulanan</Title>
-                                    <Text type="secondary" style={{ fontSize: 13 }}>Perbandingan penjualan vs biaya operasional</Text>
+                                <div style={{ padding: '12px 0' }}>
+                                    <Title level={4} style={{ margin: 0, fontWeight: 700, letterSpacing: '-0.3px' }}>Statistik Proyek & Arus Kas</Title>
+                                    <Text type="secondary" style={{ fontSize: 13, color: '#aaa', fontWeight: 500 }}>Perbandingan performa finansial bulanan</Text>
                                 </div>
                             }
                             extra={<Button type="text" icon={<MoreOutlined />} style={{ borderRadius: 10 }} />}
                         >
-                            <ResponsiveContainer width="100%" height={380}>
+                            <ResponsiveContainer width="100%" height={400}>
                                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#0fb9b1" stopOpacity={0.2} />
+                                            <stop offset="5%" stopColor="#0fb9b1" stopOpacity={0.15} />
                                             <stop offset="95%" stopColor="#0fb9b1" stopOpacity={0} />
                                         </linearGradient>
                                         <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.15} />
+                                            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1} />
                                             <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} dy={15} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} tickFormatter={(v) => `${v / 1000000}jt`} dx={-10} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#bbb', fontSize: 11, fontWeight: 600 }} dy={15} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#bbb', fontSize: 11 }} tickFormatter={(v) => `${v / 1000000}jt`} dx={-10} />
                                     <Tooltip
-                                        contentStyle={{ borderRadius: 16, border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', padding: 12 }}
+                                        contentStyle={{ borderRadius: 16, border: 'none', boxShadow: '0 15px 35px rgba(0,0,0,0.1)', padding: 12, fontFamily: "'Poppins', sans-serif" }}
                                         formatter={(v: any) => `Rp${Number(v).toLocaleString('id-ID')}`}
                                     />
                                     <Area
                                         type="monotone"
                                         dataKey="income"
                                         stroke="#0fb9b1"
-                                        strokeWidth={3}
+                                        strokeWidth={4}
                                         fillOpacity={1}
                                         fill="url(#colorIncome)"
                                         name="Pemasukan"
@@ -271,7 +298,7 @@ const DashboardPage: React.FC = () => {
                                         type="monotone"
                                         dataKey="expense"
                                         stroke="#ef4444"
-                                        strokeWidth={3}
+                                        strokeWidth={4}
                                         fillOpacity={1}
                                         fill="url(#colorExpense)"
                                         name="Pengeluaran"
@@ -294,12 +321,11 @@ const DashboardPage: React.FC = () => {
                         <Card
                             className="premium-card"
                             title={
-                                <div style={{ padding: '8px 0' }}>
-                                    <Title level={4} style={{ margin: 0, fontWeight: 700 }}>Aktivitas Terbaru</Title>
-                                    <Text type="secondary" style={{ fontSize: 13 }}>Transaksi masuk & keluar terkini</Text>
+                                <div style={{ padding: '12px 0' }}>
+                                    <Title level={4} style={{ margin: 0, fontWeight: 700, letterSpacing: '-0.3px' }}>Aktivitas Terbaru</Title>
+                                    <Text type="secondary" style={{ fontSize: 13, color: '#aaa', fontWeight: 500 }}>History transaksi real-time</Text>
                                 </div>
                             }
-                            bodyStyle={{ padding: '0 24px 24px' }}
                         >
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                                 {recentTransactions.map((tx: any, i) => (
@@ -307,42 +333,41 @@ const DashboardPage: React.FC = () => {
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         gap: 16, 
-                                        padding: '20px 0',
-                                        borderBottom: i === recentTransactions.length - 1 ? 'none' : '1px solid #f1f5f9'
+                                        padding: '16px 0',
+                                        borderBottom: i === recentTransactions.length - 1 ? 'none' : '1px solid #f8f8f8'
                                     }}>
                                         <div style={{
-                                            width: 44,
-                                            height: 44,
+                                            width: 42,
+                                            height: 42,
                                             borderRadius: 14,
-                                            backgroundColor: tx.type === 'SALE' ? '#dcfce7' : tx.type === 'PURCHASE' ? '#fef3c7' : '#fee2e2',
+                                            backgroundColor: tx.type === 'SALE' ? 'rgba(16, 185, 129, 0.1)' : tx.type === 'PURCHASE' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)',
                                             color: tx.type === 'SALE' ? '#10b981' : tx.type === 'PURCHASE' ? '#f59e0b' : '#ef4444',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            fontSize: 18,
+                                            fontSize: 16,
                                             flexShrink: 0
                                         }}>
                                             {tx.type === 'SALE' ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
                                         </div>
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <Text strong style={{ display: 'block', fontSize: 15, color: '#1e293b' }}>
+                                            <Text strong style={{ display: 'block', fontSize: 14, color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {tx.type === 'SALE' ? 'Penerimaan Piutang' : tx.type === 'PURCHASE' ? 'Pembayaran Utang' : 'Pengeluaran Biaya'}
                                             </Text>
-                                            <Text style={{ color: '#64748b', fontSize: 13 }}>
-                                                {tx.description || tx.ref || tx.number || 'Tanpa keterangan'}
+                                            <Text style={{ color: '#aaa', fontSize: 11, fontWeight: 500 }}>
+                                                {dayjs(tx.transDate || tx.date || tx.expense_date || tx.order_date).format('DD MMM, HH:mm')}
                                             </Text>
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
-                                            <Text strong style={{ color: tx.type === 'SALE' ? '#10b981' : '#0f172a', fontSize: 15 }}>
+                                            <Text strong style={{ color: tx.type === 'SALE' ? '#10b981' : '#333', fontSize: 14 }}>
                                                 {tx.type === 'SALE' ? '+' : '-'}Rp{(tx.total || tx.amount || 0).toLocaleString('id-ID')}
                                             </Text>
-                                            <div style={{ fontSize: 11, color: '#94a3b8' }}>Baru saja</div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                            <Button block size="large" className="glass-effect" style={{ borderRadius: 14, fontWeight: 700, height: 50, marginTop: 10 }}>
-                                Lihat Semua Riwayat
+                            <Button block size="large" style={{ borderRadius: 14, fontWeight: 700, height: 48, marginTop: 16, background: '#fcfcfc', color: '#666', border: '1px solid #eee' }}>
+                                LIHAT SEMUA RIWAYAT
                             </Button>
                         </Card>
                     </motion.div>

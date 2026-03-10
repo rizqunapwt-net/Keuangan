@@ -5,207 +5,53 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Finance\Services\AccountingService;
 use App\Domain\Finance\Services\ReportService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Finance\StoreExpenseRequest;
+use App\Http\Requests\Finance\StoreJournalRequest;
 use App\Models\Accounting\Account;
-use App\Models\Accounting\Expense;
 use App\Models\Accounting\Journal;
 use App\Models\Contact;
-use App\Models\Payment;
+use App\Models\Debt;
+use App\Models\Expense;
+use App\Services\Finance\ReportExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class FinanceController extends Controller
 {
-    protected AccountingService $accountingService;
-
-    protected ReportService $reportService;
-
     public function __construct(
-        AccountingService $accountingService,
-        ReportService $reportService
-    ) {
-        $this->accountingService = $accountingService;
-        $this->reportService = $reportService;
-    }
+        protected AccountingService $accountingService,
+        protected ReportService $reportService,
+        protected ReportExportService $exportService,
+    ) {}
 
     // ═══════ REPORTS ═══════
 
     public function profitAndLoss(Request $request): JsonResponse
     {
-        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
-
-        $report = $this->reportService->getProfitAndLoss($startDate, $endDate);
-
-        return response()->json([
-            'success' => true,
-            'data' => $report,
-        ]);
+        ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
+        $report = $this->reportService->getProfitAndLoss($start, $end);
+        return response()->json(['success' => true, 'data' => $report]);
     }
 
     public function balanceSheet(Request $request): JsonResponse
     {
-        $asOfDate = $request->input('as_of', now()->format('Y-m-d'));
-        $report = $this->reportService->getBalanceSheet($asOfDate);
-
-        return response()->json([
-            'success' => true,
-            'data' => $report,
-        ]);
+        $asOf = $request->input('as_of', now()->format('Y-m-d'));
+        $report = $this->reportService->getBalanceSheet($asOf);
+        return response()->json(['success' => true, 'data' => $report]);
     }
 
     public function cashFlow(Request $request): JsonResponse
     {
-        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
-
-        $report = $this->reportService->getCashFlow($startDate, $endDate);
-
-        return response()->json([
-            'success' => true,
-            'data' => $report,
-        ]);
-    }
-
-    public function exportProfitLossPdf(Request $request)
-    {
-        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
-
-        $report = $this->reportService->getProfitAndLoss($startDate, $endDate);
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.profit_loss_pdf', ['data' => $report]);
-
-        return $pdf->download("laporan-laba-rugi-{$startDate}-{$endDate}.pdf");
-    }
-
-    public function exportProfitLossExcel(Request $request)
-    {
-        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
-
-        $report = $this->reportService->getProfitAndLoss($startDate, $endDate);
-
-        return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\ProfitLossExport($report, $startDate, $endDate),
-            "laba-rugi-{$startDate}-{$endDate}.xlsx"
-        );
-    }
-
-    public function exportBalanceSheetExcel(Request $request)
-    {
-        $asOfDate = $request->input('as_of', now()->format('Y-m-d'));
-
-        $report = $this->reportService->getBalanceSheet($asOfDate);
-
-        return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\BalanceSheetExport($report, $asOfDate),
-            "neraca-{$asOfDate}.xlsx"
-        );
-    }
-
-    public function exportCashFlowPdf(Request $request)
-    {
-        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
-
-        $report = $this->reportService->getCashFlow($startDate, $endDate);
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.cash_flow_pdf', [
-            'data' => $report,
-            'start' => $startDate,
-            'end' => $endDate,
-        ]);
-
-        return $pdf->download("laporan-arus-kas-{$startDate}-{$endDate}.pdf");
-    }
-
-    public function exportCashFlowExcel(Request $request)
-    {
-        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
-
-        $report = $this->reportService->getCashFlow($startDate, $endDate);
-
-        return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\CashFlowExport($report, $startDate, $endDate),
-            "arus-kas-{$startDate}-{$endDate}.xlsx"
-        );
-    }
-
-    public function exportBalanceSheetPdf(Request $request)
-    {
-        $asOfDate = $request->input('as_of', now()->format('Y-m-d'));
-
-        $report = $this->reportService->getBalanceSheet($asOfDate);
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.balance_sheet_pdf', [
-            'data' => $report,
-            'asOf' => $asOfDate,
-        ]);
-
-        return $pdf->download("neraca-{$asOfDate}.pdf");
-    }
-
-    // ═══════ EXPENSES ═══════
-
-    public function expenses(Request $request): JsonResponse
-    {
-        $expenses = Expense::with(['account', 'payFromAccount'])
-            ->latest('date')
-            ->when($request->filled('status'), function ($q) use ($request) {
-                return $q->where('status', '=', (string)$request->status);
-            })
-            ->get();
-
-        $transformed = $expenses->map(fn ($e) => [
-            'id' => $e->id,
-            'refNumber' => $e->ref_number,
-            'transDate' => $e->date->format('Y-m-d'),
-            'status' => $e->status,
-            'amount' => (float) $e->amount,
-            'description' => $e->description,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'data' => $transformed,
-        ]);
-    }
-
-    public function storeExpense(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'refNumber' => 'required|string|unique:accounting_expenses,ref_number',
-            'transDate' => 'required|date',
-            'accountId' => 'required|exists:accounting_accounts,id',
-            'payFromAccountId' => 'required|exists:accounting_accounts,id',
-            'amount' => 'required|numeric|min:0.01',
-            'description' => 'nullable|string|max:500',
-        ]);
-
-        try {
-            $expense = $this->accountingService->recordExpense($validated, auth()->id());
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Biaya berhasil dicatat.',
-                'data' => $expense,
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-        }
+        ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
+        $report = $this->reportService->getCashFlow($start, $end);
+        return response()->json(['success' => true, 'data' => $report]);
     }
 
     public function summary(): JsonResponse
     {
         $start = now()->startOfMonth()->toDateString();
         $end = now()->endOfMonth()->toDateString();
-
         $pl = $this->reportService->getProfitAndLoss($start, $end);
-
         return response()->json([
             'success' => true,
             'data' => [
@@ -214,6 +60,79 @@ class FinanceController extends Controller
                 'net_profit' => (float) $pl['net_profit'],
             ],
         ]);
+    }
+
+    // ═══════ EXPORTS ═══════
+
+    public function exportProfitLossPdf(Request $request)
+    {
+        ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
+        return $this->exportService->exportProfitLossPdf($start, $end);
+    }
+
+    public function exportProfitLossExcel(Request $request)
+    {
+        ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
+        return $this->exportService->exportProfitLossExcel($start, $end);
+    }
+
+    public function exportBalanceSheetPdf(Request $request)
+    {
+        $asOf = $request->input('as_of', now()->format('Y-m-d'));
+        return $this->exportService->exportBalanceSheetPdf($asOf);
+    }
+
+    public function exportBalanceSheetExcel(Request $request)
+    {
+        $asOf = $request->input('as_of', now()->format('Y-m-d'));
+        return $this->exportService->exportBalanceSheetExcel($asOf);
+    }
+
+    public function exportCashFlowPdf(Request $request)
+    {
+        ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
+        return $this->exportService->exportCashFlowPdf($start, $end);
+    }
+
+    public function exportCashFlowExcel(Request $request)
+    {
+        ['start_date' =>  $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
+        return $this->exportService->exportCashFlowExcel($start, $end);
+    }
+
+    // ═══════ EXPENSES ═══════
+
+    public function expenses(Request $request): JsonResponse
+    {
+        $query = Expense::latest('expense_date');
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $data = $query->get()->map(fn ($e) => [
+            'id' => $e->id,
+            'refNumber' => $e->expense_code,
+            'transDate' => $e->expense_date?->format('Y-m-d'),
+            'status' => $e->status,
+            'amount' => (float) $e->amount,
+            'description' => $e->description,
+        ]);
+
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
+    public function storeExpense(StoreExpenseRequest $request): JsonResponse
+    {
+        try {
+            $expense = $this->accountingService->recordExpense($request->validated(), auth()->id());
+            return response()->json([
+                'success' => true,
+                'message' => 'Biaya berhasil dicatat.',
+                'data' => $expense,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     // ═══════ ACCOUNTING ═══════
@@ -240,44 +159,73 @@ class FinanceController extends Controller
 
     public function invoices(Request $request): JsonResponse
     {
-        $query = Payment::with([
-            'calculation.author:id,name',
-            'user:id,name',
-        ])->latest();
+        $query = Debt::where('type', 'receivable')
+            ->latest('date');
 
         if ($request->filled('search')) {
             $search = $request->string('search')->toString();
             $query->where(function ($sub) use ($search) {
-                $sub->where('invoice_number', 'like', "%{$search}%")
-                    ->orWhere('payment_reference', 'like', "%{$search}%");
+                $sub->where('client_name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
-        $payments = $query->get()->map(function ($p) {
-            $status = $p->status instanceof \BackedEnum
-                ? $p->status->value
-                : strtolower((string) $p->status);
-
+        $invoices = $query->get()->map(function ($d) {
             return [
-                'id' => $p->id,
-                'type' => 'royalty',
-                'refNumber' => $p->invoice_number,
-                'number' => $p->invoice_number,
-                'total' => (float) $p->amount,
-                'paidAmount' => $status === 'paid' ? (float) $p->amount : 0,
-                'status' => $status,
-                'transDate' => $p->created_at->toISOString(),
-                'date' => $p->created_at->toDateString(),
-                'contactName' => $p->calculation?->author?->name ?? $p->user?->name ?? 'Author',
-                'contact' => ['name' => $p->calculation?->author?->name ?? $p->user?->name ?? 'Author'],
-                'ref' => $p->payment_reference,
+                'id' => $d->id,
+                'type' => 'sales',
+                'refNumber' => 'INV-' . str_pad($d->id, 6, '0', STR_PAD_LEFT),
+                'number' => 'INV-' . str_pad($d->id, 6, '0', STR_PAD_LEFT),
+                'total' => (float) $d->amount,
+                'paidAmount' => (float) $d->paid_amount,
+                'status' => $d->status,
+                'transDate' => $d->date?->toISOString(),
+                'date' => $d->date?->toDateString(),
+                'dueDate' => $d->due_date?->toDateString(),
+                'contactName' => $d->client_name ?? '-',
+                'contact' => ['name' => $d->client_name ?? '-'],
+                'description' => $d->description,
             ];
         });
 
         return response()->json([
             'success' => true,
-            'data' => $payments,
+            'data' => $invoices,
         ]);
+    }
+
+    public function storeInvoice(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'contactId' => 'required|exists:contacts,id',
+            'amount' => 'required|numeric|min:1',
+            'transDate' => 'required|date',
+            'dueDate' => 'nullable|date',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        $contact = Contact::find($validated['contactId']);
+
+        $debt = Debt::create([
+            'type' => 'receivable',
+            'status' => 'unpaid',
+            'date' => $validated['transDate'],
+            'due_date' => $validated['dueDate'] ?? null,
+            'client_name' => $contact->name,
+            'client_phone' => $contact->phone ?? null,
+            'description' => $validated['description'] ?? null,
+            'amount' => $validated['amount'],
+            'paid_amount' => 0,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoice berhasil dibuat.',
+            'data' => [
+                'id' => $debt->id,
+                'refNumber' => 'INV-' . str_pad($debt->id, 6, '0', STR_PAD_LEFT),
+            ],
+        ], 201);
     }
 
     public function storeJournal(Request $request, AccountingService $accounting): JsonResponse

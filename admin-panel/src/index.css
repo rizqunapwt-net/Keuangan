@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,6 +8,7 @@
   :root {
     --primary-blue: #0ea5e9;
     --primary-indigo: #2563eb;
+    --primary-teal: #0fb9b1;
     --slate-50: #f8fafc;
     --slate-100: #f1f5f9;
     --slate-200: #e2e8f0;
@@ -20,7 +23,7 @@
 
   body {
     @apply bg-slate-50 text-slate-800 antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
   }
 }
 
@@ -38,32 +41,30 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.ant-card:hover {
-  @apply border-blue-100 shadow-xl shadow-slate-200/50 -translate-y-[2px] !important;
-}
-
-.ant-menu-light .ant-menu-item-selected {
-  @apply bg-blue-50 text-blue-600 font-semibold !important;
-}
-
-.ant-menu-item {
-  @apply rounded-xl mx-2 my-1 !important;
-}
-
-.ant-input {
-  @apply rounded-xl border-slate-200 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 !important;
-}
-
-.ant-table {
-  @apply text-slate-700 !important;
+.ant-input, .ant-input-number, .ant-select-selector {
+  @apply !rounded-xl !border-slate-200 hover:!border-blue-400 focus:!border-blue-500 focus:!ring-2 focus:!ring-blue-500/10 transition-all !important;
 }
 
 .ant-table-thead>tr>th {
-  @apply bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b-slate-100 !important;
+  @apply bg-slate-50 text-slate-500 font-semibold text-[11px] uppercase tracking-wider border-b-slate-100 !important;
 }
 
-.ant-table-tbody>tr>td {
-  @apply border-b-slate-50 py-4 !important;
+/* Premium Card Utility */
+.premium-card {
+  @apply bg-white border border-slate-100 shadow-sm transition-all duration-300 !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.02) !important;
+}
+
+.premium-card:hover {
+  @apply shadow-xl shadow-slate-200/40 -translate-y-1 !important;
+}
+
+.clickable-card {
+  @apply cursor-pointer !important;
+}
+
+.clickable-card:active {
+  @apply scale-95 !important;
 }
 
 /* Custom Scrollbar */
@@ -71,12 +72,8 @@
   @apply w-1.5 h-1.5;
 }
 
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
-
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full hover:bg-slate-400;
+  @apply bg-slate-200 rounded-full hover:bg-slate-300;
 }
 
 /* Animations */

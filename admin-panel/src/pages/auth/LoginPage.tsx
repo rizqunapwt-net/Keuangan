@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Card, Typography, message } from 'antd';
-import { UserOutlined, LockOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import logoNre from '../../assets/logo-nre.png';
 import api from '../../api';
 
 const { Title, Text } = Typography;
@@ -13,12 +13,14 @@ const LoginPage: React.FC = () => {
         setLoading(true);
         try {
             const response = await api.post('/auth/login', values);
-            const token = response.data.data?.access_token || response.data.access_token;
-            localStorage.setItem('token', token);
+            const token = response.data?.data?.access_token || response.data?.access_token;
+            if (token) {
+                localStorage.setItem('access_token', token);
+            }
             message.success('Selamat Datang Kembali!');
             window.location.href = '/dashboard';
         } catch (error: any) {
-            message.error(error.response?.data?.message || 'Email atau Kata Sandi salah');
+            message.error(error.response?.data?.error?.message || error.response?.data?.message || 'Email atau Kata Sandi salah');
         } finally {
             setLoading(false);
         }
@@ -30,76 +32,69 @@ const LoginPage: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+            background: '#f8fafc',
             position: 'relative',
             overflow: 'hidden',
+            fontFamily: "'Poppins', sans-serif"
         }}>
-            {/* Background Decorative Circles */}
+            {/* Fillow-style Background Blobs */}
             <div style={{
                 position: 'absolute',
-                top: '-10%',
+                top: '-15%',
                 right: '-10%',
-                width: '400px',
-                height: '400px',
+                width: '600px',
+                height: '600px',
                 borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(15, 185, 177, 0.08) 0%, transparent 70%)',
+                filter: 'blur(60px)',
             }} />
             <div style={{
                 position: 'absolute',
-                bottom: '-10%',
+                bottom: '-15%',
                 left: '-10%',
-                width: '400px',
-                height: '400px',
+                width: '500px',
+                height: '500px',
                 borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(32, 191, 107, 0.05) 0%, transparent 70%)',
+                filter: 'blur(60px)',
             }} />
 
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                style={{ zIndex: 1, width: '100%', maxWidth: 450, padding: '0 20px' }}
             >
                 <Card
                     style={{
-                        width: 420,
-                        borderRadius: 24,
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.7)',
-                        backdropFilter: 'blur(10px)',
-                        background: 'rgba(255, 255, 255, 0.8)',
+                        borderRadius: 28,
+                        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.05)',
+                        border: '1px solid #eee',
+                        background: '#ffffff',
                     }}
-                    bodyStyle={{ padding: '40px' }}
+                    bodyStyle={{ padding: '48px 40px' }}
                 >
                     <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                        <div style={{
-                            width: 56,
-                            height: 56,
-                            borderRadius: 16,
-                            background: 'linear-gradient(135deg, #0ea5e9, #2563eb)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            margin: '0 auto 20px',
-                            boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)',
-                        }}>
-                            <SafetyCertificateOutlined style={{ fontSize: 28, color: '#fff' }} />
-                        </div>
-                        <Title level={2} style={{ margin: 0, color: '#0f172a', fontWeight: 800, fontSize: 32 }}>
-                            Rizquna Kasir
+                        <img
+                            src={logoNre}
+                            alt="Rizquna Logo"
+                            style={{ width: 72, height: 72, objectFit: 'contain', marginBottom: 16 }}
+                        />
+                        <Title level={2} style={{ margin: 0, color: '#333', fontWeight: 800, fontSize: 26, letterSpacing: '1px' }}>
+                            RIZQUNA.ID
                         </Title>
-                        <Text style={{ color: '#64748b', fontSize: 16 }}>
-                            Sistem POS & Keuangan Pintar
-                        </Text>
                     </div>
 
                     <Form
-                        name="modern_login"
+                        name="fillow_login"
                         layout="vertical"
                         size="large"
                         onFinish={onFinish}
                         autoComplete="off"
+                        requiredMark={false}
                     >
                         <Form.Item
+                            label={<span style={{ fontWeight: 600, fontSize: 13, color: '#666' }}>EMAIL</span>}
                             name="email"
                             rules={[
                                 { required: true, message: 'Harap masukkan Email Anda' },
@@ -107,25 +102,25 @@ const LoginPage: React.FC = () => {
                             ]}
                         >
                             <Input
-                                prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
-                                placeholder="Alamat Email"
-                                style={{ borderRadius: 12, height: 48 }}
+                                placeholder="nama@email.com"
+                                style={{ borderRadius: 14, height: 52, background: '#fcfcfc', border: '1px solid #eee' }}
                             />
                         </Form.Item>
 
                         <Form.Item
+                            label={<span style={{ fontWeight: 600, fontSize: 13, color: '#666' }}>KATA SANDI</span>}
                             name="password"
                             rules={[{ required: true, message: 'Harap masukkan Kata Sandi' }]}
+                            style={{ marginBottom: 8 }}
                         >
                             <Input.Password
-                                prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
-                                placeholder="Kata Sandi"
-                                style={{ borderRadius: 12, height: 48 }}
+                                placeholder="••••••••"
+                                style={{ borderRadius: 14, height: 52, background: '#fcfcfc', border: '1px solid #eee' }}
                             />
                         </Form.Item>
 
                         <div style={{ marginBottom: 24, textAlign: 'right' }}>
-                            <Text style={{ color: '#2563eb', cursor: 'pointer', fontSize: 14 }}>
+                            <Text style={{ color: '#0fb9b1', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
                                 Lupa Kata Sandi?
                             </Text>
                         </div>
@@ -137,30 +132,31 @@ const LoginPage: React.FC = () => {
                                 loading={loading}
                                 style={{
                                     width: '100%',
-                                    height: 48,
-                                    borderRadius: 12,
-                                    background: 'linear-gradient(135deg, #0ea5e9, #2563eb)',
+                                    height: 52,
+                                    borderRadius: 14,
+                                    background: 'linear-gradient(135deg, #0fb9b1, #20bf6b)',
                                     border: 'none',
                                     fontSize: 16,
-                                    fontWeight: 600,
-                                    boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.2)',
+                                    fontWeight: 700,
+                                    boxShadow: '0 10px 20px rgba(15, 185, 177, 0.3)',
+                                    marginTop: 8
                                 }}
                             >
-                                Masuk ke Dashboard
+                                MASUK SEKARANG
                             </Button>
                         </Form.Item>
                     </Form>
 
-                    <div style={{ marginTop: 40, textAlign: 'center' }}>
-                        <Text style={{ color: '#64748b' }}>
-                            Butuh akses akun? <strong style={{ color: '#2563eb', cursor: 'pointer' }}>Hubungi Admin</strong>
+                    <div style={{ marginTop: 32, textAlign: 'center' }}>
+                        <Text style={{ color: '#aaa', fontSize: 13 }}>
+                            Butuh bantuan akses? <span style={{ color: '#0fb9b1', fontWeight: 600, cursor: 'pointer' }}>Hubungi Admin</span>
                         </Text>
                     </div>
                 </Card>
 
-                <div style={{ marginTop: 24, textAlign: 'center' }}>
-                    <Text style={{ color: '#94a3b8', fontSize: 12 }}>
-                        © 2026 Rizquna Kasir. v4.0.0 Refactor Premium Edition.
+                <div style={{ marginTop: 32, textAlign: 'center' }}>
+                    <Text style={{ color: '#ccc', fontSize: 12, fontWeight: 500, letterSpacing: '0.5px' }}>
+                        © 2026 RIZQUNA.ID
                     </Text>
                 </div>
             </motion.div>
