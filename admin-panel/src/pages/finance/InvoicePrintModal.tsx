@@ -140,18 +140,70 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                         <div>berikut adalah Detail Order Anda:</div>
                     </div>
 
-                    {isPaid && (
-                        <div style={{
-                            position: 'absolute', top: 120, right: 20,
-                            padding: '10px 30px', fontSize: 24, fontWeight: 900,
-                            borderRadius: 4, transform: 'rotate(-8deg)', opacity: 0.7,
-                            border: `4px double #ef4444`,
-                            color: '#ef4444',
-                            zIndex: 10
-                        }}>
-                            LUNAS
-                        </div>
-                    )}
+                    {/* === STEMPEL STATUS === */}
+                    {(() => {
+                        const stampConfig = {
+                            paid: {
+                                text: 'LUNAS',
+                                color: '#16a34a',
+                                borderColor: '#16a34a',
+                            },
+                            unpaid: {
+                                text: 'BELUM LUNAS',
+                                color: '#dc2626',
+                                borderColor: '#dc2626',
+                            },
+                            partial: {
+                                text: 'CICILAN',
+                                color: '#ea580c',
+                                borderColor: '#ea580c',
+                            },
+                        }[invoice.status] || {
+                            text: 'BELUM LUNAS',
+                            color: '#dc2626',
+                            borderColor: '#dc2626',
+                        };
+
+                        return (
+                            <div style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%) rotate(-18deg)',
+                                zIndex: 10,
+                                pointerEvents: 'none',
+                            }}>
+                                <div style={{
+                                    border: `5px solid ${stampConfig.borderColor}`,
+                                    borderRadius: 12,
+                                    padding: '8px 32px',
+                                    position: 'relative',
+                                    opacity: 0.7,
+                                }}>
+                                    <div style={{
+                                        position: 'absolute',
+                                        inset: 3,
+                                        border: `2px solid ${stampConfig.borderColor}`,
+                                        borderRadius: 8,
+                                    }} />
+                                    <div style={{
+                                        fontSize: invoice.status === 'unpaid' ? 28 : 36,
+                                        fontWeight: 900,
+                                        color: stampConfig.color,
+                                        letterSpacing: '4px',
+                                        textTransform: 'uppercase',
+                                        whiteSpace: 'nowrap',
+                                        fontFamily: "'Inter', 'Arial Black', sans-serif",
+                                        textAlign: 'center',
+                                        lineHeight: 1.2,
+                                        padding: '4px 0',
+                                    }}>
+                                        {stampConfig.text}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 20, borderTop: '1px solid #000', borderBottom: '1px solid #000' }}>
                         <thead>
@@ -201,12 +253,21 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                         </div>
                     </div>
 
-                    {!isPaid && (
-                        <div style={{ marginTop: 24, fontSize: 11, color: '#666', borderTop: '1px dotted #ccc', paddingTop: 8 }}>
-                            <div style={{ fontWeight: 700 }}>Pembayaran via:</div>
-                            <div>{bankName} Account: {bankAccount} a.n {bankHolder}</div>
-                        </div>
-                    )}
+                    <div style={{ marginTop: 24, fontSize: 11, color: '#666', borderTop: '1px dotted #ccc', paddingTop: 8 }}>
+                        {isPaid ? (
+                            <div style={{ fontWeight: 700, color: '#16a34a' }}>✅ Invoice ini sudah LUNAS. Terima kasih.</div>
+                        ) : (
+                            <>
+                                <div style={{ fontWeight: 700 }}>Pembayaran via:</div>
+                                <div>{bankName} Account: {bankAccount} a.n {bankHolder}</div>
+                                {invoice.status === 'partial' && (
+                                    <div style={{ marginTop: 4, fontWeight: 600, color: '#ea580c' }}>
+                                        Sisa tagihan: {fmtRp((invoice.total_amount ?? invoice.total ?? 0) - (invoice.paid_amount ?? invoice.paidAmount ?? 0))}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         </Modal>
