@@ -18,7 +18,7 @@ const LoginPage: React.FC = () => {
                 localStorage.setItem('access_token', token);
             }
             message.success('Selamat Datang Kembali!');
-            window.location.href = '/dashboard';
+            window.location.href = '/admin/dashboard';
         } catch (error: any) {
             message.error(error.response?.data?.error?.message || error.response?.data?.message || 'Email atau Kata Sandi salah');
         } finally {
