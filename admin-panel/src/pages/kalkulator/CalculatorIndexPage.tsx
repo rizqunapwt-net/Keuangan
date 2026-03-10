@@ -2,8 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Typography, Row, Col, Card, Tag } from 'antd';
 import {
-    PrinterOutlined, BookOutlined, ScissorOutlined,
-    IdcardOutlined, FileTextOutlined,
     ColumnWidthOutlined, DashboardOutlined,
     ArrowRightOutlined,
 } from '@ant-design/icons';
@@ -28,31 +26,36 @@ const PRICE_ITEMS: CalcItem[] = [
     {
         key: 'spanduk', title: 'Banner & Spanduk', meta: 'Harga per m²',
         desc: 'Vinyl, Backdrop, Roll-Up, X-Banner presisi.',
-        icon: <PrinterOutlined />, path: '/kalkulator/spanduk', 
+        icon: <img src="/admin/icons/3d-banner.png" style={{ width: '85%', height: '85%', objectFit: 'contain' }} />, 
+        path: '/kalkulator/spanduk', 
         color: '#0fb9b1', gradient: 'linear-gradient(135deg, #0fb9b1 0%, #20bf6b 100%)'
     },
     {
         key: 'brosur', title: 'Flyer & Brosur', meta: 'Volume Pricing',
         desc: 'A3, A4, A5 — diskon volume & finishing.',
-        icon: <FileTextOutlined />, path: '/kalkulator/brosur', 
+        icon: <img src="/admin/icons/3d-flyer.png" style={{ width: '85%', height: '85%', objectFit: 'contain' }} />, 
+        path: '/kalkulator/brosur', 
         color: '#ff9f43', gradient: 'linear-gradient(135deg, #ff9f43 0%, #ffbe76 100%)'
     },
     {
         key: 'buku', title: 'Cetak Buku', meta: 'Per Eksemplar',
         desc: 'Softcover, Hardcover, Majalah & Booklet.',
-        icon: <BookOutlined />, path: '/kalkulator/buku', 
+        icon: <img src="/admin/icons/3d-book.png" style={{ width: '85%', height: '85%', objectFit: 'contain' }} />, 
+        path: '/kalkulator/buku', 
         color: '#4361ee', gradient: 'linear-gradient(135deg, #4361ee 0%, #4cc9f0 100%)'
     },
     {
         key: 'kartu-nama', title: 'Kartu Nama', meta: 'Per Box',
         desc: 'Artcarton 260gsm — Hotprint & Rounded.',
-        icon: <IdcardOutlined />, path: '/kalkulator/kartu-nama', 
+        icon: <img src="/admin/icons/3d-card.png" style={{ width: '85%', height: '85%', objectFit: 'contain' }} />, 
+        path: '/kalkulator/kartu-nama', 
         color: '#ff4d4f', gradient: 'linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%)'
     },
     {
         key: 'stiker', title: 'Stiker & Label', meta: 'Auto Layout',
         desc: 'Chromo, Vinyl — Die Cut & Kiss Cut.',
-        icon: <ScissorOutlined />, path: '/kalkulator/stiker', 
+        icon: <img src="/admin/icons/3d-sticker.png" style={{ width: '85%', height: '85%', objectFit: 'contain' }} />, 
+        path: '/kalkulator/stiker', 
         color: '#9c27b0', gradient: 'linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%)'
     },
 ];
