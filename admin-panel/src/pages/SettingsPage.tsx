@@ -16,7 +16,7 @@ import { SaveOutlined, LockOutlined, PictureOutlined, SafetyOutlined } from '@an
 import api from '../api';
 import PageHeader from '../components/PageHeader';
 import { motion } from 'framer-motion';
-import { setSecurityPin, isPinConfigured, clearPinSession } from '../components/FinancePinGuard';
+import { setSecurityPin, isPinConfigured, clearPinSession, verifyPin } from '../components/FinancePinGuard';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -69,7 +69,6 @@ const defaultSettings: AppSettings = {
   footer_note: 'Terima kasih atas kepercayaan Anda kepada kami.',
 };
 
-const PIN_STORAGE_KEY = 'finance_security_pin';
 const SESSION_DURATION_KEY = 'finance_pin_duration';
 
 const PinSetupForm: React.FC = () => {
@@ -80,6 +79,18 @@ const PinSetupForm: React.FC = () => {
   });
 
   const handleSetPin = (values: any) => {
+    // If PIN already exists, verify old PIN first
+    if (hasPinSet) {
+      if (!values.old_pin || values.old_pin.length !== 6) {
+        message.error('Masukkan PIN lama yang valid (6 digit)');
+        return;
+      }
+      if (!verifyPin(values.old_pin)) {
+        message.error('PIN lama salah! Tidak bisa mengubah PIN.');
+        return;
+      }
+    }
+
     if (values.new_pin !== values.confirm_pin) {
       message.error('Konfirmasi PIN tidak cocok!');
       return;
@@ -92,14 +103,7 @@ const PinSetupForm: React.FC = () => {
     clearPinSession();
     setHasPinSet(true);
     pinForm.resetFields();
-    message.success('PIN keamanan berhasil diatur! 🔐');
-  };
-
-  const handleRemovePin = () => {
-    localStorage.removeItem(PIN_STORAGE_KEY);
-    clearPinSession();
-    setHasPinSet(false);
-    message.success('PIN keamanan dihapus. Halaman keuangan tidak lagi dilindungi.');
+    message.success(hasPinSet ? 'PIN berhasil diubah! 🔐' : 'PIN keamanan berhasil diatur! 🔐');
   };
 
   const handleSessionDuration = (minutes: number) => {
@@ -108,9 +112,27 @@ const PinSetupForm: React.FC = () => {
     message.success(`Durasi sesi diubah ke ${minutes} menit`);
   };
 
+  const inputStyle = { borderRadius: 12, height: 44, background: '#fcfcfc', letterSpacing: 8, textAlign: 'center' as const, fontSize: 18, fontWeight: 700 };
+
   return (
     <div>
       <Form form={pinForm} layout="vertical" onFinish={handleSetPin} requiredMark={false}>
+        {/* Old PIN — only shown when changing existing PIN */}
+        {hasPinSet && (
+          <Form.Item
+            name="old_pin"
+            label={<Text strong style={{ fontSize: 13 }}>PIN Saat Ini</Text>}
+            rules={[{ required: true, message: 'Masukkan PIN saat ini' }, { len: 6, message: 'PIN harus 6 digit' }]}
+          >
+            <Input.Password
+              maxLength={6}
+              placeholder="••••••"
+              prefix={<LockOutlined style={{ color: '#ef4444' }} />}
+              style={{ ...inputStyle, borderColor: '#fecaca' }}
+            />
+          </Form.Item>
+        )}
+
         <Form.Item
           name="new_pin"
           label={<Text strong style={{ fontSize: 13 }}>{hasPinSet ? 'PIN Baru' : 'Buat PIN (6 digit)'}</Text>}
@@ -120,7 +142,7 @@ const PinSetupForm: React.FC = () => {
             maxLength={6}
             placeholder="••••••"
             prefix={<LockOutlined style={{ color: '#0fb9b1' }} />}
-            style={{ borderRadius: 12, height: 44, background: '#fcfcfc', letterSpacing: 8, textAlign: 'center', fontSize: 18, fontWeight: 700 }}
+            style={inputStyle}
           />
         </Form.Item>
 
@@ -142,30 +164,19 @@ const PinSetupForm: React.FC = () => {
             maxLength={6}
             placeholder="••••••"
             prefix={<LockOutlined style={{ color: '#0fb9b1' }} />}
-            style={{ borderRadius: 12, height: 44, background: '#fcfcfc', letterSpacing: 8, textAlign: 'center', fontSize: 18, fontWeight: 700 }}
+            style={inputStyle}
           />
         </Form.Item>
 
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-          <Button
-            type="primary"
-            htmlType="submit"
-            icon={<SafetyOutlined />}
-            style={{ borderRadius: 12, height: 44, fontWeight: 700, flex: 1 }}
-          >
-            {hasPinSet ? 'Ubah PIN' : 'Aktifkan PIN'}
-          </Button>
-
-          {hasPinSet && (
-            <Button
-              danger
-              onClick={handleRemovePin}
-              style={{ borderRadius: 12, height: 44, fontWeight: 600 }}
-            >
-              Hapus PIN
-            </Button>
-          )}
-        </div>
+        <Button
+          type="primary"
+          htmlType="submit"
+          icon={<SafetyOutlined />}
+          block
+          style={{ borderRadius: 12, height: 44, fontWeight: 700, marginBottom: 20 }}
+        >
+          {hasPinSet ? 'Ubah PIN' : 'Aktifkan PIN'}
+        </Button>
       </Form>
 
       {hasPinSet && (
