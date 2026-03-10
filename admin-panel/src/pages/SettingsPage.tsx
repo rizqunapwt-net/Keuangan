@@ -570,7 +570,7 @@ const SettingsPage: React.FC = () => {
               </div>
             </div>
             <Text style={{ display: 'block', marginBottom: 20, color: '#888', fontSize: 13 }}>
-              Seperti verifikasi CVC kartu kredit — setiap kali mengakses menu keuangan, Anda harus memasukkan PIN 6 digit terlebih dahulu.
+              Seperti verifikasi CVC kartu kredit — setiap kali mengakses menu <strong>Bank</strong> (data rekening perusahaan), Anda harus memasukkan PIN 6 digit terlebih dahulu.
             </Text>
             
             <PinSetupForm />
