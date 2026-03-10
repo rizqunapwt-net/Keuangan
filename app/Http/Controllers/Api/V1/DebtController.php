@@ -10,14 +10,18 @@ use App\Models\CashTransaction;
 use App\Traits\Auditable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 class DebtController extends Controller
 {
     use Auditable;
+    
     public function index(Request $request)
     {
+        Gate::authorize('viewAny', Debt::class);
+        
         $query = Debt::query();
 
         if ($request->has('type')) {
@@ -45,6 +49,8 @@ class DebtController extends Controller
 
     public function store(Request $request)
     {
+        Gate::authorize('create', Debt::class);
+        
         $validated = $request->validate([
             'type' => 'required|in:payable,receivable',
             'date' => 'required|date',
@@ -93,11 +99,15 @@ class DebtController extends Controller
 
     public function show(Debt $debt)
     {
+        Gate::authorize('view', $debt);
+        
         return $debt->load('payments');
     }
 
     public function update(Request $request, Debt $debt)
     {
+        Gate::authorize('update', $debt);
+        
         $validated = $request->validate([
             'date' => 'required|date',
             'due_date' => 'nullable|date',
@@ -114,6 +124,8 @@ class DebtController extends Controller
 
     public function destroy(Debt $debt)
     {
+        Gate::authorize('delete', $debt);
+        
         return DB::transaction(function () use ($debt) {
             $paymentSnapshots = $debt->payments()->get();
 
@@ -141,6 +153,8 @@ class DebtController extends Controller
 
     public function storePayment(Request $request, Debt $debt)
     {
+        Gate::authorize('recordPayment', $debt);
+
         $validated = $request->validate([
             'date' => 'required|date',
             'bank_id' => 'required|exists:banks,id',
@@ -149,6 +163,14 @@ class DebtController extends Controller
         ]);
 
         return DB::transaction(function () use ($validated, $debt) {
+            // Prevent over-payment
+            $remainingDebt = (float) $debt->amount - (float) $debt->paid_amount;
+            if ((float) $validated['amount'] > $remainingDebt) {
+                throw ValidationException::withMessages([
+                    'amount' => ['Jumlah pembayaran melebihi sisa hutang/piutang. Sisa: Rp ' . number_format($remainingDebt, 0, ',', '.') . ', Anda membayar: Rp ' . number_format($validated['amount'], 0, ',', '.')],
+                ]);
+            }
+
             $bank = Bank::lockForUpdate()->find($validated['bank_id']);
             if (! $bank) {
                 throw ValidationException::withMessages([
@@ -166,7 +188,7 @@ class DebtController extends Controller
             $bank->save();
 
             $payment = $debt->payments()->create($validated);
-            
+
             CashTransaction::create([
                 'type' => $isIncome ? 'income' : 'expense',
                 'bank_id' => $validated['bank_id'],

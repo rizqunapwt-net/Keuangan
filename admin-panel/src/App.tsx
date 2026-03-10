@@ -5,7 +5,6 @@ import {
   Layout,
   Menu,
   Button,
-  Space,
   Avatar,
   Dropdown,
   Spin,
@@ -18,9 +17,6 @@ import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
   DollarOutlined,
-  BookOutlined,
-  PrinterOutlined,
-  TeamOutlined,
   SettingOutlined,
   AuditOutlined,
   FileSearchOutlined,
@@ -29,12 +25,15 @@ import {
   DollarCircleOutlined,
   WalletOutlined,
   BarChartOutlined,
+  ShoppingOutlined,
+  CalculatorOutlined,
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Styles & Theme
 import './App.css';
 import themeConfig from './theme/themeConfig';
+import logoNre from './assets/logo-nre.png';
 
 // Auth pages
 import LoginPage from './pages/auth/LoginPage';
@@ -46,7 +45,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 const DashboardPage = React.lazy(() => import('./pages/DashboardPage'));
 
 // Finance
-const FinanceOverviewPage = React.lazy(() => import('./pages/finance/FinanceOverviewPage'));
 const InvoicesPage = React.lazy(() => import('./pages/finance/InvoicesPage'));
 const ExpensesPage = React.lazy(() => import('./pages/finance/ExpensesPage'));
 const JournalEntriesPage = React.lazy(() => import('./pages/finance/JournalEntriesPage'));
@@ -65,6 +63,22 @@ const DebtsPage = React.lazy(() => import('./pages/finance/DebtsPage'));
 const ReceivablesPage = React.lazy(() => import('./pages/finance/ReceivablesPage'));
 const CashBookPage = React.lazy(() => import('./pages/finance/CashBookPage'));
 const FinanceReportsPage = React.lazy(() => import('./pages/finance/FinanceReportsPage'));
+
+// Percetakan
+const OrdersPage = React.lazy(() => import('./pages/percetakan/OrdersPage'));
+
+// Kalkulator
+const CalculatorIndexPage = React.lazy(() => import('./pages/kalkulator/CalculatorIndexPage'));
+const SpandukCalculatorPage = React.lazy(() => import('./pages/kalkulator/SpandukCalculatorPage'));
+const BrosurCalculatorPage = React.lazy(() => import('./pages/kalkulator/BrosurCalculatorPage'));
+const BukuCalculatorPage = React.lazy(() => import('./pages/kalkulator/BukuCalculatorPage'));
+const KartuNamaCalculatorPage = React.lazy(() => import('./pages/kalkulator/KartuNamaCalculatorPage'));
+const StikerCalculatorPage = React.lazy(() => import('./pages/kalkulator/StikerCalculatorPage'));
+const SpineCalculatorPage = React.lazy(() => import('./pages/kalkulator/SpineCalculatorPage'));
+const BeratCalculatorPage = React.lazy(() => import('./pages/kalkulator/BeratCalculatorPage'));
+
+// Settings
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f8fafc' }}>
@@ -122,14 +136,13 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     },
 
     {
-      label: 'MODUL LAIN', type: 'group', children: [
-        { key: '/publishing', icon: <BookOutlined />, label: 'Penerbitan' },
-        { key: '/percetakan', icon: <PrinterOutlined />, label: 'Percetakan' },
+      label: 'PERCETAKAN', type: 'group', children: [
+        { key: '/percetakan/orders', icon: <ShoppingOutlined />, label: 'Pesanan Cetak' },
+        { key: '/kalkulator', icon: <CalculatorOutlined />, label: 'Kalkulator Cetak' },
       ]
     },
 
     { type: 'divider' },
-    { key: '/users', icon: <TeamOutlined />, label: 'User Admin' },
     { key: '/settings', icon: <SettingOutlined />, label: 'Pengaturan' },
     { key: 'logout', icon: <LogoutOutlined />, label: 'Keluar', danger: true, onClick: logout },
   ];
@@ -151,7 +164,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f8fafc', overflow: 'hidden' }}>
+    <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       {/* Background Decorative Shapes */}
       <div className="bg-shape bg-shape-1" />
       <div className="bg-shape bg-shape-2" />
@@ -162,6 +175,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         collapsed={collapsed}
         theme="light"
         width={280}
+        collapsedWidth={80}
         style={{
           position: 'fixed',
           height: '100vh',
@@ -169,42 +183,76 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           top: 0,
           bottom: 0,
           zIndex: 100,
-          overflowY: 'auto'
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        <div style={{ padding: '32px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: 12,
-            background: 'linear-gradient(135deg, #0fb9b1, #20bf6b)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontWeight: 800, fontSize: 20,
-            boxShadow: '0 8px 16px rgba(15, 185, 177, 0.25)'
-          }}>
-            R
-          </div>
+        {/* Logo Section — Clean branding */}
+        <div style={{
+          padding: collapsed ? '24px 16px' : '24px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          borderBottom: '1px solid #f0f0f0',
+          marginBottom: 8,
+        }}>
+          <img
+            src={logoNre}
+            alt="Logo"
+            style={{ width: 38, height: 38, objectFit: 'contain', flexShrink: 0 }}
+          />
           {!collapsed && (
-            <span style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>
-              Rizquna <span style={{ color: '#0fb9b1' }}>Kasir</span>
-            </span>
+            <div style={{ fontSize: 17, fontWeight: 800, color: '#333', letterSpacing: '0.5px' }}>
+              RIZQUNA.ID
+            </div>
           )}
         </div>
 
-        <Menu
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          items={menuItems}
-          style={{ borderRight: 'none', padding: '0 8px' }}
-          onClick={({ key }) => {
-            if (key !== 'logout') navigate(key);
-          }}
-        />
+        {/* Menu */}
+        <div style={{ flex: 1, overflow: 'auto', paddingBottom: 8 }}>
+          <Menu
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={menuItems}
+            style={{ borderRight: 'none', padding: '0 4px' }}
+            onClick={({ key }) => {
+              if (key !== 'logout') navigate(key);
+            }}
+          />
+        </div>
 
-        <div style={{ padding: '24px', marginTop: 'auto' }}>
+        {/* Bottom: User Profile + Collapse — Fillow-style */}
+        <div style={{ borderTop: '1px solid #f0f0f0', padding: collapsed ? '12px 8px' : '16px' }}>
+          {!collapsed && user && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 12px',
+              borderRadius: 14,
+              background: '#f8f8f8',
+              marginBottom: 10,
+            }}>
+              <Avatar
+                size={36}
+                icon={<UserOutlined />}
+                style={{ background: 'linear-gradient(135deg, #0fb9b1, #20bf6b)', flexShrink: 0 }}
+              />
+              <div style={{ overflow: 'hidden' }}>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {user.name}
+                </div>
+                <div style={{ fontSize: 11, color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {user.email}
+                </div>
+              </div>
+            </div>
+          )}
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed(!collapsed)}
-            style={{ width: '100%', color: '#94a3b8', height: 48, borderRadius: 12 }}
+            style={{ width: '100%', color: '#aaa', height: 40, borderRadius: 10, fontSize: 16 }}
           />
         </div>
       </Sider>
@@ -213,36 +261,46 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <Header
           className="premium-header"
           style={{
-            padding: '0 32px',
+            padding: '0 40px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            height: 80,
+            height: 72,
             position: 'sticky',
             top: 0,
             zIndex: 99,
           }}
         >
-          <div style={{ fontWeight: 600, fontSize: 18, color: '#1e293b' }}>
-            {(menuItems.find((item: any) => item?.key === location.pathname) as any)?.label || 'Dashboard'}
+          <div style={{ fontWeight: 600, fontSize: 20, color: '#333', letterSpacing: -0.3 }}>
+            {(() => {
+              // Find label from flat + grouped items
+              for (const item of menuItems || []) {
+                if ((item as any)?.key === location.pathname) return (item as any).label;
+                if ((item as any)?.children) {
+                  const child = (item as any).children.find((c: any) => c?.key === location.pathname);
+                  if (child) return child.label;
+                }
+              }
+              return 'Dashboard';
+            })()}
           </div>
 
           <Dropdown menu={{ items: userMenuItems, onClick: ({ key }) => key === 'logout' ? logout() : navigate(key) }} placement="bottomRight" trigger={['click']}>
-            <Space style={{ cursor: 'pointer', padding: '8px 16px', borderRadius: 16, background: '#f1f5f9' }}>
-              <div style={{ textAlign: 'right', lineHeight: 1.2 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: '#1e293b' }}>{user?.name || 'Admin'}</div>
-                <div style={{ fontSize: 12, color: '#64748b' }}>Administrator</div>
-              </div>
-              <Avatar
-                size={40}
-                icon={<UserOutlined />}
-                style={{ background: 'linear-gradient(135deg, #0fb9b1, #20bf6b)', color: '#fff' }}
-              />
-            </Space>
+            <Avatar
+              size={42}
+              icon={<UserOutlined />}
+              style={{
+                cursor: 'pointer',
+                background: 'linear-gradient(135deg, #0fb9b1, #20bf6b)',
+                color: '#fff',
+                boxShadow: '0 4px 12px rgba(15, 185, 177, 0.25)',
+                transition: 'all 0.3s',
+              }}
+            />
           </Dropdown>
         </Header>
 
-        <Content style={{ padding: '32px', minHeight: 'calc(100vh - 80px)' }}>
+        <Content style={{ padding: '28px 40px', minHeight: 'calc(100vh - 72px)' }}>
           <div style={{ maxWidth: 1400, margin: '0 auto' }}>
             <AnimatePresence mode="wait">
               <PageTransition key={location.pathname}>
@@ -258,10 +316,10 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const AuthGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
-  const token = localStorage.getItem('token');
 
   if (loading) return <PageLoader />;
-  if (!token || !user) return <Navigate to="/login" replace />;
+  // ✅ Rely only on user state from httpOnly cookie session, not localStorage
+  if (!user) return <Navigate to="/login" replace />;
 
   return <>{children}</>;
 };
@@ -270,7 +328,7 @@ const App: React.FC = () => {
   return (
     <ConfigProvider theme={themeConfig}>
       <QueryClientProvider client={queryClient}>
-        <Router>
+        <Router basename="/admin">
           <AuthProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
@@ -284,7 +342,6 @@ const App: React.FC = () => {
                         <Routes>
                           <Route path="/dashboard" element={<DashboardPage />} />
 
-                          <Route path="/finance" element={<FinanceOverviewPage />} />
                           <Route path="/finance/invoices" element={<InvoicesPage />} />
                           <Route path="/finance/expenses" element={<ExpensesPage />} />
                           <Route path="/finance/debts" element={<DebtsPage />} />
@@ -302,8 +359,19 @@ const App: React.FC = () => {
                           <Route path="/reports/cash-flow" element={<CashFlowPage />} />
                           <Route path="/reports/trial-balance" element={<TrialBalancePage />} />
                           <Route path="/reports/general-ledger" element={<GeneralLedgerPage />} />
-                          <Route path="/accounts/journals" element={<JournalEntriesPage />} />
 
+                          <Route path="/percetakan/orders" element={<OrdersPage />} />
+
+                          <Route path="/kalkulator" element={<CalculatorIndexPage />} />
+                          <Route path="/kalkulator/spanduk" element={<SpandukCalculatorPage />} />
+                          <Route path="/kalkulator/brosur" element={<BrosurCalculatorPage />} />
+                          <Route path="/kalkulator/buku" element={<BukuCalculatorPage />} />
+                          <Route path="/kalkulator/kartu-nama" element={<KartuNamaCalculatorPage />} />
+                          <Route path="/kalkulator/stiker" element={<StikerCalculatorPage />} />
+                          <Route path="/kalkulator/spine" element={<SpineCalculatorPage />} />
+                          <Route path="/kalkulator/berat" element={<BeratCalculatorPage />} />
+
+                          <Route path="/settings" element={<SettingsPage />} />
                           <Route path="/profile" element={<ProfilePage />} />
 
                           <Route path="*" element={<Navigate to="/dashboard" replace />} />

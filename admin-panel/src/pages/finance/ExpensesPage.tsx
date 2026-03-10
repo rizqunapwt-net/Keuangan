@@ -1,16 +1,21 @@
 import React from 'react';
-import { Table, Button, Tag, Card, Typography, Row, Col, Statistic, Breadcrumb, Space, Input, Popconfirm, message } from 'antd';
-import { PlusOutlined, SearchOutlined, PrinterOutlined, ExportOutlined, FilterOutlined, StopOutlined } from '@ant-design/icons';
+import { Table, Button, Tag, Card, Typography, Row, Col, Space, Input, Popconfirm, message } from 'antd';
+import { PlusOutlined, SearchOutlined, PrinterOutlined, ExportOutlined, StopOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api';
 import AccessControl from '../../components/AccessControl';
 import dayjs from 'dayjs';
 import ExpenseFormDrawer from './ExpenseFormDrawer';
+import PageHeader from '../../components/PageHeader';
+import { motion } from 'framer-motion';
 
 const { Title, Text } = Typography;
 
-const statusColors: Record<string, string> = { recorded: 'green', void: 'red', unpaid: 'blue' };
-const statusLabels: Record<string, string> = { recorded: 'Tercatat', void: 'Void', unpaid: 'Belum Bayar' };
+const statusConfig: Record<string, { color: string; bgColor: string; label: string }> = {
+    recorded: { color: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)', label: 'TERCATAT' },
+    void: { color: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.1)', label: 'VOID' },
+    unpaid: { color: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.1)', label: 'BELUM BAYAR' },
+};
 
 const ExpensesPage: React.FC = () => {
     const queryClient = useQueryClient();
@@ -36,162 +41,161 @@ const ExpensesPage: React.FC = () => {
 
     // Summary metrics
     const now = dayjs();
-    const thisMonth = data.filter((e: Record<string, unknown>) => dayjs(e.transDate as string).isSame(now, 'month'));
-    const last30 = data.filter((e: Record<string, unknown>) => dayjs(e.transDate as string).isAfter(now.subtract(30, 'day')));
-    const totalThisMonth = thisMonth.reduce((s: number, e: Record<string, unknown>) => s + Number(e.amount), 0);
-    const totalLast30 = last30.reduce((s: number, e: Record<string, unknown>) => s + Number(e.amount), 0);
+    const thisMonth = data.filter((e: any) => dayjs(e.transDate).isSame(now, 'month'));
+    const last30 = data.filter((e: any) => dayjs(e.transDate).isAfter(now.subtract(30, 'day')));
+    const totalThisMonth = thisMonth.reduce((s: number, e: any) => s + Number(e.amount), 0);
+    const totalLast30 = last30.reduce((s: number, e: any) => s + Number(e.amount), 0);
 
     const columns = [
         {
-            title: 'Tanggal',
+            title: 'TANGGAL',
             dataIndex: 'transDate',
             key: 'transDate',
             sorter: true,
-            render: (v: string) => dayjs(v).format('DD/MM/YYYY'),
+            render: (v: string) => <Text style={{ fontSize: 13, fontWeight: 500, color: '#666' }}>{dayjs(v).format('DD MMM YYYY')}</Text>,
         },
         {
-            title: 'Nomor',
+            title: 'NOMOR REF',
             dataIndex: 'refNumber',
             key: 'refNumber',
             sorter: true,
-            render: (v: string) => <a style={{ fontWeight: 600, color: '#1890ff' }}>{v}</a>,
+            render: (v: string) => <Text strong style={{ color: '#0fb9b1', fontWeight: 700 }}>#{v}</Text>,
         },
-        { title: 'Referensi', key: 'ref', render: () => '-' },
         {
-            title: 'Penerima',
+            title: 'PENERIMA',
             dataIndex: ['contact', 'name'],
             key: 'contact',
-            render: (v: string) => v || '-',
+            render: (v: string) => <Text style={{ fontSize: 13, fontWeight: 600, color: '#333' }}>{v || '-'}</Text>,
         },
         {
-            title: 'Status',
+            title: 'STATUS',
             dataIndex: 'status',
             key: 'status',
-            render: (s: string) => (
-                <Tag color={statusColors[s] || 'default'}>
-                    {statusLabels[s] || s}
-                </Tag>
-            ),
+            render: (s: string) => {
+                const config = statusConfig[s] || { color: '#aaa', bgColor: '#f5f5f5', label: s.toUpperCase() };
+                return (
+                    <Tag bordered={false} style={{
+                        backgroundColor: config.bgColor,
+                        color: config.color,
+                        fontWeight: 700,
+                        borderRadius: 8,
+                        fontSize: 10,
+                        padding: '2px 10px',
+                        letterSpacing: '0.3px'
+                    }}>
+                        {config.label}
+                    </Tag>
+                );
+            },
         },
         {
-            title: 'Sisa Tagihan',
-            key: 'remaining',
-            align: 'right' as const,
-            render: () => 'Rp 0',
-        },
-        {
-            title: 'Total',
+            title: 'TOTAL BIAYA',
             dataIndex: 'amount',
             key: 'amount',
             align: 'right' as const,
             sorter: true,
-            render: (v: number) => `Rp ${Number(v).toLocaleString('id-ID')}`,
+            render: (v: number) => <Text strong style={{ fontSize: 14, color: '#333' }}>Rp{Number(v).toLocaleString('id-ID')}</Text>,
         },
         {
-            title: 'Aksi',
+            title: '',
             key: 'action',
             width: 80,
-            align: 'center' as const,
-            render: (_: unknown, record: Record<string, unknown>) => record.status !== 'void' ? (
+            align: 'right' as const,
+            render: (_: unknown, record: any) => record.status !== 'void' ? (
                 <Popconfirm
                     title="Batalkan biaya ini?"
-                    description="Jurnal terkait akan di-reverse."
-                    onConfirm={() => handleVoid(record.id as number)}
-                    okText="Void"
+                    onConfirm={() => handleVoid(record.id)}
+                    okText="Ya, Void"
                     cancelText="Batal"
                     okButtonProps={{ danger: true }}
                 >
-                    <Button type="text" danger icon={<StopOutlined />} size="small" />
+                    <Button type="text" danger icon={<StopOutlined />} size="small" style={{ color: '#aaa' }} />
                 </Popconfirm>
             ) : null,
         },
     ];
 
+    const stats = [
+        { title: 'BULAN INI', value: totalThisMonth, color: '#0fb9b1', icon: <DollarOutlined style={{ fontSize: 20 }} /> },
+        { title: '30 HARI TERAKHIR', value: totalLast30, color: '#3b82f6', icon: <ExportOutlined style={{ fontSize: 20 }} /> },
+        { title: 'BELUM DIBAYAR', value: 0, color: '#f59e0b', icon: <DollarOutlined style={{ fontSize: 20 }} /> },
+        { title: 'JATUH TEMPO', value: 0, color: '#ef4444', icon: <StopOutlined style={{ fontSize: 20 }} /> },
+    ];
+
     return (
-        <div>
-            <Breadcrumb className="mb-4" items={[{ title: 'Beranda' }, { title: 'Biaya' }]} />
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <PageHeader
+                title="Daftar Pengeluaran"
+                description="Kelola dan pantau semua pengeluaran operasional bisnis Anda."
+                breadcrumb={[{ label: 'KEUANGAN' }, { label: 'BIAYA' }]}
+                extra={
+                    <Space size={12}>
+                        <Button icon={<PrinterOutlined />} style={{ borderRadius: 10, height: 40, fontWeight: 600, color: '#666' }}>Print</Button>
+                        <AccessControl permission="expenses_create">
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => setDrawerOpen(true)}
+                                style={{ borderRadius: 12, height: 40, fontWeight: 700, boxShadow: '0 4px 12px rgba(15, 185, 177, 0.2)' }}
+                            >
+                                Catat Biaya
+                            </Button>
+                        </AccessControl>
+                    </Space>
+                }
+            />
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <Title level={4} style={{ margin: 0 }}>Biaya</Title>
-                <Space>
-                    <Button icon={<PrinterOutlined />} size="small" onClick={() => message.info('Fitur cetak segera hadir')}>Print</Button>
-                    <Button icon={<ExportOutlined />} size="small" onClick={() => message.info('Fitur export segera hadir')}>Export</Button>
-                    <AccessControl permission="expenses_create">
-                        <Button type="primary" icon={<PlusOutlined />} onClick={() => setDrawerOpen(true)}>
-                            Catat Biaya
-                        </Button>
-                    </AccessControl>
-                </Space>
-            </div>
-
-            {/* Summary Cards */}
-            <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                <Col xs={12} sm={6}>
-                    <Card bordered={false} style={{ borderRadius: 8 }} bodyStyle={{ padding: 16 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 12 }}>Bulan Ini</Text>}
-                            value={totalThisMonth}
-                            prefix="Rp"
-                            valueStyle={{ fontSize: 16, fontWeight: 600 }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={12} sm={6}>
-                    <Card bordered={false} style={{ borderRadius: 8 }} bodyStyle={{ padding: 16 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 12 }}>30 Hari Lalu</Text>}
-                            value={totalLast30}
-                            prefix="Rp"
-                            valueStyle={{ fontSize: 16, fontWeight: 600 }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={12} sm={6}>
-                    <Card bordered={false} style={{ borderRadius: 8 }} bodyStyle={{ padding: 16 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 12 }}>Belum Dibayar</Text>}
-                            value={0}
-                            prefix="Rp"
-                            valueStyle={{ fontSize: 16, fontWeight: 600, color: '#faad14' }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={12} sm={6}>
-                    <Card bordered={false} style={{ borderRadius: 8 }} bodyStyle={{ padding: 16 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 12 }}>Jatuh Tempo</Text>}
-                            value={0}
-                            prefix="Rp"
-                            valueStyle={{ fontSize: 16, fontWeight: 600, color: '#ff4d4f' }}
-                        />
-                    </Card>
-                </Col>
+            <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
+                {stats.map((stat, i) => (
+                    <Col xs={24} sm={12} lg={6} key={i}>
+                        <Card className="premium-card" style={{ borderRadius: 20 }} bodyStyle={{ padding: '24px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <div style={{
+                                    width: 44, height: 44, borderRadius: 12,
+                                    background: `${stat.color}10`, color: stat.color,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                                }}>
+                                    {stat.icon}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 10, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'block' }}>{stat.title}</Text>
+                                    <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#333' }}>
+                                        Rp{stat.value.toLocaleString('id-ID')}
+                                    </Title>
+                                </div>
+                            </div>
+                        </Card>
+                    </Col>
+                ))}
             </Row>
 
-            <Card bordered={false} style={{ borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }} bodyStyle={{ padding: 0 }}>
-                {/* Filter Bar */}
-                <div style={{ padding: '12px 16px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Card className="premium-card" style={{ borderRadius: 20 }} bodyStyle={{ padding: 0 }}>
+                <div style={{ padding: '20px 32px', borderBottom: '1px solid #f8f8f8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                    <Title level={5} style={{ margin: 0, fontWeight: 700, color: '#333' }}>RIWAYAT TRANSAKSI</Title>
                     <Input
-                        placeholder="Cari nomor atau penerima..."
-                        prefix={<SearchOutlined />}
-                        style={{ width: 240 }}
-                        size="small"
+                        prefix={<SearchOutlined style={{ color: '#ccc' }} />}
+                        placeholder="Cari biaya..."
+                        style={{ width: 260, borderRadius: 12, height: 40, background: '#fcfcfc', border: '1px solid #eee' }}
                     />
-                    <Button icon={<FilterOutlined />} size="small">Filter</Button>
                 </div>
-
-                <Table
-                    columns={columns}
-                    dataSource={data}
-                    rowKey="id"
-                    loading={isLoading}
-                    rowSelection={{ type: 'checkbox' }}
-                    pagination={{ pageSize: 15, showSizeChanger: true }}
-                    size="small"
-                />
+                <div style={{ padding: '0 8px' }}>
+                    <Table
+                        columns={columns}
+                        dataSource={data}
+                        rowKey="id"
+                        loading={isLoading}
+                        pagination={{ 
+                            pageSize: 15, 
+                            showSizeChanger: true,
+                            position: ['bottomRight'],
+                            style: { margin: '24px 16px' }
+                        }}
+                    />
+                </div>
             </Card>
+
             <ExpenseFormDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-        </div>
+        </motion.div>
     );
 };
 

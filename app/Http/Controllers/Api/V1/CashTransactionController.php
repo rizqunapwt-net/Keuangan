@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Traits\Auditable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 
 class CashTransactionController extends Controller
@@ -55,12 +56,18 @@ class CashTransactionController extends Controller
 
         return DB::transaction(function () use ($validated) {
             $bank = Bank::lockForUpdate()->find($validated['bank_id']);
-            
-            // Perbarui saldo bank
-            if ($validated['type'] === 'income') {
-                $bank->balance += $validated['amount'];
+
+            // Prevent negative balance
+            if ($validated['type'] === 'expense') {
+                $newBalance = (float) $bank->balance - (float) $validated['amount'];
+                if ($newBalance < 0) {
+                    throw ValidationException::withMessages([
+                        'amount' => ['Saldo bank tidak cukup. Saldo saat ini: Rp ' . number_format($bank->balance, 0, ',', '.') . ', Anda mencoba mengurangi Rp ' . number_format($validated['amount'], 0, ',', '.')],
+                    ]);
+                }
+                $bank->balance = $newBalance;
             } else {
-                $bank->balance -= $validated['amount'];
+                $bank->balance += $validated['amount'];
             }
             $bank->save();
 

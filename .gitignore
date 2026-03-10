@@ -6,30 +6,25 @@
 /storage/*.key
 /storage/pail
 /vendor
-/backups
 .env
 .env.backup
 .env.production
-.phpactor.json
 .phpunit.result.cache
-Homestead.json
-Homestead.yaml
-npm-debug.log
-yarn-error.log
-/auth.json
+.DS_Store
+
+# IDE
 /.fleet
 /.idea
 /.nova
 /.vscode
 /.zed
+
+# Build output
 /public/admin
-/admin-panel/.npm-cache
-/reports
-.DS_Store
+/admin-panel/node_modules
+/admin-panel/dist
 
-# Large deploy archives
+# Misc
+npm-debug.log
+yarn-error.log
 nre_deploy.zip
-ssh.md
-
-# Node modules
-mcp-stitch/node_modules/

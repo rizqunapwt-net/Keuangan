@@ -21,16 +21,16 @@ class UserPolicy
 
     public function create(User $user): bool
     {
-        return $this->isAdmin($user);
+        return $this->isAdmin($user) || $user->hasPermissionTo('user.create');
     }
 
-    public function update(User $user, User $model): bool
+    public function update(User $user, User $target): bool
     {
-        return $this->isAdmin($user);
+        return $this->isAdmin($user) || $user->hasPermissionTo('user.update');
     }
 
-    public function delete(User $user, User $model): bool
+    public function delete(User $user, User $target): bool
     {
-        return $this->isAdmin($user) && $user->id !== $model->id;
+        return ($this->isAdmin($user) || $user->hasPermissionTo('user.delete')) && $user->id !== $target->id;
     }
 }
