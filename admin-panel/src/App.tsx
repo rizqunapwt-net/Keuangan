@@ -116,34 +116,34 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
 
   const menuItems: MenuProps['items'] = [
-    { key: '/dashboard', icon: <HomeOutlined />, label: 'Dashboard' },
+    { key: '/dashboard', icon: <HomeOutlined style={{ color: '#3b82f6', filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2))' }} />, label: 'Dashboard' },
     { type: 'divider' },
 
     {
       label: 'KEUANGAN', type: 'group', children: [
-        { key: '/finance/invoices', icon: <AuditOutlined />, label: 'Invoice' },
-        { key: '/finance/expenses', icon: <DollarOutlined />, label: 'Biaya' },
-        { key: '/finance/debts', icon: <FileSearchOutlined />, label: 'Utang' },
-        { key: '/finance/receivables', icon: <DollarCircleOutlined />, label: 'Piutang' },
-        { key: '/finance/cash-book', icon: <WalletOutlined />, label: 'Buku Kas' },
-        { key: '/finance/reports', icon: <BarChartOutlined />, label: 'Laporan Kas' },
-        { key: '/finance/reports-index', icon: <BarChartOutlined />, label: 'Laporan Akuntansi' },
-        { key: '/finance/journals', icon: <FileSearchOutlined />, label: 'Jurnal' },
-        { key: '/finance/accounts', icon: <AuditOutlined />, label: 'Akun' },
-        { key: '/finance/banks', icon: <BankOutlined />, label: 'Bank' },
-        { key: '/finance/contacts', icon: <ContactsOutlined />, label: 'Kontak' },
+        { key: '/finance/invoices', icon: <AuditOutlined style={{ color: '#0fb9b1' }} />, label: 'Invoice' },
+        { key: '/finance/expenses', icon: <DollarOutlined style={{ color: '#ef4444' }} />, label: 'Biaya' },
+        { key: '/finance/debts', icon: <FileSearchOutlined style={{ color: '#f59e0b' }} />, label: 'Utang' },
+        { key: '/finance/receivables', icon: <DollarCircleOutlined style={{ color: '#10b981' }} />, label: 'Piutang' },
+        { key: '/finance/cash-book', icon: <WalletOutlined style={{ color: '#6366f1' }} />, label: 'Buku Kas' },
+        { key: '/finance/reports', icon: <BarChartOutlined style={{ color: '#f97316' }} />, label: 'Laporan Kas' },
+        { key: '/finance/reports-index', icon: <BarChartOutlined style={{ color: '#8b5cf6' }} />, label: 'Laporan Akuntansi' },
+        { key: '/finance/journals', icon: <FileSearchOutlined style={{ color: '#64748b' }} />, label: 'Jurnal' },
+        { key: '/finance/accounts', icon: <AuditOutlined style={{ color: '#a855f7' }} />, label: 'Akun' },
+        { key: '/finance/banks', icon: <BankOutlined style={{ color: '#0ea5e9' }} />, label: 'Bank' },
+        { key: '/finance/contacts', icon: <ContactsOutlined style={{ color: '#ec4899' }} />, label: 'Kontak' },
       ]
     },
 
     {
       label: 'PERCETAKAN', type: 'group', children: [
-        { key: '/percetakan/orders', icon: <ShoppingOutlined />, label: 'Pesanan Cetak' },
-        { key: '/kalkulator', icon: <CalculatorOutlined />, label: 'Kalkulator Cetak' },
+        { key: '/percetakan/orders', icon: <ShoppingOutlined style={{ color: '#06b6d4' }} />, label: 'Pesanan Cetak' },
+        { key: '/kalkulator', icon: <CalculatorOutlined style={{ color: '#10b981' }} />, label: 'Kalkulator Cetak' },
       ]
     },
 
     { type: 'divider' },
-    { key: '/settings', icon: <SettingOutlined />, label: 'Pengaturan' },
+    { key: '/settings', icon: <SettingOutlined style={{ color: '#94a3b8' }} />, label: 'Pengaturan' },
     { key: 'logout', icon: <LogoutOutlined />, label: 'Keluar', danger: true, onClick: logout },
   ];
 
