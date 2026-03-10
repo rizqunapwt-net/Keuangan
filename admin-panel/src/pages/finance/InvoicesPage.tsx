@@ -291,6 +291,9 @@ const InvoicesPage: React.FC = () => {
                 onClose={() => setPrintInvoice(null)}
                 invoice={printInvoice}
                 companyName={settings.company_name}
+                companyEmail={settings.company_email}
+                companyWebsite={settings.company_website}
+                companyIG={settings.company_ig}
                 companyAddress={settings.company_address}
                 companyPhone={settings.company_phone}
                 companyLogo={settings.company_logo}
