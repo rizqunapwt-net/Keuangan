@@ -65,7 +65,7 @@ class ProductSeeder extends Seeder
                 array_merge($data, [
                     'uuid' => (string) Str::uuid(),
                     'product_code' => $data['sku'],
-                    'quantity_on_hand' => $stock,
+                    'stock' => $stock,
                     'stock_min' => 5,
                     'status' => 'active',
                     'created_by' => $adminId,
