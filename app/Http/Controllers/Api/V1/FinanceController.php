@@ -171,19 +171,29 @@ class FinanceController extends Controller
         }
 
         $invoices = $query->get()->map(function ($d) {
+            $total = (float) $d->amount;
+            $paid = (float) $d->paid_amount;
             return [
                 'id' => $d->id,
                 'type' => 'sales',
+                'invoice_number' => 'INV-' . str_pad($d->id, 6, '0', STR_PAD_LEFT),
                 'refNumber' => 'INV-' . str_pad($d->id, 6, '0', STR_PAD_LEFT),
                 'number' => 'INV-' . str_pad($d->id, 6, '0', STR_PAD_LEFT),
-                'total' => (float) $d->amount,
-                'paidAmount' => (float) $d->paid_amount,
+                'total_amount' => $total,
+                'total' => $total,
+                'paid_amount' => $paid,
+                'paidAmount' => $paid,
+                'remaining_balance' => $total - $paid,
                 'status' => $d->status,
                 'transDate' => $d->date?->toISOString(),
                 'date' => $d->date?->toDateString(),
+                'due_date' => $d->due_date?->toDateString(),
                 'dueDate' => $d->due_date?->toDateString(),
+                'customer_name' => $d->client_name ?? '-',
                 'contactName' => $d->client_name ?? '-',
-                'contact' => ['name' => $d->client_name ?? '-'],
+                'contact' => [
+                    'name' => $d->client_name ?? '-'
+                ],
                 'description' => $d->description,
             ];
         });

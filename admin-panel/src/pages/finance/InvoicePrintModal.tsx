@@ -16,13 +16,17 @@ interface InvoiceData {
     refNumber: string;
     number: string;
     total_amount: number;
+    total?: number;
     paid_amount: number;
+    paidAmount?: number;
     status: string;
     date: string;
     due_date?: string;
+    dueDate?: string;
     contact?: {
         name: string;
     };
+    contactName?: string;
     description?: string;
     items?: InvoiceItem[];
 }
@@ -66,12 +70,15 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
     if (!invoice) return null;
 
     const isPaid = invoice.status === 'paid';
+    const invoiceTotal = Number(invoice.total_amount ?? invoice.total ?? 0);
+    const customerName = invoice.contact?.name || invoice.contactName || 'Umum';
 
     const items: InvoiceItem[] = invoice.items && invoice.items.length > 0
         ? invoice.items
-        : [{ nama_produk: invoice.description || 'Penjualan / Jasa', jumlah: 1, satuan: 'unit', harga: Number(invoice.total_amount), diskon: 0 }];
+        : [{ nama_produk: invoice.description || 'Penjualan / Jasa', jumlah: 1, satuan: 'unit', harga: invoiceTotal, diskon: 0 }];
 
     const totalAmount = items.reduce((s, item) => s + (item.harga * item.jumlah - item.diskon), 0);
+
 
     const handlePrint = () => {
         const content = printRef.current;
@@ -129,7 +136,7 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                     </div>
 
                     <div style={{ marginBottom: 16, fontSize: 13 }}>
-                        <div style={{ fontWeight: 800 }}>Kepada Yth: {invoice.contact?.name || 'Umum'}</div>
+                        <div style={{ fontWeight: 800 }}>Kepada Yth: {customerName}</div>
                         <div>berikut adalah Detail Order Anda:</div>
                     </div>
 
@@ -174,7 +181,7 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                         <tfoot>
                             <tr style={{ borderTop: '1px solid #000', fontWeight: 800 }}>
                                 <td colSpan={6} style={{ padding: '8px', textAlign: 'left' }}>TOTAL</td>
-                                <td style={{ padding: '8px', textAlign: 'right' }}>{fmtRp(totalAmount || Number(invoice.total_amount))}</td>
+                                <td style={{ padding: '8px', textAlign: 'right' }}>{fmtRp(totalAmount || invoiceTotal)}</td>
                             </tr>
                         </tfoot>
                     </table>

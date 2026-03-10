@@ -49,7 +49,18 @@ const InvoicesPage: React.FC = () => {
             const response = await api.get('/finance/invoices', {
                 params: { status: activeTab === 'all' ? undefined : activeTab }
             });
-            setData(response.data?.data || []);
+            const raw = response.data?.data || [];
+            // Normalize API fields to frontend fields
+            const normalized = raw.map((inv: any) => ({
+                ...inv,
+                invoice_number: inv.invoice_number || inv.refNumber || inv.number || '-',
+                total_amount: Number(inv.total_amount ?? inv.total ?? 0),
+                paid_amount: Number(inv.paid_amount ?? inv.paidAmount ?? 0),
+                remaining_balance: Number(inv.remaining_balance ?? ((inv.total_amount ?? inv.total ?? 0) - (inv.paid_amount ?? inv.paidAmount ?? 0))),
+                date: inv.date || inv.transDate,
+                due_date: inv.due_date || inv.dueDate,
+            }));
+            setData(normalized);
         } catch (error) {
             console.error('Error fetching invoices:', error);
         } finally {
