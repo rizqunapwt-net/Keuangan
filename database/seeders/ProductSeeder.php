@@ -56,10 +56,16 @@ class ProductSeeder extends Seeder
         ];
 
         foreach ($products as $p) {
+            $data = $p;
+            $stock = $data['stock'];
+            unset($data['stock']);
+            
             Product::updateOrCreate(
-                ['sku' => $p['sku']],
-                array_merge($p, [
+                ['sku' => $data['sku']],
+                array_merge($data, [
                     'uuid' => (string) Str::uuid(),
+                    'product_code' => $data['sku'],
+                    'quantity_on_hand' => $stock,
                     'stock_min' => 5,
                     'status' => 'active',
                     'created_by' => $adminId,

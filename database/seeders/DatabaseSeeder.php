@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             AccountingAccountSeeder::class,
             ProductSeeder::class,
+            SampleFinanceSeeder::class,
         ]);
     }
 }
