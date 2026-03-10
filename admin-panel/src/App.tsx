@@ -345,24 +345,25 @@ const App: React.FC = () => {
                         <Routes>
                           <Route path="/dashboard" element={<DashboardPage />} />
 
-                          {/* Financial pages — protected by PIN guard */}
-                          <Route path="/finance/invoices" element={<FinancePinGuard><InvoicesPage /></FinancePinGuard>} />
-                          <Route path="/finance/expenses" element={<FinancePinGuard><ExpensesPage /></FinancePinGuard>} />
-                          <Route path="/finance/debts" element={<FinancePinGuard><DebtsPage /></FinancePinGuard>} />
-                          <Route path="/finance/receivables" element={<FinancePinGuard><ReceivablesPage /></FinancePinGuard>} />
-                          <Route path="/finance/cash-book" element={<FinancePinGuard><CashBookPage /></FinancePinGuard>} />
-                          <Route path="/finance/reports" element={<FinancePinGuard><FinanceReportsPage /></FinancePinGuard>} />
-                          <Route path="/finance/reports-index" element={<FinancePinGuard><ReportsPage /></FinancePinGuard>} />
-                          <Route path="/finance/journals" element={<FinancePinGuard><JournalEntriesPage /></FinancePinGuard>} />
-                          <Route path="/finance/accounts" element={<FinancePinGuard><ChartOfAccountsPage /></FinancePinGuard>} />
+                          {/* Financial pages */}
+                          <Route path="/finance/invoices" element={<InvoicesPage />} />
+                          <Route path="/finance/expenses" element={<ExpensesPage />} />
+                          <Route path="/finance/debts" element={<DebtsPage />} />
+                          <Route path="/finance/receivables" element={<ReceivablesPage />} />
+                          <Route path="/finance/cash-book" element={<CashBookPage />} />
+                          <Route path="/finance/reports" element={<FinanceReportsPage />} />
+                          <Route path="/finance/reports-index" element={<ReportsPage />} />
+                          <Route path="/finance/journals" element={<JournalEntriesPage />} />
+                          <Route path="/finance/accounts" element={<ChartOfAccountsPage />} />
+                          {/* Bank page — protected by PIN guard (sensitive account data) */}
                           <Route path="/finance/banks" element={<FinancePinGuard><BanksPage /></FinancePinGuard>} />
                           <Route path="/finance/contacts" element={<ContactsPage />} />
 
-                          <Route path="/reports/profit-loss" element={<FinancePinGuard><ProfitLossPage /></FinancePinGuard>} />
-                          <Route path="/reports/balance-sheet" element={<FinancePinGuard><BalanceSheetPage /></FinancePinGuard>} />
-                          <Route path="/reports/cash-flow" element={<FinancePinGuard><CashFlowPage /></FinancePinGuard>} />
-                          <Route path="/reports/trial-balance" element={<FinancePinGuard><TrialBalancePage /></FinancePinGuard>} />
-                          <Route path="/reports/general-ledger" element={<FinancePinGuard><GeneralLedgerPage /></FinancePinGuard>} />
+                          <Route path="/reports/profit-loss" element={<ProfitLossPage />} />
+                          <Route path="/reports/balance-sheet" element={<BalanceSheetPage />} />
+                          <Route path="/reports/cash-flow" element={<CashFlowPage />} />
+                          <Route path="/reports/trial-balance" element={<TrialBalancePage />} />
+                          <Route path="/reports/general-ledger" element={<GeneralLedgerPage />} />
 
                           <Route path="/percetakan/orders" element={<OrdersPage />} />
 
