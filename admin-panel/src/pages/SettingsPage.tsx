@@ -365,6 +365,7 @@ const SettingsPage: React.FC = () => {
                 </Col>
               </Row>
 
+              <Form.Item name="company_logo" hidden><Input /></Form.Item>
               <Form.Item label={<Text strong style={{ fontSize: 13 }}>Logo Instansi</Text>} style={{ marginTop: 8 }}>
                 <div style={{
                   border: '2px dashed #eee',
@@ -395,6 +396,7 @@ const SettingsPage: React.FC = () => {
                 </div>
               </Form.Item>
 
+              <Form.Item name="company_signature" hidden><Input /></Form.Item>
               <Form.Item label={<Text strong style={{ fontSize: 13 }}>Tanda Tangan & STEMPEL</Text>} style={{ marginTop: 8 }}>
                 <div style={{
                   border: '2px dashed #eee',

@@ -39,7 +39,7 @@ const InvoicesPage: React.FC = () => {
 
     // Load company settings from localStorage
     const settings = useMemo(() => {
-        const saved = localStorage.getItem('company_settings');
+        const saved = localStorage.getItem('app_settings');
         return saved ? JSON.parse(saved) : null;
     }, []);
 
