@@ -65,7 +65,7 @@ class SampleFinanceSeeder extends Seeder
             'amount' => 350000,
             'description' => 'Pembelian Tinta Printer',
             'category' => 'Operational',
-            'status' => 'paid'
+            'status' => 'approved'
         ]);
 
         Expense::create([
@@ -74,7 +74,7 @@ class SampleFinanceSeeder extends Seeder
             'amount' => 150000,
             'description' => 'Biaya Listrik Kantor',
             'category' => 'Utility',
-            'status' => 'paid'
+            'status' => 'approved'
         ]);
 
         // 4. Create Cash Transactions
