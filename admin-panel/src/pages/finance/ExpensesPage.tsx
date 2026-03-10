@@ -24,10 +24,11 @@ const ExpensesPage: React.FC = () => {
         queryKey: ['expenses'],
         queryFn: async () => {
             const res = await api.get('/finance/expenses');
-            return res.data?.data || res.data || [];
+            const data = res.data?.data || res.data;
+            return Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
         },
     });
-    const data = Array.isArray(rawData) ? rawData : [];
+    const data = rawData;
 
     const handleVoid = async (id: number) => {
         try {
