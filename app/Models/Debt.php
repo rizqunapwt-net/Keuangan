@@ -22,6 +22,8 @@ class Debt extends Model
         'amount',
         'paid_amount',
         'bank_id',
+        'kodeinvoice',
+        'items',
     ];
 
     protected $casts = [
@@ -29,6 +31,7 @@ class Debt extends Model
         'due_date' => 'date',
         'amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
+        'items' => 'array',
     ];
 
     public function payments(): HasMany

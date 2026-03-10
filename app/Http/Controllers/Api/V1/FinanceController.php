@@ -173,12 +173,15 @@ class FinanceController extends Controller
         $invoices = $query->get()->map(function ($d) {
             $total = (float) $d->amount;
             $paid = (float) $d->paid_amount;
+            $invNumber = $d->kodeinvoice ?: ('INV-' . str_pad($d->id, 6, '0', STR_PAD_LEFT));
+            $items = $d->items ? (is_string($d->items) ? json_decode($d->items, true) : $d->items) : [];
             return [
                 'id' => $d->id,
                 'type' => 'sales',
-                'invoice_number' => 'INV-' . str_pad($d->id, 6, '0', STR_PAD_LEFT),
-                'refNumber' => 'INV-' . str_pad($d->id, 6, '0', STR_PAD_LEFT),
-                'number' => 'INV-' . str_pad($d->id, 6, '0', STR_PAD_LEFT),
+                'invoice_number' => $invNumber,
+                'refNumber' => $invNumber,
+                'number' => $invNumber,
+                'kodeinvoice' => $d->kodeinvoice,
                 'total_amount' => $total,
                 'total' => $total,
                 'paid_amount' => $paid,
@@ -195,6 +198,7 @@ class FinanceController extends Controller
                     'name' => $d->client_name ?? '-'
                 ],
                 'description' => $d->description,
+                'items' => $items,
             ];
         });
 
