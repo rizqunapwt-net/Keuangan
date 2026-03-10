@@ -51,7 +51,7 @@ export const setSecurityPin = (pin: string) => {
 };
 
 /** Verify PIN against stored hash */
-const verifyPin = (pin: string): boolean => {
+export const verifyPin = (pin: string): boolean => {
     const stored = localStorage.getItem(PIN_KEY);
     if (!stored) return true; // No PIN set = always pass
     const hash = btoa(pin.split('').reverse().join('') + ':rizquna');
