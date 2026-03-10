@@ -35,6 +35,9 @@ import './App.css';
 import themeConfig from './theme/themeConfig';
 import logoNre from './assets/logo-nre.png';
 
+// Security
+import FinancePinGuard, { clearPinSession } from './components/FinancePinGuard';
+
 // Auth pages
 import LoginPage from './pages/auth/LoginPage';
 import ProfilePage from './pages/auth/ProfilePage';
@@ -144,7 +147,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
     { type: 'divider' },
     { key: '/settings', icon: <SettingOutlined style={{ color: '#94a3b8' }} />, label: 'Pengaturan' },
-    { key: 'logout', icon: <LogoutOutlined />, label: 'Keluar', danger: true, onClick: logout },
+    { key: 'logout', icon: <LogoutOutlined />, label: 'Keluar', danger: true, onClick: () => { clearPinSession(); logout(); } },
   ];
 
   const userMenuItems = [
@@ -342,23 +345,24 @@ const App: React.FC = () => {
                         <Routes>
                           <Route path="/dashboard" element={<DashboardPage />} />
 
-                          <Route path="/finance/invoices" element={<InvoicesPage />} />
-                          <Route path="/finance/expenses" element={<ExpensesPage />} />
-                          <Route path="/finance/debts" element={<DebtsPage />} />
-                          <Route path="/finance/receivables" element={<ReceivablesPage />} />
-                          <Route path="/finance/cash-book" element={<CashBookPage />} />
-                          <Route path="/finance/reports" element={<FinanceReportsPage />} />
-                          <Route path="/finance/reports-index" element={<ReportsPage />} />
-                          <Route path="/finance/journals" element={<JournalEntriesPage />} />
-                          <Route path="/finance/accounts" element={<ChartOfAccountsPage />} />
-                          <Route path="/finance/banks" element={<BanksPage />} />
+                          {/* Financial pages — protected by PIN guard */}
+                          <Route path="/finance/invoices" element={<FinancePinGuard><InvoicesPage /></FinancePinGuard>} />
+                          <Route path="/finance/expenses" element={<FinancePinGuard><ExpensesPage /></FinancePinGuard>} />
+                          <Route path="/finance/debts" element={<FinancePinGuard><DebtsPage /></FinancePinGuard>} />
+                          <Route path="/finance/receivables" element={<FinancePinGuard><ReceivablesPage /></FinancePinGuard>} />
+                          <Route path="/finance/cash-book" element={<FinancePinGuard><CashBookPage /></FinancePinGuard>} />
+                          <Route path="/finance/reports" element={<FinancePinGuard><FinanceReportsPage /></FinancePinGuard>} />
+                          <Route path="/finance/reports-index" element={<FinancePinGuard><ReportsPage /></FinancePinGuard>} />
+                          <Route path="/finance/journals" element={<FinancePinGuard><JournalEntriesPage /></FinancePinGuard>} />
+                          <Route path="/finance/accounts" element={<FinancePinGuard><ChartOfAccountsPage /></FinancePinGuard>} />
+                          <Route path="/finance/banks" element={<FinancePinGuard><BanksPage /></FinancePinGuard>} />
                           <Route path="/finance/contacts" element={<ContactsPage />} />
 
-                          <Route path="/reports/profit-loss" element={<ProfitLossPage />} />
-                          <Route path="/reports/balance-sheet" element={<BalanceSheetPage />} />
-                          <Route path="/reports/cash-flow" element={<CashFlowPage />} />
-                          <Route path="/reports/trial-balance" element={<TrialBalancePage />} />
-                          <Route path="/reports/general-ledger" element={<GeneralLedgerPage />} />
+                          <Route path="/reports/profit-loss" element={<FinancePinGuard><ProfitLossPage /></FinancePinGuard>} />
+                          <Route path="/reports/balance-sheet" element={<FinancePinGuard><BalanceSheetPage /></FinancePinGuard>} />
+                          <Route path="/reports/cash-flow" element={<FinancePinGuard><CashFlowPage /></FinancePinGuard>} />
+                          <Route path="/reports/trial-balance" element={<FinancePinGuard><TrialBalancePage /></FinancePinGuard>} />
+                          <Route path="/reports/general-ledger" element={<FinancePinGuard><GeneralLedgerPage /></FinancePinGuard>} />
 
                           <Route path="/percetakan/orders" element={<OrdersPage />} />
 

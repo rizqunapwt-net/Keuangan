@@ -12,10 +12,11 @@ import {
   InputNumber,
   Upload,
 } from 'antd';
-import { SaveOutlined, LockOutlined, PictureOutlined } from '@ant-design/icons';
+import { SaveOutlined, LockOutlined, PictureOutlined, SafetyOutlined } from '@ant-design/icons';
 import api from '../api';
 import PageHeader from '../components/PageHeader';
 import { motion } from 'framer-motion';
+import { setSecurityPin, isPinConfigured, clearPinSession } from '../components/FinancePinGuard';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -66,6 +67,142 @@ const defaultSettings: AppSettings = {
   invoice_prefix: 'INV-',
   invoice_next_number: 1,
   footer_note: 'Terima kasih atas kepercayaan Anda kepada kami.',
+};
+
+const PIN_STORAGE_KEY = 'finance_security_pin';
+const SESSION_DURATION_KEY = 'finance_pin_duration';
+
+const PinSetupForm: React.FC = () => {
+  const [pinForm] = Form.useForm();
+  const [hasPinSet, setHasPinSet] = useState(isPinConfigured());
+  const [sessionMinutes, setSessionMinutes] = useState(() => {
+    return Number(localStorage.getItem(SESSION_DURATION_KEY)) || 15;
+  });
+
+  const handleSetPin = (values: any) => {
+    if (values.new_pin !== values.confirm_pin) {
+      message.error('Konfirmasi PIN tidak cocok!');
+      return;
+    }
+    if (values.new_pin.length !== 6) {
+      message.error('PIN harus 6 digit!');
+      return;
+    }
+    setSecurityPin(values.new_pin);
+    clearPinSession();
+    setHasPinSet(true);
+    pinForm.resetFields();
+    message.success('PIN keamanan berhasil diatur! 🔐');
+  };
+
+  const handleRemovePin = () => {
+    localStorage.removeItem(PIN_STORAGE_KEY);
+    clearPinSession();
+    setHasPinSet(false);
+    message.success('PIN keamanan dihapus. Halaman keuangan tidak lagi dilindungi.');
+  };
+
+  const handleSessionDuration = (minutes: number) => {
+    setSessionMinutes(minutes);
+    localStorage.setItem(SESSION_DURATION_KEY, String(minutes));
+    message.success(`Durasi sesi diubah ke ${minutes} menit`);
+  };
+
+  return (
+    <div>
+      <Form form={pinForm} layout="vertical" onFinish={handleSetPin} requiredMark={false}>
+        <Form.Item
+          name="new_pin"
+          label={<Text strong style={{ fontSize: 13 }}>{hasPinSet ? 'PIN Baru' : 'Buat PIN (6 digit)'}</Text>}
+          rules={[{ required: true, message: 'Masukkan PIN' }, { len: 6, message: 'PIN harus 6 digit' }]}
+        >
+          <Input.Password
+            maxLength={6}
+            placeholder="••••••"
+            prefix={<LockOutlined style={{ color: '#0fb9b1' }} />}
+            style={{ borderRadius: 12, height: 44, background: '#fcfcfc', letterSpacing: 8, textAlign: 'center', fontSize: 18, fontWeight: 700 }}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="confirm_pin"
+          label={<Text strong style={{ fontSize: 13 }}>Konfirmasi PIN</Text>}
+          dependencies={['new_pin']}
+          rules={[
+            { required: true, message: 'Konfirmasi PIN' },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue('new_pin') === value) return Promise.resolve();
+                return Promise.reject(new Error('PIN tidak cocok!'));
+              },
+            }),
+          ]}
+        >
+          <Input.Password
+            maxLength={6}
+            placeholder="••••••"
+            prefix={<LockOutlined style={{ color: '#0fb9b1' }} />}
+            style={{ borderRadius: 12, height: 44, background: '#fcfcfc', letterSpacing: 8, textAlign: 'center', fontSize: 18, fontWeight: 700 }}
+          />
+        </Form.Item>
+
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+          <Button
+            type="primary"
+            htmlType="submit"
+            icon={<SafetyOutlined />}
+            style={{ borderRadius: 12, height: 44, fontWeight: 700, flex: 1 }}
+          >
+            {hasPinSet ? 'Ubah PIN' : 'Aktifkan PIN'}
+          </Button>
+
+          {hasPinSet && (
+            <Button
+              danger
+              onClick={handleRemovePin}
+              style={{ borderRadius: 12, height: 44, fontWeight: 600 }}
+            >
+              Hapus PIN
+            </Button>
+          )}
+        </div>
+      </Form>
+
+      {hasPinSet && (
+        <div style={{
+          padding: '16px 20px',
+          background: '#f8fffe',
+          borderRadius: 14,
+          border: '1px solid #e0f2f1',
+        }}>
+          <Text strong style={{ fontSize: 12, color: '#555', display: 'block', marginBottom: 8 }}>
+            ⏱ Durasi Sesi (menit)
+          </Text>
+          <Text style={{ fontSize: 11, color: '#aaa', display: 'block', marginBottom: 12 }}>
+            Setelah memasukkan PIN, akses terbuka selama durasi ini sebelum perlu memasukkan PIN lagi.
+          </Text>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[5, 15, 30, 60].map(m => (
+              <Button
+                key={m}
+                type={sessionMinutes === m ? 'primary' : 'default'}
+                size="small"
+                onClick={() => handleSessionDuration(m)}
+                style={{
+                  borderRadius: 8,
+                  fontWeight: 600,
+                  fontSize: 12,
+                  ...(sessionMinutes === m ? {} : { border: '1px solid #e0e0e0' }),
+                }}
+              >
+                {m} menit
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const SettingsPage: React.FC = () => {
@@ -409,6 +546,34 @@ const SettingsPage: React.FC = () => {
                 Perbarui Password
               </Button>
             </Form>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* ===== PIN Keamanan Keuangan ===== */}
+      <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
+        <Col xs={24} lg={12}>
+          <Card className="premium-card" style={{ borderRadius: 20 }} bodyStyle={{ padding: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 12,
+                background: 'linear-gradient(135deg, #0fb9b1, #20bf6b)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <SafetyOutlined style={{ fontSize: 20, color: '#fff' }} />
+              </div>
+              <div>
+                <Title level={5} style={{ margin: 0, fontWeight: 700, color: '#333' }}>PIN Keamanan Keuangan</Title>
+                <Text style={{ color: '#aaa', fontSize: 12 }}>
+                  {isPinConfigured() ? '✅ PIN aktif — halaman keuangan terlindungi' : '⚠️ PIN belum diatur — halaman keuangan bisa diakses bebas'}
+                </Text>
+              </div>
+            </div>
+            <Text style={{ display: 'block', marginBottom: 20, color: '#888', fontSize: 13 }}>
+              Seperti verifikasi CVC kartu kredit — setiap kali mengakses menu keuangan, Anda harus memasukkan PIN 6 digit terlebih dahulu.
+            </Text>
+            
+            <PinSetupForm />
           </Card>
         </Col>
       </Row>
