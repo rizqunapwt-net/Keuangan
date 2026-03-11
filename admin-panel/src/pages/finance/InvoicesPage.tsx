@@ -22,7 +22,6 @@ import {
     DeleteOutlined,
     CheckCircleOutlined,
     PlusOutlined,
-    SearchOutlined,
 } from '@ant-design/icons';
 import api from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
