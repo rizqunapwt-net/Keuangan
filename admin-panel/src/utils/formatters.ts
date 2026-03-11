@@ -2,7 +2,8 @@
  * Format angka ke format Rupiah Indonesia
  * @example fmtRp(1250000) → "Rp 1.250.000"
  */
-export const fmtRp = (n: number | string): string => {
+export const fmtRp = (n: number | string | null | undefined): string => {
+    if (n === null || n === undefined || isNaN(Number(n))) return 'Rp 0';
     return `Rp ${Number(n).toLocaleString('id-ID')}`;
 };
 
@@ -10,7 +11,8 @@ export const fmtRp = (n: number | string): string => {
  * Format angka ke format Rupiah tanpa spasi (untuk tabel yang padat)
  * @example fmtRpCompact(1250000) → "Rp1.250.000"
  */
-export const fmtRpCompact = (n: number | string): string => {
+export const fmtRpCompact = (n: number | string | null | undefined): string => {
+    if (n === null || n === undefined || isNaN(Number(n))) return 'Rp0';
     return `Rp${Number(n).toLocaleString('id-ID')}`;
 };
 
