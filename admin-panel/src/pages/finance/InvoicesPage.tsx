@@ -16,6 +16,7 @@ import {
     message,
     Tooltip,
     Input,
+    Select,
 } from 'antd';
 import {
     PrinterOutlined,
@@ -26,6 +27,7 @@ import {
     DeleteOutlined,
     CheckCircleOutlined,
     UndoOutlined,
+    SearchOutlined,
 } from '@ant-design/icons';
 import api from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -35,12 +37,14 @@ import { motion } from 'framer-motion';
 import { fmtRpCompact, fmtDateShort } from '../../utils/formatters';
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 const InvoicesPage: React.FC = () => {
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
     const [searchText, setSearchText] = useState('');
+    const [searchCategory, setSearchCategory] = useState('nama');
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [editInvoice, setEditInvoice] = useState<any>(null);
     const [printModalOpen, setPrintModalOpen] = useState(false);
@@ -116,258 +120,287 @@ const InvoicesPage: React.FC = () => {
         }
     };
 
+    // Helper to convert a flattened row back to the full invoice object for editing/printing
+    const rowToInvoice = (record: any) => {
+        // If it was a grouped row, it should already have full invoice properties
+        return record;
+    };
+
+    const flattenedData = useMemo(() => {
+        const rows: any[] = [];
+        data.forEach((inv) => {
+            const items = inv.items || [];
+            if (items.length === 0) {
+                rows.push({
+                    ...inv,
+                    _item_name: inv.description || '-',
+                    _item_price: inv.total_amount,
+                    _item_qty: 1,
+                    _item_discount: 0,
+                    _item_total: inv.total_amount,
+                });
+            } else {
+                items.forEach((item: any) => {
+                    rows.push({
+                        ...inv,
+                        _item_name: item.nama_produk,
+                        _item_price: item.harga,
+                        _item_qty: item.jumlah,
+                        _item_discount: item.diskon || 0,
+                        _item_total: (item.harga * item.jumlah) - (item.diskon || 0),
+                    });
+                });
+            }
+        });
+        return rows;
+    }, [data]);
+
+    const filteredData = useMemo(() => {
+        if (!searchText) return flattenedData;
+        const low = searchText.toLowerCase();
+        return flattenedData.filter(row => {
+            if (searchCategory === 'nama') return (row.client_name || row.contact?.name)?.toLowerCase().includes(low);
+            if (searchCategory === 'kodeinvoice') return row.invoice_number?.toLowerCase().includes(low);
+            if (searchCategory === 'tanggal') return row.date?.toLowerCase().includes(low);
+            if (searchCategory === 'statusbayar') return row.status?.toLowerCase().includes(low);
+            if (searchCategory === 'nama_produk') return row._item_name?.toLowerCase().includes(low);
+            return true;
+        });
+    }, [flattenedData, searchText, searchCategory]);
+
     const columns = [
         {
-            title: 'INVOICE',
-            dataIndex: 'invoice_number',
-            key: 'invoice_number',
-            render: (text: string) => <Text strong style={{ color: '#0fb9b1' }}>{text}</Text>,
+            title: 'No',
+            key: 'no',
+            width: 50,
+            render: (_: any, __: any, index: number) => index + 1,
         },
         {
-            title: 'PELANGGAN',
-            dataIndex: 'contact',
-            key: 'contact',
-            render: (contact: any) => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Avatar size="small" style={{ backgroundColor: '#0fb9b115', color: '#0fb9b1' }}>
-                        {contact?.name?.charAt(0) || 'C'}
-                    </Avatar>
-                    <Text strong>{contact?.name || 'Umum'}</Text>
+            title: 'Kode tagihan',
+            dataIndex: 'invoice_number',
+            key: 'invoice_number',
+            render: (text: string, record: any) => (
+                <Button 
+                    size="small" 
+                    type="primary" 
+                    style={{ 
+                        fontSize: 11, 
+                        fontWeight: 700, 
+                        borderRadius: 4,
+                        background: record.status === 'paid' ? '#28a745' : '#dc3545',
+                        border: 'none',
+                        minWidth: 100
+                    }}
+                    onClick={() => handlePrint(record)}
+                >
+                    {text}
+                </Button>
+            ),
+        },
+        {
+            title: 'Nama user',
+            key: 'client_name',
+            render: (record: any) => (
+                <Text strong>{record.contact?.name || record.client_name || 'Umum'}</Text>
+            ),
+        },
+        {
+            title: 'Tanggal order',
+            dataIndex: 'date',
+            key: 'date',
+            render: (date: string) => <small style={{ color: '#666' }}>{fmtDateShort(date, true)}</small>,
+        },
+        {
+            title: 'Produk',
+            dataIndex: '_item_name',
+            key: 'produk',
+            render: (text: string) => <span style={{ fontSize: 13 }}>{text}</span>
+        },
+        {
+            title: 'harga @',
+            dataIndex: '_item_price',
+            key: 'price',
+            align: 'right' as const,
+            render: (v: number) => fmtRpCompact(v),
+        },
+        {
+            title: 'disc',
+            dataIndex: '_item_discount',
+            key: 'discount',
+            align: 'right' as const,
+            render: (v: number) => <span style={{ color: v > 0 ? '#dc3545' : '#999' }}>{fmtRpCompact(v)}</span>,
+        },
+        {
+            title: 'Total',
+            dataIndex: '_item_total',
+            key: 'total',
+            align: 'right' as const,
+            render: (v: number) => <Text strong>{fmtRpCompact(v)}</Text>,
+        },
+        {
+            title: 'status pembayaran',
+            key: 'status_label',
+            render: (record: any) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Tag 
+                        color={record.status === 'paid' ? 'success' : 'error'}
+                        style={{ borderRadius: 4, fontWeight: 700, fontSize: 10, margin: 0 }}
+                    >
+                        {record.status.toUpperCase()}
+                    </Tag>
+                    <Popconfirm
+                        title={record.status === 'paid' ? 'Batal tandai lunas?' : 'Tandai sebagai LUNAS?'}
+                        onConfirm={() => handleTogglePaid(record.id)}
+                        okText="Ya"
+                        cancelText="Batal"
+                    >
+                        <Button 
+                            type="primary" 
+                            size="small" 
+                            style={{ 
+                                padding: '0 4px', 
+                                height: 22, 
+                                background: '#28a745', 
+                                border: 'none',
+                                display: 'flex',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <CheckCircleOutlined />
+                        </Button>
+                    </Popconfirm>
                 </div>
             ),
         },
         {
-            title: 'TANGGAL',
-            dataIndex: 'date',
-            key: 'date',
-            render: (date: string) => fmtDateShort(date),
-        },
-        {
-            title: 'TOTAL',
-            dataIndex: 'total_amount',
-            key: 'total_amount',
-            render: (amount: number) => <Text strong>{fmtRpCompact(amount)}</Text>,
-        },
-        {
-            title: 'SISA',
-            dataIndex: 'remaining_balance',
-            key: 'remaining_balance',
-            render: (balance: number) => (
-                <Text type={balance > 0 ? 'danger' : 'secondary'} strong>
-                    {balance > 0 ? fmtRpCompact(balance) : 'Lunas'}
-                </Text>
-            ),
-        },
-        {
-            title: 'STATUS',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status: string) => {
-                let color = 'default';
-                if (status === 'paid') color = 'success';
-                if (status === 'partial') color = 'warning';
-                if (status === 'unpaid') color = 'error';
-                return (
-                    <Tag color={color} style={{ borderRadius: 6, fontWeight: 700, textTransform: 'uppercase', fontSize: 10 }}>
-                        {status}
-                    </Tag>
-                );
-            },
-        },
-        {
-            title: 'AKSI',
+            title: 'aksi',
             key: 'actions',
             align: 'right' as const,
-            width: 160,
+            width: 80,
             render: (_: any, record: any) => (
-                <Space size={0}>
-                    {/* Toggle Paid */}
-                    <Tooltip title={record.status === 'paid' ? 'Batal Lunas' : 'Tandai Lunas'}>
+                <Space size={4}>
+                    <Button
+                        size="small"
+                        style={{ background: '#ffc107', border: 'none', color: '#000' }}
+                        icon={<EditOutlined style={{ fontSize: 12 }} />}
+                        onClick={() => handleEdit(record)}
+                    />
+                    {record.status !== 'paid' && (
                         <Popconfirm
-                            title={record.status === 'paid' ? 'Batal tandai lunas?' : 'Tandai sebagai LUNAS?'}
-                            onConfirm={(e) => { e?.stopPropagation(); handleTogglePaid(record.id); }}
-                            onCancel={(e) => e?.stopPropagation()}
-                            okText="Ya"
+                            title="Yakin hapus data?"
+                            onConfirm={() => handleDelete(record.id)}
+                            okText="Hapus"
                             cancelText="Batal"
                         >
                             <Button
-                                type="text"
-                                icon={record.status === 'paid'
-                                    ? <UndoOutlined style={{ color: '#f59e0b' }} />
-                                    : <CheckCircleOutlined style={{ color: '#16a34a' }} />
-                                }
-                                onClick={(e) => e.stopPropagation()}
                                 size="small"
+                                type="primary"
+                                danger
+                                icon={<DeleteOutlined style={{ fontSize: 12 }} />}
+                                style={{ background: '#dc3545' }}
                             />
                         </Popconfirm>
-                    </Tooltip>
-                    {/* Edit */}
-                    <Tooltip title="Edit">
-                        <Button
-                            type="text"
-                            icon={<EditOutlined style={{ color: '#3b82f6' }} />}
-                            onClick={(e) => { e.stopPropagation(); handleEdit(record); }}
-                            size="small"
-                        />
-                    </Tooltip>
-                    {/* Print */}
-                    <Tooltip title="Cetak">
-                        <Button
-                            type="text"
-                            icon={<PrinterOutlined style={{ color: '#0fb9b1' }} />}
-                            onClick={(e) => { e.stopPropagation(); handlePrint(record); }}
-                            size="small"
-                        />
-                    </Tooltip>
-                    {/* Delete */}
-                    {record.status !== 'paid' && (
-                        <Tooltip title="Hapus">
-                            <Popconfirm
-                                title="Hapus invoice ini?"
-                                description="Invoice yang dihapus tidak bisa dikembalikan."
-                                onConfirm={(e) => { e?.stopPropagation(); handleDelete(record.id); }}
-                                onCancel={(e) => e?.stopPropagation()}
-                                okText="Hapus"
-                                cancelText="Batal"
-                                okButtonProps={{ danger: true }}
-                            >
-                                <Button
-                                    type="text"
-                                    icon={<DeleteOutlined style={{ color: '#ef4444' }} />}
-                                    onClick={(e) => e.stopPropagation()}
-                                    size="small"
-                                />
-                            </Popconfirm>
-                        </Tooltip>
                     )}
                 </Space>
             ),
         },
     ];
 
-    const filteredData = useMemo(() => {
-        if (!searchText) return data;
-        const low = searchText.toLowerCase();
-        return data.filter(inv => 
-            inv.invoice_number?.toLowerCase().includes(low) || 
-            inv.contact?.name?.toLowerCase().includes(low) ||
-            inv.client_name?.toLowerCase().includes(low) ||
-            inv.description?.toLowerCase().includes(low)
-        );
-    }, [data, searchText]);
-
     const stats = [
-        { title: 'Total Invoice', value: data.length, icon: <FileTextOutlined />, color: '#3b82f6' },
+        { title: 'Total Omzet', value: data.reduce((sum, i) => sum + (i.total_amount || 0), 0), isCurrency: true, icon: <AuditOutlined />, color: '#0fb9b1' },
         { title: 'Belum Lunas', value: data.filter(i => i.status !== 'paid').length, icon: <ClockCircleOutlined />, color: '#f59e0b' },
         { title: 'Total Piutang', value: data.reduce((sum, i) => sum + (i.remaining_balance || 0), 0), isCurrency: true, icon: <AuditOutlined />, color: '#ef4444' },
     ];
 
-    if (!user) console.debug('Guest Mode');
-
     return (
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
-            <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Space direction="vertical" size={0}>
-                    <Breadcrumb items={[{ title: 'KEUANGAN' }, { title: 'INVOICE' }]} style={{ marginBottom: 8 }} />
-                    <Title level={2} style={{ margin: 0, fontWeight: 800 }}>Daftar <span style={{ color: '#0fb9b1' }}>Invoice</span></Title>
-                    <Text type="secondary">Kelola penagihan dan pembayaran pelanggan.</Text>
+                    <Breadcrumb items={[{ title: 'Home' }, { title: 'tagihan' }]} style={{ marginBottom: 4 }} />
+                    <Title level={4} style={{ margin: 0, fontWeight: 700 }}>Data Orderan</Title>
                 </Space>
-                <Button type="primary" size="large" icon={<PlusOutlined />} onClick={handleCreate} style={{ borderRadius: 12, height: 44, background: '#0fb9b1', border: 'none', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
-                    Buat Invoice
+                <Button 
+                    type="primary" 
+                    icon={<PlusOutlined />} 
+                    onClick={handleCreate} 
+                    style={{ background: '#28a745', border: 'none', borderRadius: 4, fontWeight: 600 }}
+                >
+                    tambah order
                 </Button>
             </div>
 
-            <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
+            <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                 {stats.map((stat, i) => (
                     <Col key={i} xs={24} md={8}>
-                        <Card className="premium-card" style={{ borderRadius: 20 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                                <div style={{ width: 48, height: 48, borderRadius: 12, background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                        <Card bordered={false} bodyStyle={{ padding: '16px 20px' }} style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <div style={{ width: 40, height: 40, borderRadius: 8, background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
                                     {stat.icon}
                                 </div>
-                                <div style={{ flex: 1 }}>
-                                    <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>{stat.title}</Text>
-                                    <div style={{ fontSize: 22, fontWeight: 800 }}>
+                                <div>
+                                    <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>{stat.title}</Text>
+                                    <div style={{ fontSize: 18, fontWeight: 800, color: '#333' }}>
                                         {stat.isCurrency ? fmtRpCompact(stat.value) : stat.value}
                                     </div>
                                 </div>
-                                <Badge status="processing" color={stat.color} />
                             </div>
                         </Card>
                     </Col>
                 ))}
             </Row>
 
-            <Card className="premium-card" style={{ borderRadius: 24 }} bodyStyle={{ padding: 0 }}>
-                <div style={{ padding: '4px 20px', borderBottom: '1px solid #f8f9fa', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff' }}>
+            <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }} bodyStyle={{ padding: 0 }}>
+                <div style={{ padding: '12px 20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderBottom: '1px solid #f0f0f0' }}>
+                    <div style={{ display: 'flex', gap: 0, alignItems: 'center' }}>
+                        <Select 
+                            value={searchCategory}
+                            onChange={setSearchCategory}
+                            style={{ width: 140 }}
+                        >
+                            <Option value="nama">nama customer</Option>
+                            <Option value="kodeinvoice">kode invoice</Option>
+                            <Option value="tanggal">tanggal order</Option>
+                            <Option value="statusbayar">status bayar</Option>
+                            <Option value="nama_produk">nama produk</Option>
+                        </Select>
+                        <Input 
+                            placeholder="kata kunci pencarian" 
+                            style={{ width: 180 }} 
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                            onPressEnter={fetchInvoices}
+                            suffix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        />
+                        <Button style={{ marginLeft: 8, borderRadius: 4 }} onClick={fetchInvoices}>search</Button>
+                    </div>
+                    
                     <Tabs
                         activeKey={activeTab}
                         onChange={setActiveTab}
-                        className="premium-tabs"
+                        size="small"
                         items={[
-                            { key: 'all', label: <span style={{ fontWeight: 600, fontSize: 13 }}>SEMUA</span> },
-                            { key: 'unpaid', label: <span style={{ fontWeight: 600, fontSize: 13 }}>BELUM BAYAR</span> },
-                            { key: 'partial', label: <span style={{ fontWeight: 600, fontSize: 13 }}>DICICIL</span> },
-                            { key: 'paid', label: <span style={{ fontWeight: 600, fontSize: 13 }}>LUNAS</span> },
+                            { key: 'all', label: 'SEMUA' },
+                            { key: 'unpaid', label: 'BELUM BAYAR' },
+                            { key: 'paid', label: 'LUNAS' },
                         ]}
+                        style={{ marginBottom: -13 }}
                     />
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <Input.Search 
-                            placeholder="Cari invoice/pelanggan..." 
-                            style={{ width: 250 }} 
-                            onSearch={setSearchText}
-                            onChange={(e) => setSearchText(e.target.value)}
-                        />
-                        <Button type="primary" style={{ borderRadius: 12, height: 40, background: '#333', border: 'none' }} onClick={() => fetchInvoices()}>
-                            Refresh
-                        </Button>
-                    </div>
                 </div>
 
-                <div style={{ padding: '0 8px' }}>
+                <div className="table-responsive">
                     <Table
                         columns={columns}
                         dataSource={filteredData}
-                        rowKey="id"
+                        rowKey={(r, i) => `${r.id}-${i}`}
                         loading={loading}
-                        rowSelection={{
-                            type: 'checkbox',
-                            selectedRowKeys,
-                            onChange: (keys) => setSelectedRowKeys(keys),
+                        size="small"
+                        pagination={{ 
+                            pageSize: 50, 
+                            showSizeChanger: true,
+                            showTotal: (total) => `Total ${total} items` 
                         }}
-                        expandable={{
-                            expandedRowRender: (record) => (
-                                <div style={{ background: '#fefefe', padding: '16px 24px', borderRadius: 16, border: '1px dashed #d9d9d9' }}>
-                                    <Text strong style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', marginBottom: 12, display: 'block' }}>
-                                        Rincian Produk / Item ({record.items?.length || 0})
-                                    </Text>
-                                    <Table 
-                                        size="small"
-                                        pagination={false}
-                                        columns={[
-                                            { title: 'Item', dataIndex: 'nama_produk', key: 'name' },
-                                            { title: 'Qty', dataIndex: 'jumlah', key: 'qty', align: 'center' },
-                                            { title: 'Unit', dataIndex: 'satuan', key: 'unit', align: 'center' },
-                                            { title: 'Harga', dataIndex: 'harga', key: 'price', align: 'right', render: (v: any) => fmtRpCompact(v) },
-                                            { title: 'Sub', key: 'sub', align: 'right', render: (_: any, r: any) => fmtRpCompact((r.harga || 0) * (r.jumlah || 0) - (r.diskon || 0)) },
-                                        ]}
-                                        dataSource={record.items || []}
-                                        rowKey={(_, i) => i!}
-                                    />
-                                    {record.description && (
-                                        <div style={{ marginTop: 12, fontSize: 12, color: '#666' }}>
-                                            <Text strong>Catatan:</Text> {record.description}
-                                        </div>
-                                    )}
-                                </div>
-                            ),
-                            rowExpandable: (record) => record.items?.length > 0,
-                        }}
-                        onRow={(record) => ({
-                            onClick: () => handlePrint(record),
-                            style: { cursor: 'pointer' }
-                        })}
-                        pagination={{ pageSize: 15, showSizeChanger: true }}
+                        style={{ padding: '0 4px' }}
+                        className="old-style-table"
                     />
                 </div>
             </Card>
