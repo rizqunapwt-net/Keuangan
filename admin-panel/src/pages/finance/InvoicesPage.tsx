@@ -352,7 +352,7 @@ const InvoicesPage: React.FC = () => {
                                             { title: 'Sub', key: 'sub', align: 'right', render: (_: any, r: any) => fmtRpCompact((r.harga || 0) * (r.jumlah || 0) - (r.diskon || 0)) },
                                         ]}
                                         dataSource={record.items || []}
-                                        rowKey={(r, i) => i!}
+                                        rowKey={(_, i) => i!}
                                     />
                                     {record.description && (
                                         <div style={{ marginTop: 12, fontSize: 12, color: '#666' }}>
