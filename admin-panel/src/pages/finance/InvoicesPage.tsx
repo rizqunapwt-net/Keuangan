@@ -9,19 +9,19 @@ import {
     Tabs,
     Row,
     Col,
-    Breadcrumb,
     Popconfirm,
     message,
     Input,
     Select,
+    Breadcrumb,
 } from 'antd';
 import {
-    PlusOutlined,
     ClockCircleOutlined,
     AuditOutlined,
     EditOutlined,
     DeleteOutlined,
     CheckCircleOutlined,
+    PlusOutlined,
     SearchOutlined,
 } from '@ant-design/icons';
 import api from '../../api';
@@ -29,10 +29,23 @@ import { useAuth } from '../../contexts/AuthContext';
 import InvoiceFormDrawer from './InvoiceFormDrawer';
 import InvoicePrintModal from './InvoicePrintModal';
 import { motion } from 'framer-motion';
-import { fmtRpCompact, fmtDateShort } from '../../utils/formatters';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+
+// Exactly match PHP formatting: Rp.17,500 (dot after Rp, comma separator)
+const fmtPhpRp = (n: number | string | null | undefined): string => {
+    if (n === null || n === undefined || isNaN(Number(n))) return 'Rp.0';
+    return `Rp.${Number(n).toLocaleString('en-US')}`; 
+};
+
+// Exactly match PHP date: 11/02/2026 07:53:00
+const fmtPhpDate = (d: string | Date): string => {
+    if (!d) return '-';
+    const date = new Date(d);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+};
 
 const InvoicesPage: React.FC = () => {
     const [data, setData] = useState<any[]>([]);
@@ -65,7 +78,6 @@ const InvoicesPage: React.FC = () => {
                 paid_amount: Number(inv.paid_amount ?? inv.paidAmount ?? 0),
                 remaining_balance: Number(inv.remaining_balance ?? ((inv.total_amount ?? inv.total ?? 0) - (inv.paid_amount ?? inv.paidAmount ?? 0))),
                 date: inv.date || inv.transDate,
-                due_date: inv.due_date || inv.dueDate,
             }));
             setData(normalized);
         } catch (error) {
@@ -114,7 +126,6 @@ const InvoicesPage: React.FC = () => {
         }
     };
 
-
     const flattenedData = useMemo(() => {
         const rows: any[] = [];
         data.forEach((inv) => {
@@ -133,10 +144,10 @@ const InvoicesPage: React.FC = () => {
                     rows.push({
                         ...inv,
                         _item_name: item.nama_produk,
-                        _item_price: item.harga,
-                        _item_qty: item.jumlah,
-                        _item_discount: item.diskon || 0,
-                        _item_total: (item.harga * item.jumlah) - (item.diskon || 0),
+                        _item_price: Number(item.harga || 0),
+                        _item_qty: Number(item.jumlah || 0),
+                        _item_discount: Number(item.diskon || 0),
+                        _item_total: (Number(item.harga || 0) * Number(item.jumlah || 0)) - Number(item.diskon || 0),
                     });
                 });
             }
@@ -150,7 +161,7 @@ const InvoicesPage: React.FC = () => {
         return flattenedData.filter(row => {
             if (searchCategory === 'nama') return (row.client_name || row.contact?.name)?.toLowerCase().includes(low);
             if (searchCategory === 'kodeinvoice') return row.invoice_number?.toLowerCase().includes(low);
-            if (searchCategory === 'tanggal') return row.date?.toLowerCase().includes(low);
+            if (searchCategory === 'tanggal') return String(row.date).toLowerCase().includes(low);
             if (searchCategory === 'statusbayar') return row.status?.toLowerCase().includes(low);
             if (searchCategory === 'nama_produk') return row._item_name?.toLowerCase().includes(low);
             return true;
@@ -161,7 +172,7 @@ const InvoicesPage: React.FC = () => {
         {
             title: 'No',
             key: 'no',
-            width: 50,
+            width: 40,
             render: (_: any, __: any, index: number) => index + 1,
         },
         {
@@ -173,12 +184,14 @@ const InvoicesPage: React.FC = () => {
                     size="small" 
                     type="primary" 
                     style={{ 
-                        fontSize: 11, 
+                        fontSize: 10, 
                         fontWeight: 700, 
                         borderRadius: 4,
                         background: record.status === 'paid' ? '#28a745' : '#dc3545',
                         border: 'none',
-                        minWidth: 100
+                        minWidth: 80,
+                        padding: '0 8px',
+                        height: 22
                     }}
                     onClick={() => handlePrint(record)}
                 >
@@ -189,42 +202,46 @@ const InvoicesPage: React.FC = () => {
         {
             title: 'Nama user',
             key: 'client_name',
-            render: (record: any) => (
-                <Text strong>{record.contact?.name || record.client_name || 'Umum'}</Text>
-            ),
+            render: (record: any) => record.contact?.name || record.client_name || 'Umum',
         },
         {
             title: 'Tanggal order',
             dataIndex: 'date',
             key: 'date',
-            render: (date: string) => <small style={{ color: '#666' }}>{fmtDateShort(date)}</small>,
+            render: (date: string) => <small style={{ color: '#333' }}>{fmtPhpDate(date)}</small>,
         },
         {
             title: 'Produk',
             dataIndex: '_item_name',
             key: 'produk',
-            render: (text: string) => <span style={{ fontSize: 13 }}>{text}</span>
+            render: (text: string) => <span style={{ fontSize: 12 }}>{text}</span>
         },
         {
             title: 'harga @',
             dataIndex: '_item_price',
             key: 'price',
             align: 'right' as const,
-            render: (v: number) => fmtRpCompact(v),
+            render: (v: number) => fmtPhpRp(v),
         },
         {
             title: 'disc',
             dataIndex: '_item_discount',
             key: 'discount',
             align: 'right' as const,
-            render: (v: number) => <span style={{ color: v > 0 ? '#dc3545' : '#999' }}>{fmtRpCompact(v)}</span>,
+            render: (v: number) => fmtPhpRp(v),
         },
         {
             title: 'Total',
             dataIndex: '_item_total',
             key: 'total',
             align: 'right' as const,
-            render: (v: number) => <Text strong>{fmtRpCompact(v)}</Text>,
+            render: (v: number) => <Text strong>{fmtPhpRp(v)}</Text>,
+        },
+        {
+            title: 'Status bayar',
+            dataIndex: 'status',
+            key: 'status_text',
+            render: (status: string) => status === 'paid' ? 'lunas' : status,
         },
         {
             title: 'status pembayaran',
@@ -232,10 +249,10 @@ const InvoicesPage: React.FC = () => {
             render: (record: any) => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Tag 
-                        color={record.status === 'paid' ? 'success' : 'error'}
-                        style={{ borderRadius: 4, fontWeight: 700, fontSize: 10, margin: 0 }}
+                        color={record.status === 'paid' ? '#28a745' : '#dc3545'}
+                        style={{ borderRadius: 4, fontWeight: 700, fontSize: 10, margin: 0, padding: '0 5px' }}
                     >
-                        {record.status.toUpperCase()}
+                        {record.status === 'paid' ? 'lunas' : record.status}
                     </Tag>
                     <Popconfirm
                         title={record.status === 'paid' ? 'Batal tandai lunas?' : 'Tandai sebagai LUNAS?'}
@@ -270,40 +287,38 @@ const InvoicesPage: React.FC = () => {
                 <Space size={4}>
                     <Button
                         size="small"
-                        style={{ background: '#ffc107', border: 'none', color: '#000' }}
+                        style={{ background: '#ffc107', border: 'none', color: '#000', padding: '0 6px' }}
                         icon={<EditOutlined style={{ fontSize: 12 }} />}
                         onClick={() => handleEdit(record)}
                     />
-                    {record.status !== 'paid' && (
-                        <Popconfirm
-                            title="Yakin hapus data?"
-                            onConfirm={() => handleDelete(record.id)}
-                            okText="Hapus"
-                            cancelText="Batal"
-                        >
-                            <Button
-                                size="small"
-                                type="primary"
-                                danger
-                                icon={<DeleteOutlined style={{ fontSize: 12 }} />}
-                                style={{ background: '#dc3545' }}
-                            />
-                        </Popconfirm>
-                    )}
+                    <Popconfirm
+                        title="Yakin hapus data?"
+                        onConfirm={() => handleDelete(record.id)}
+                        okText="Hapus"
+                        cancelText="Batal"
+                    >
+                        <Button
+                            size="small"
+                            type="primary"
+                            danger
+                            icon={<DeleteOutlined style={{ fontSize: 12 }} />}
+                            style={{ background: '#dc3545', border: 'none', padding: '0 6px' }}
+                        />
+                    </Popconfirm>
                 </Space>
             ),
         },
     ];
 
     const stats = [
-        { title: 'Total Omzet', value: data.reduce((sum, i) => sum + (i.total_amount || 0), 0), isCurrency: true, icon: <AuditOutlined />, color: '#0fb9b1' },
-        { title: 'Belum Lunas', value: data.filter(i => i.status !== 'paid').length, icon: <ClockCircleOutlined />, color: '#f59e0b' },
-        { title: 'Total Piutang', value: data.reduce((sum, i) => sum + (i.remaining_balance || 0), 0), isCurrency: true, icon: <AuditOutlined />, color: '#ef4444' },
+        { title: 'Total Omzet', value: data.reduce((sum, i) => sum + (i.total_amount || 0), 0), isCurrency: true, icon: <AuditOutlined />, color: '#28a745' },
+        { title: 'Belum Lunas', value: data.filter(i => i.status !== 'paid').length, icon: <ClockCircleOutlined />, color: '#dc3545' },
+        { title: 'Total Piutang', value: data.reduce((sum, i) => sum + (i.remaining_balance || 0), 0), isCurrency: true, icon: <AuditOutlined />, color: '#dc3545' },
     ];
 
     return (
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
-            <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ marginBottom: 15, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Space direction="vertical" size={0}>
                     <Breadcrumb items={[{ title: 'Home' }, { title: 'tagihan' }]} style={{ marginBottom: 4 }} />
                     <Title level={4} style={{ margin: 0, fontWeight: 700 }}>Data Orderan</Title>
@@ -318,18 +333,18 @@ const InvoicesPage: React.FC = () => {
                 </Button>
             </div>
 
-            <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+            <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
                 {stats.map((stat, i) => (
                     <Col key={i} xs={24} md={8}>
-                        <Card bordered={false} bodyStyle={{ padding: '16px 20px' }} style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                <div style={{ width: 40, height: 40, borderRadius: 8, background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
+                        <Card bordered={false} bodyStyle={{ padding: '12px 15px' }} style={{ borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{ width: 32, height: 32, borderRadius: 6, background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
                                     {stat.icon}
                                 </div>
                                 <div>
-                                    <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>{stat.title}</Text>
-                                    <div style={{ fontSize: 18, fontWeight: 800, color: '#333' }}>
-                                        {stat.isCurrency ? fmtRpCompact(stat.value) : stat.value}
+                                    <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase' }}>{stat.title}</Text>
+                                    <div style={{ fontSize: 16, fontWeight: 800 }}>
+                                        {stat.isCurrency ? fmtPhpRp(stat.value) : stat.value}
                                     </div>
                                 </div>
                             </div>
@@ -338,13 +353,15 @@ const InvoicesPage: React.FC = () => {
                 ))}
             </Row>
 
-            <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }} bodyStyle={{ padding: 0 }}>
-                <div style={{ padding: '12px 20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderBottom: '1px solid #f0f0f0' }}>
-                    <div style={{ display: 'flex', gap: 0, alignItems: 'center' }}>
+            <Card bordered={false} style={{ borderRadius: 8 }} bodyStyle={{ padding: 0 }}>
+                <div style={{ padding: '8px 15px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderBottom: '1px solid #f0f0f0' }}>
+                    <div style={{ display: 'flex', border: '1px solid #d9d9d9', borderRadius: 4, overflow: 'hidden' }}>
                         <Select 
                             value={searchCategory}
                             onChange={setSearchCategory}
-                            style={{ width: 140 }}
+                            style={{ width: 150 }}
+                            bordered={false}
+                            dropdownStyle={{ minWidth: 200 }}
                         >
                             <Option value="nama">nama customer</Option>
                             <Option value="kodeinvoice">kode invoice</Option>
@@ -354,13 +371,13 @@ const InvoicesPage: React.FC = () => {
                         </Select>
                         <Input 
                             placeholder="kata kunci pencarian" 
-                            style={{ width: 180 }} 
+                            style={{ width: 180, borderLeft: '1px solid #d9d9d9' }} 
                             value={searchText}
                             onChange={(e) => setSearchText(e.target.value)}
                             onPressEnter={fetchInvoices}
-                            suffix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                            bordered={false}
                         />
-                        <Button style={{ marginLeft: 8, borderRadius: 4 }} onClick={fetchInvoices}>search</Button>
+                        <Button style={{ border: 'none', background: '#f5f5f5' }} onClick={fetchInvoices}>search</Button>
                     </div>
                     
                     <Tabs
@@ -386,10 +403,10 @@ const InvoicesPage: React.FC = () => {
                         pagination={{ 
                             pageSize: 50, 
                             showSizeChanger: true,
-                            showTotal: (total) => `Total ${total} items` 
+                            showTotal: (total) => `Total ${total} data`
                         }}
-                        style={{ padding: '0 4px' }}
                         className="old-style-table"
+                        bordered
                     />
                 </div>
             </Card>
@@ -410,6 +427,5 @@ const InvoicesPage: React.FC = () => {
         </motion.div>
     );
 };
-
 
 export default InvoicesPage;
