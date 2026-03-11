@@ -59,7 +59,6 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
     companyWebsite = settings?.company_website || 'www.rizquna.id',
     companyIG = settings?.company_ig || '@penerbit_rizquna',
     companyLogo = settings?.company_logo || settings?.logo_url || '/admin/logo-nre.png',
-    companySignature = settings?.company_signature || settings?.signature_url || '',
     authorizedName = settings?.director_name || settings?.authorized_name || '',
     authorizedTitle = settings?.director_title || settings?.authorized_title || '',
     bankName = settings?.invoice_bank_name || settings?.bank_name || 'Bank BTPN / SMBC (kode 213)',
@@ -240,44 +239,40 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                     </table>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 30, fontSize: 13 }}>
-                        {/* QR Code Verification Section */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1px solid #eee', padding: '8px 12px', borderRadius: 8 }}>
-                            <img 
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(window.location.origin + '/v/inv/' + (invoice.kodeinvoice || invoice.refNumber))}`} 
-                                alt="QR Verifikasi" 
-                                style={{ width: 65, height: 65 }} 
-                            />
-                            <div style={{ fontSize: 9, color: '#666', maxWidth: 100, lineHeight: 1.2 }}>
-                                <div style={{ fontWeight: 800, color: '#000', marginBottom: 2 }}>VERIFIKASI DIGITAL</div>
-                                Pindai QR ini untuk memverifikasi keaslian invoice secara online di sistem kami.
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 11, color: '#666' }}>
+                                {isPaid ? (
+                                    <div style={{ fontWeight: 700, color: '#16a34a' }}>✅ Invoice ini sudah LUNAS. Terima kasih.</div>
+                                ) : (
+                                    <>
+                                        <div style={{ fontWeight: 700 }}>Pembayaran via:</div>
+                                        <div>{bankName} Account: {bankAccount} a.n {bankHolder}</div>
+                                        {invoice.status === 'partial' && (
+                                            <div style={{ marginTop: 4, fontWeight: 600, color: '#ea580c' }}>
+                                                Sisa tagihan: {fmtRp((invoice.total_amount ?? invoice.total ?? 0) - (invoice.paid_amount ?? invoice.paidAmount ?? 0))}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         </div>
 
                         <div style={{ position: 'relative', textAlign: 'center', width: 220 }}>
                             <div style={{ fontWeight: 700, marginBottom: 4 }}>{authorizedTitle || 'Direktur'},</div>
-                            <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {companySignature && (
-                                    <img src={companySignature} alt="Signature" style={{ maxHeight: 75, maxWidth: '100%', objectFit: 'contain' }} />
-                                )}
+                            <div style={{ height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5px 0' }}>
+                                <img 
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + '/v/inv/' + (invoice.kodeinvoice || invoice.refNumber))}`} 
+                                    alt="Digital Signature" 
+                                    style={{ width: 85, height: 85, opacity: 0.9 }} 
+                                />
                             </div>
                             <div style={{ fontWeight: 800, textTransform: 'uppercase', borderTop: '1px solid #000', paddingTop: 2 }}>{authorizedName || companyName}</div>
+                            <div style={{ fontSize: 7, color: '#888', marginTop: 2, letterSpacing: 0.5 }}>DIGITALLY SIGNED & VERIFIED</div>
                         </div>
                     </div>
 
-                    <div style={{ marginTop: 24, fontSize: 11, color: '#666', borderTop: '1px dotted #ccc', paddingTop: 8 }}>
-                        {isPaid ? (
-                            <div style={{ fontWeight: 700, color: '#16a34a' }}>✅ Invoice ini sudah LUNAS. Terima kasih.</div>
-                        ) : (
-                            <>
-                                <div style={{ fontWeight: 700 }}>Pembayaran via:</div>
-                                <div>{bankName} Account: {bankAccount} a.n {bankHolder}</div>
-                                {invoice.status === 'partial' && (
-                                    <div style={{ marginTop: 4, fontWeight: 600, color: '#ea580c' }}>
-                                        Sisa tagihan: {fmtRp((invoice.total_amount ?? invoice.total ?? 0) - (invoice.paid_amount ?? invoice.paidAmount ?? 0))}
-                                    </div>
-                                )}
-                            </>
-                        )}
+                    <div style={{ marginTop: 12, fontSize: 10, color: '#999', textAlign: 'center', borderTop: '1px solid #eee', paddingTop: 8 }}>
+                        Invoice ini diterbitkan secara elektronik dan sah sesuai sistem keuangan {companyName}.
                     </div>
                 </div>
             </div>
