@@ -169,13 +169,13 @@ const InvoicesPage: React.FC = () => {
 
     const columns = [
         {
-            title: 'No',
+            title: <span style={{ fontSize: 11 }}>No</span>,
             key: 'no',
-            width: 40,
-            render: (_: any, __: any, index: number) => index + 1,
+            width: 35,
+            render: (_: any, __: any, index: number) => <span style={{ fontSize: 11 }}>{index + 1}</span>,
         },
         {
-            title: 'Kode tagihan',
+            title: <span style={{ fontSize: 11 }}>Kode tagihan</span>,
             dataIndex: 'invoice_number',
             key: 'invoice_number',
             render: (text: string, record: any) => (
@@ -183,14 +183,14 @@ const InvoicesPage: React.FC = () => {
                     size="small" 
                     type="primary" 
                     style={{ 
-                        fontSize: 10, 
+                        fontSize: 9, 
                         fontWeight: 700, 
-                        borderRadius: 4,
+                        borderRadius: 3,
                         background: record.status === 'paid' ? '#28a745' : '#dc3545',
                         border: 'none',
-                        minWidth: 80,
-                        padding: '0 8px',
-                        height: 22
+                        minWidth: 70,
+                        padding: '0 4px',
+                        height: 18
                     }}
                     onClick={() => handlePrint(record)}
                 >
@@ -199,57 +199,57 @@ const InvoicesPage: React.FC = () => {
             ),
         },
         {
-            title: 'Nama user',
+            title: <span style={{ fontSize: 11 }}>Nama user</span>,
             key: 'client_name',
-            render: (record: any) => record.contact?.name || record.client_name || 'Umum',
+            render: (record: any) => <span style={{ fontSize: 11 }}>{record.contact?.name || record.client_name || 'Umum'}</span>,
         },
         {
-            title: 'Tanggal order',
+            title: <span style={{ fontSize: 11 }}>Tanggal order</span>,
             dataIndex: 'date',
             key: 'date',
-            render: (date: string) => <small style={{ color: '#333' }}>{fmtPhpDate(date)}</small>,
+            render: (date: string) => <span style={{ color: '#333', fontSize: 10, whiteSpace: 'nowrap' }}>{fmtPhpDate(date)}</span>,
         },
         {
-            title: 'Produk',
+            title: <span style={{ fontSize: 11 }}>Produk</span>,
             dataIndex: '_item_name',
             key: 'produk',
-            render: (text: string) => <span style={{ fontSize: 12 }}>{text}</span>
+            render: (text: string) => <span style={{ fontSize: 11 }}>{text}</span>
         },
         {
-            title: 'harga @',
+            title: <span style={{ fontSize: 11 }}>harga @</span>,
             dataIndex: '_item_price',
             key: 'price',
             align: 'right' as const,
-            render: (v: number) => fmtPhpRp(v),
+            render: (v: number) => <span style={{ fontSize: 11 }}>{fmtPhpRp(v)}</span>,
         },
         {
-            title: 'disc',
+            title: <span style={{ fontSize: 11 }}>disc</span>,
             dataIndex: '_item_discount',
             key: 'discount',
             align: 'right' as const,
-            render: (v: number) => fmtPhpRp(v),
+            render: (v: number) => <span style={{ fontSize: 11 }}>{fmtPhpRp(v)}</span>,
         },
         {
-            title: 'Total',
+            title: <span style={{ fontSize: 11 }}>Total</span>,
             dataIndex: '_item_total',
             key: 'total',
             align: 'right' as const,
-            render: (v: number) => <Text strong>{fmtPhpRp(v)}</Text>,
+            render: (v: number) => <span style={{ fontWeight: 700, fontSize: 11 }}>{fmtPhpRp(v)}</span>,
         },
         {
-            title: 'Status bayar',
+            title: <span style={{ fontSize: 11 }}>Status bayar</span>,
             dataIndex: 'status',
             key: 'status_text',
-            render: (status: string) => status === 'paid' ? 'lunas' : status,
+            render: (status: string) => <span style={{ fontSize: 10 }}>{status === 'paid' ? 'lunas' : status}</span>,
         },
         {
-            title: 'status pembayaran',
+            title: <span style={{ fontSize: 11 }}>status pembayaran</span>,
             key: 'status_label',
             render: (record: any) => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <Tag 
                         color={record.status === 'paid' ? '#28a745' : '#dc3545'}
-                        style={{ borderRadius: 4, fontWeight: 700, fontSize: 10, margin: 0, padding: '0 5px' }}
+                        style={{ borderRadius: 3, fontWeight: 700, fontSize: 9, margin: 0, padding: '0 3px', lineHeight: '14px' }}
                     >
                         {record.status === 'paid' ? 'lunas' : record.status}
                     </Tag>
@@ -263,31 +263,32 @@ const InvoicesPage: React.FC = () => {
                             type="primary" 
                             size="small" 
                             style={{ 
-                                padding: '0 4px', 
-                                height: 22, 
+                                padding: '0 2px', 
+                                height: 16, 
                                 background: '#28a745', 
                                 border: 'none',
                                 display: 'flex',
-                                alignItems: 'center'
+                                alignItems: 'center',
+                                fontSize: 10
                             }}
                         >
-                            <CheckCircleOutlined />
+                            <CheckCircleOutlined style={{ fontSize: 10 }} />
                         </Button>
                     </Popconfirm>
                 </div>
             ),
         },
         {
-            title: 'aksi',
+            title: <span style={{ fontSize: 11 }}>aksi</span>,
             key: 'actions',
             align: 'right' as const,
-            width: 80,
+            width: 70,
             render: (_: any, record: any) => (
-                <Space size={4}>
+                <Space size={2}>
                     <Button
                         size="small"
-                        style={{ background: '#ffc107', border: 'none', color: '#000', padding: '0 6px' }}
-                        icon={<EditOutlined style={{ fontSize: 12 }} />}
+                        style={{ background: '#ffc107', border: 'none', color: '#000', padding: '0 4px', height: 20, width: 22 }}
+                        icon={<EditOutlined style={{ fontSize: 10 }} />}
                         onClick={() => handleEdit(record)}
                     />
                     <Popconfirm
@@ -300,8 +301,8 @@ const InvoicesPage: React.FC = () => {
                             size="small"
                             type="primary"
                             danger
-                            icon={<DeleteOutlined style={{ fontSize: 12 }} />}
-                            style={{ background: '#dc3545', border: 'none', padding: '0 6px' }}
+                            icon={<DeleteOutlined style={{ fontSize: 10 }} />}
+                            style={{ background: '#dc3545', border: 'none', padding: '0 4px', height: 20, width: 22 }}
                         />
                     </Popconfirm>
                 </Space>
@@ -316,33 +317,41 @@ const InvoicesPage: React.FC = () => {
     ];
 
     return (
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
-            <div style={{ marginBottom: 15, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <motion.div 
+            initial={{ opacity: 0, y: 15 }} 
+            animate={{ opacity: 1, y: 0 }}
+            style={{ fontSize: 12 }} // Global smaller font
+        >
+            <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Space direction="vertical" size={0}>
-                    <Breadcrumb items={[{ title: 'Home' }, { title: 'tagihan' }]} style={{ marginBottom: 4 }} />
-                    <Title level={4} style={{ margin: 0, fontWeight: 700 }}>Data Orderan</Title>
+                    <Breadcrumb 
+                        items={[{ title: 'Home' }, { title: 'tagihan' }]} 
+                        style={{ marginBottom: 2, fontSize: 11 }} 
+                    />
+                    <Title level={5} style={{ margin: 0, fontWeight: 700, fontSize: 16 }}>Data Orderan</Title>
                 </Space>
                 <Button 
                     type="primary" 
-                    icon={<PlusOutlined />} 
+                    icon={<PlusOutlined style={{ fontSize: 12 }} />} 
                     onClick={handleCreate} 
-                    style={{ background: '#28a745', border: 'none', borderRadius: 4, fontWeight: 600 }}
+                    size="small"
+                    style={{ background: '#28a745', border: 'none', borderRadius: 4, fontWeight: 600, height: 28, fontSize: 12 }}
                 >
                     tambah order
                 </Button>
             </div>
 
-            <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
+            <Row gutter={[8, 8]} style={{ marginBottom: 15 }}>
                 {stats.map((stat, i) => (
                     <Col key={i} xs={24} md={8}>
-                        <Card bordered={false} bodyStyle={{ padding: '12px 15px' }} style={{ borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <div style={{ width: 32, height: 32, borderRadius: 6, background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+                        <Card bordered={false} bodyStyle={{ padding: '8px 12px' }} style={{ borderRadius: 6, boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{ width: 28, height: 28, borderRadius: 5, background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
                                     {stat.icon}
                                 </div>
                                 <div>
-                                    <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase' }}>{stat.title}</Text>
-                                    <div style={{ fontSize: 16, fontWeight: 800 }}>
+                                    <Text type="secondary" style={{ fontSize: 10, textTransform: 'uppercase', display: 'block', lineHeight: '12px' }}>{stat.title}</Text>
+                                    <div style={{ fontSize: 14, fontWeight: 800 }}>
                                         {stat.isCurrency ? fmtPhpRp(stat.value) : stat.value}
                                     </div>
                                 </div>
@@ -352,43 +361,46 @@ const InvoicesPage: React.FC = () => {
                 ))}
             </Row>
 
-            <Card bordered={false} style={{ borderRadius: 8 }} bodyStyle={{ padding: 0 }}>
-                <div style={{ padding: '8px 15px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderBottom: '1px solid #f0f0f0' }}>
-                    <div style={{ display: 'flex', border: '1px solid #d9d9d9', borderRadius: 4, overflow: 'hidden' }}>
+            <Card bordered={false} style={{ borderRadius: 6 }} bodyStyle={{ padding: 0 }}>
+                <div style={{ padding: '6px 12px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8, borderBottom: '1px solid #f0f0f0' }}>
+                    <div style={{ display: 'flex', border: '1px solid #d9d9d9', borderRadius: 3, overflow: 'hidden' }}>
                         <Select 
                             value={searchCategory}
                             onChange={setSearchCategory}
-                            style={{ width: 150 }}
+                            style={{ width: 130, fontSize: 11 }}
                             bordered={false}
-                            dropdownStyle={{ minWidth: 200 }}
+                            size="small"
+                            dropdownStyle={{ minWidth: 180 }}
                         >
-                            <Option value="nama">nama customer</Option>
-                            <Option value="kodeinvoice">kode invoice</Option>
-                            <Option value="tanggal">tanggal order</Option>
-                            <Option value="statusbayar">status bayar</Option>
-                            <Option value="nama_produk">nama produk</Option>
+                            <Option value="nama"><span style={{ fontSize: 11 }}>nama customer</span></Option>
+                            <Option value="kodeinvoice"><span style={{ fontSize: 11 }}>kode invoice</span></Option>
+                            <Option value="tanggal"><span style={{ fontSize: 11 }}>tanggal order</span></Option>
+                            <Option value="statusbayar"><span style={{ fontSize: 11 }}>status bayar</span></Option>
+                            <Option value="nama_produk"><span style={{ fontSize: 11 }}>nama produk</span></Option>
                         </Select>
                         <Input 
                             placeholder="kata kunci pencarian" 
-                            style={{ width: 180, borderLeft: '1px solid #d9d9d9' }} 
+                            style={{ width: 160, borderLeft: '1px solid #d9d9d9', fontSize: 11 }} 
                             value={searchText}
                             onChange={(e) => setSearchText(e.target.value)}
                             onPressEnter={fetchInvoices}
                             bordered={false}
+                            size="small"
                         />
-                        <Button style={{ border: 'none', background: '#f5f5f5' }} onClick={fetchInvoices}>search</Button>
+                        <Button style={{ border: 'none', background: '#f5f5f5', fontSize: 11, height: 24 }} size="small" onClick={fetchInvoices}>search</Button>
                     </div>
                     
                     <Tabs
                         activeKey={activeTab}
                         onChange={setActiveTab}
                         size="small"
+                        className="small-tabs"
                         items={[
-                            { key: 'all', label: 'SEMUA' },
-                            { key: 'unpaid', label: 'BELUM BAYAR' },
-                            { key: 'paid', label: 'LUNAS' },
+                            { key: 'all', label: <span style={{ fontSize: 11 }}>SEMUA</span> },
+                            { key: 'unpaid', label: <span style={{ fontSize: 11 }}>BELUM BAYAR</span> },
+                            { key: 'paid', label: <span style={{ fontSize: 11 }}>LUNAS</span> },
                         ]}
-                        style={{ marginBottom: -13 }}
+                        style={{ marginBottom: -10 }}
                     />
                 </div>
 
@@ -402,10 +414,12 @@ const InvoicesPage: React.FC = () => {
                         pagination={{ 
                             pageSize: 50, 
                             showSizeChanger: true,
-                            showTotal: (total) => `Total ${total} data`
+                            showTotal: (total) => <span style={{ fontSize: 10 }}>Total {total} data</span>,
+                            size: 'small'
                         }}
-                        className="old-style-table"
+                        className="compact-table"
                         bordered
+                        style={{ fontSize: 11 }}
                     />
                 </div>
             </Card>
@@ -423,6 +437,22 @@ const InvoicesPage: React.FC = () => {
                 invoice={selectedInvoice}
                 settings={settings}
             />
+            
+            <style>{`
+                .compact-table .ant-table-thead > tr > th {
+                    padding: 4px 8px !important;
+                    background: #fafafa !important;
+                }
+                .compact-table .ant-table-tbody > tr > td {
+                    padding: 3px 8px !important;
+                }
+                .compact-table .ant-table-pagination.ant-pagination {
+                    margin: 8px 0 !important;
+                }
+                .small-tabs .ant-tabs-tab {
+                    padding: 4px 8px !important;
+                }
+            `}</style>
         </motion.div>
     );
 };
