@@ -211,25 +211,45 @@ class FinanceController extends Controller
     public function storeInvoice(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'contactId' => 'required|exists:contacts,id',
-            'amount' => 'required|numeric|min:1',
+            'contactId' => 'nullable|exists:contacts,id',
+            'client_name' => 'nullable|string|max:255',
             'transDate' => 'required|date',
             'dueDate' => 'nullable|date',
             'description' => 'nullable|string|max:500',
+            'items' => 'required|array|min:1',
+            'items.*.nama_produk' => 'required|string|max:255',
+            'items.*.jumlah' => 'required|numeric|min:1',
+            'items.*.satuan' => 'required|string|max:50',
+            'items.*.harga' => 'required|numeric|min:0',
+            'items.*.diskon' => 'nullable|numeric|min:0',
         ]);
 
-        $contact = Contact::find($validated['contactId']);
+        $clientName = $validated['client_name'] ?? null;
+        if (!empty($validated['contactId'])) {
+            $contact = Contact::find($validated['contactId']);
+            $clientName = $contact->name;
+        }
+
+        $items = collect($validated['items'])->map(fn($item) => [
+            'nama_produk' => $item['nama_produk'],
+            'jumlah' => (int) $item['jumlah'],
+            'satuan' => $item['satuan'],
+            'harga' => (float) $item['harga'],
+            'diskon' => (float) ($item['diskon'] ?? 0),
+        ])->toArray();
+
+        $total = collect($items)->sum(fn($i) => ($i['harga'] * $i['jumlah']) - $i['diskon']);
 
         $debt = Debt::create([
             'type' => 'receivable',
             'status' => 'unpaid',
             'date' => $validated['transDate'],
             'due_date' => $validated['dueDate'] ?? null,
-            'client_name' => $contact->name,
-            'client_phone' => $contact->phone ?? null,
+            'client_name' => $clientName ?? 'Umum',
             'description' => $validated['description'] ?? null,
-            'amount' => $validated['amount'],
+            'amount' => $total,
             'paid_amount' => 0,
+            'items' => $items,
         ]);
 
         return response()->json([
@@ -240,6 +260,98 @@ class FinanceController extends Controller
                 'refNumber' => 'INV-' . str_pad($debt->id, 6, '0', STR_PAD_LEFT),
             ],
         ], 201);
+    }
+
+    public function updateInvoice(Request $request, int $id): JsonResponse
+    {
+        $debt = Debt::where('type', 'receivable')->findOrFail($id);
+
+        $validated = $request->validate([
+            'client_name' => 'nullable|string|max:255',
+            'transDate' => 'nullable|date',
+            'dueDate' => 'nullable|date',
+            'description' => 'nullable|string|max:500',
+            'items' => 'nullable|array|min:1',
+            'items.*.nama_produk' => 'required|string|max:255',
+            'items.*.jumlah' => 'required|numeric|min:1',
+            'items.*.satuan' => 'required|string|max:50',
+            'items.*.harga' => 'required|numeric|min:0',
+            'items.*.diskon' => 'nullable|numeric|min:0',
+        ]);
+
+        if (isset($validated['client_name'])) {
+            $debt->client_name = $validated['client_name'];
+        }
+        if (isset($validated['transDate'])) {
+            $debt->date = $validated['transDate'];
+        }
+        if (isset($validated['dueDate'])) {
+            $debt->due_date = $validated['dueDate'];
+        }
+        if (isset($validated['description'])) {
+            $debt->description = $validated['description'];
+        }
+
+        if (isset($validated['items'])) {
+            $items = collect($validated['items'])->map(fn($item) => [
+                'nama_produk' => $item['nama_produk'],
+                'jumlah' => (int) $item['jumlah'],
+                'satuan' => $item['satuan'],
+                'harga' => (float) $item['harga'],
+                'diskon' => (float) ($item['diskon'] ?? 0),
+            ])->toArray();
+
+            $debt->items = $items;
+            $debt->amount = collect($items)->sum(fn($i) => ($i['harga'] * $i['jumlah']) - $i['diskon']);
+        }
+
+        $debt->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoice berhasil diperbarui.',
+        ]);
+    }
+
+    public function deleteInvoice(int $id): JsonResponse
+    {
+        $debt = Debt::where('type', 'receivable')->findOrFail($id);
+
+        if ($debt->status === 'paid') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak bisa menghapus invoice yang sudah lunas.',
+            ], 422);
+        }
+
+        $debt->payments()->delete();
+        $debt->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoice berhasil dihapus.',
+        ]);
+    }
+
+    public function togglePaidStatus(int $id): JsonResponse
+    {
+        $debt = Debt::where('type', 'receivable')->findOrFail($id);
+
+        if ($debt->status === 'paid') {
+            $debt->status = 'unpaid';
+            $debt->paid_amount = 0;
+        } else {
+            $debt->status = 'paid';
+            $debt->paid_amount = $debt->amount;
+        }
+
+        $debt->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => $debt->status === 'paid' ? 'Invoice ditandai LUNAS.' : 'Invoice ditandai BELUM LUNAS.',
+            'data' => ['status' => $debt->status],
+        ]);
     }
 
     public function storeJournal(Request $request, AccountingService $accounting): JsonResponse

@@ -11,13 +11,20 @@ import {
     Col,
     Badge,
     Breadcrumb,
-    Avatar
+    Avatar,
+    Popconfirm,
+    message,
+    Tooltip,
 } from 'antd';
 import {
     PrinterOutlined,
     PlusOutlined,
     ClockCircleOutlined,
-    AuditOutlined
+    AuditOutlined,
+    EditOutlined,
+    DeleteOutlined,
+    CheckCircleOutlined,
+    UndoOutlined,
 } from '@ant-design/icons';
 import api from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -32,12 +39,12 @@ const InvoicesPage: React.FC = () => {
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [editInvoice, setEditInvoice] = useState<any>(null);
     const [printModalOpen, setPrintModalOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
     const [activeTab, setActiveTab] = useState('all');
     const { user } = useAuth();
 
-    // Load company settings from localStorage
     const settings = useMemo(() => {
         const saved = localStorage.getItem('app_settings');
         return saved ? JSON.parse(saved) : null;
@@ -50,7 +57,6 @@ const InvoicesPage: React.FC = () => {
                 params: { status: activeTab === 'all' ? undefined : activeTab }
             });
             const raw = response.data?.data || [];
-            // Normalize API fields to frontend fields
             const normalized = raw.map((inv: any) => ({
                 ...inv,
                 invoice_number: inv.invoice_number || inv.refNumber || inv.number || '-',
@@ -75,6 +81,36 @@ const InvoicesPage: React.FC = () => {
     const handlePrint = (record: any) => {
         setSelectedInvoice(record);
         setPrintModalOpen(true);
+    };
+
+    const handleEdit = (record: any) => {
+        setEditInvoice(record);
+        setDrawerOpen(true);
+    };
+
+    const handleCreate = () => {
+        setEditInvoice(null);
+        setDrawerOpen(true);
+    };
+
+    const handleDelete = async (id: number) => {
+        try {
+            await api.delete(`/finance/invoices/${id}`);
+            message.success('Invoice berhasil dihapus!');
+            fetchInvoices();
+        } catch (err: any) {
+            message.error(err.response?.data?.message || 'Gagal menghapus invoice');
+        }
+    };
+
+    const handleTogglePaid = async (id: number) => {
+        try {
+            const res = await api.patch(`/finance/invoices/${id}/toggle-paid`);
+            message.success(res.data?.message || 'Status diperbarui!');
+            fetchInvoices();
+        } catch (err: any) {
+            message.error(err.response?.data?.message || 'Gagal mengubah status');
+        }
     };
 
     const columns = [
@@ -136,17 +172,71 @@ const InvoicesPage: React.FC = () => {
             },
         },
         {
-            title: '',
+            title: 'AKSI',
             key: 'actions',
             align: 'right' as const,
+            width: 160,
             render: (_: any, record: any) => (
-                <Space>
-                    <Button 
-                        type="text" 
-                        icon={<PrinterOutlined />} 
-                        onClick={(e) => { e.stopPropagation(); handlePrint(record); }} 
-                        style={{ color: '#0fb9b1' }}
-                    />
+                <Space size={0}>
+                    {/* Toggle Paid */}
+                    <Tooltip title={record.status === 'paid' ? 'Batal Lunas' : 'Tandai Lunas'}>
+                        <Popconfirm
+                            title={record.status === 'paid' ? 'Batal tandai lunas?' : 'Tandai sebagai LUNAS?'}
+                            onConfirm={(e) => { e?.stopPropagation(); handleTogglePaid(record.id); }}
+                            onCancel={(e) => e?.stopPropagation()}
+                            okText="Ya"
+                            cancelText="Batal"
+                        >
+                            <Button
+                                type="text"
+                                icon={record.status === 'paid'
+                                    ? <UndoOutlined style={{ color: '#f59e0b' }} />
+                                    : <CheckCircleOutlined style={{ color: '#16a34a' }} />
+                                }
+                                onClick={(e) => e.stopPropagation()}
+                                size="small"
+                            />
+                        </Popconfirm>
+                    </Tooltip>
+                    {/* Edit */}
+                    <Tooltip title="Edit">
+                        <Button
+                            type="text"
+                            icon={<EditOutlined style={{ color: '#3b82f6' }} />}
+                            onClick={(e) => { e.stopPropagation(); handleEdit(record); }}
+                            size="small"
+                        />
+                    </Tooltip>
+                    {/* Print */}
+                    <Tooltip title="Cetak">
+                        <Button
+                            type="text"
+                            icon={<PrinterOutlined style={{ color: '#0fb9b1' }} />}
+                            onClick={(e) => { e.stopPropagation(); handlePrint(record); }}
+                            size="small"
+                        />
+                    </Tooltip>
+                    {/* Delete */}
+                    {record.status !== 'paid' && (
+                        <Tooltip title="Hapus">
+                            <Popconfirm
+                                title="Hapus invoice ini?"
+                                description="Invoice yang dihapus tidak bisa dikembalikan."
+                                onConfirm={(e) => { e?.stopPropagation(); handleDelete(record.id); }}
+                                onCancel={(e) => e?.stopPropagation()}
+                                okText="Hapus"
+                                cancelText="Batal"
+                                okButtonProps={{ danger: true }}
+                            >
+                                <Button
+                                    type="text"
+                                    icon={<DeleteOutlined style={{ color: '#ef4444' }} />}
+                                    onClick={(e) => e.stopPropagation()}
+                                    size="small"
+                                />
+                            </Popconfirm>
+                        </Tooltip>
+                    )}
                 </Space>
             ),
         },
@@ -158,7 +248,6 @@ const InvoicesPage: React.FC = () => {
         { title: 'Total Piutang', value: data.reduce((sum, i) => sum + (i.remaining_balance || 0), 0), isCurrency: true, icon: <AuditOutlined />, color: '#ef4444' },
     ];
 
-    // Logging user for build (suppress unused warning)
     if (!user) console.debug('Guest Mode');
 
     return (
@@ -169,7 +258,7 @@ const InvoicesPage: React.FC = () => {
                     <Title level={2} style={{ margin: 0, fontWeight: 800 }}>Daftar <span style={{ color: '#0fb9b1' }}>Invoice</span></Title>
                     <Text type="secondary">Kelola penagihan dan pembayaran pelanggan.</Text>
                 </Space>
-                <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setDrawerOpen(true)} style={{ borderRadius: 12, height: 44, background: '#0fb9b1', border: 'none', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+                <Button type="primary" size="large" icon={<PlusOutlined />} onClick={handleCreate} style={{ borderRadius: 12, height: 44, background: '#0fb9b1', border: 'none', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
                     Buat Invoice
                 </Button>
             </div>
@@ -197,8 +286,8 @@ const InvoicesPage: React.FC = () => {
 
             <Card className="premium-card" style={{ borderRadius: 24 }} bodyStyle={{ padding: 0 }}>
                 <div style={{ padding: '4px 20px', borderBottom: '1px solid #f8f9fa', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff' }}>
-                    <Tabs 
-                        activeKey={activeTab} 
+                    <Tabs
+                        activeKey={activeTab}
                         onChange={setActiveTab}
                         className="premium-tabs"
                         items={[
@@ -230,15 +319,16 @@ const InvoicesPage: React.FC = () => {
                 </div>
             </Card>
 
-            <InvoiceFormDrawer 
-                open={drawerOpen} 
-                onClose={() => setDrawerOpen(false)} 
-                onSuccess={() => { setDrawerOpen(false); fetchInvoices(); }} 
+            <InvoiceFormDrawer
+                open={drawerOpen}
+                onClose={() => { setDrawerOpen(false); setEditInvoice(null); }}
+                onSuccess={() => { setDrawerOpen(false); setEditInvoice(null); fetchInvoices(); }}
+                editData={editInvoice}
             />
 
-            <InvoicePrintModal 
-                open={printModalOpen} 
-                onClose={() => setPrintModalOpen(false)} 
+            <InvoicePrintModal
+                open={printModalOpen}
+                onClose={() => setPrintModalOpen(false)}
                 invoice={selectedInvoice}
                 settings={settings}
             />
@@ -246,7 +336,6 @@ const InvoicesPage: React.FC = () => {
     );
 };
 
-// Internal icon for the stats
 const FileTextOutlined = () => (
     <svg width="1em" height="1em" fill="currentColor" viewBox="0 0 1024 1024" style={{ verticalAlign: 'middle' }}>
         <path d="M854.6 288.6L639.4 73.4c-6-6-14.1-9.4-22.6-9.4H132c-17.7 0-32 14.3-32 32v832c0 17.7 14.3 32 32 32h720c17.7 0 32-14.3 32-32V311.2c0-8.5-3.4-16.7-9.4-22.6zM790.2 326L602 326V137.8L790.2 326zM812 888H172V136h358v190c0 17.7 14.3 32 32 32h190v530z" />
