@@ -53,8 +53,9 @@ class SyncOldInvoices extends Command
                 $items = [];
                 if (!empty($inv['nama_produk'])) {
                     $items[] = [
-                        'nama' => $inv['nama_produk'],
+                        'nama_produk' => $inv['nama_produk'],
                         'jumlah' => $inv['jumlah'] ?: 1,
+                        'satuan' => 'Pcs',
                         'harga' => $inv['htm'] ?: 0,
                         'diskon' => $inv['diskon'] ?: 0,
                     ];

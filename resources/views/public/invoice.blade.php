@@ -72,9 +72,9 @@
                         @forelse($items as $item)
                             <tr class="text-slate-700">
                                 <td class="py-4 px-6">
-                                    <div class="font-semibold">{{ $item['nama_produk'] }}</div>
+                                    <div class="font-semibold">{{ $item['nama_produk'] ?? $item['nama'] ?? 'Produk' }}</div>
                                 </td>
-                                <td class="py-4 px-2 text-center text-slate-500">{{ $item['jumlah'] }} {{ $item['satuan'] }}</td>
+                                <td class="py-4 px-2 text-center text-slate-500">{{ $item['jumlah'] }} {{ $item['satuan'] ?? 'Pcs' }}</td>
                                 <td class="py-4 px-2 text-right">Rp{{ number_format($item['harga'], 0, ',', '.') }}</td>
                                 <td class="py-4 px-6 text-right font-bold text-slate-900 italic">Rp{{ number_format(($item['harga'] * $item['jumlah']) - ($item['diskon'] ?? 0), 0, ',', '.') }}</td>
                             </tr>
