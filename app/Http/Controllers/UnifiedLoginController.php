@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Support\ApiResponse;
+use App\Traits\LogsActivity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 class UnifiedLoginController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, LogsActivity;
 
     /**
      * API Login - Returns token for SPA/Mobile
@@ -42,12 +43,14 @@ class UnifiedLoginController extends Controller
 
             if (! $user || ! Hash::check($validated['password'], $user->password)) {
                 $this->logAuthEvent('login_failed', $identifier, null, 'invalid_credentials', $request);
+                $this->logActivity('login_failed', 'users', "Gagal login: Kredensial tidak valid untuk {$identifier}");
 
                 return $this->error('Kredensial tidak valid.', 401);
             }
 
             if (! $user->is_active) {
                 $this->logAuthEvent('login_failed', $identifier, $user->id, 'account_inactive', $request);
+                $this->logActivity('login_failed', 'users', "Gagal login: Akun {$identifier} tidak aktif", $user);
 
                 return response()->json([
                     'success' => false,
@@ -60,6 +63,7 @@ class UnifiedLoginController extends Controller
 
             if (! $this->isAdminUser($user)) {
                 $this->logAuthEvent('login_failed', $identifier, $user->id, 'not_admin', $request);
+                $this->logActivity('login_failed', 'users', "Gagal login: User {$identifier} bukan admin", $user);
 
                 return response()->json([
                     'success' => false,
@@ -71,6 +75,7 @@ class UnifiedLoginController extends Controller
             }
 
             $this->logAuthEvent('login_success', $identifier, $user->id, 'success', $request);
+            $this->logActivity('login', 'users', "User {$user->name} berhasil login", $user);
             $user->update(['last_login_at' => now()]);
 
             $token = $user->createToken(
@@ -319,6 +324,7 @@ class UnifiedLoginController extends Controller
             $user->tokens()->delete();
 
             $this->logAuthEvent('logout', $user->email ?? $user->username, $user->id, 'success', $request);
+            $this->logActivity('logout', 'users', "User {$user->name} logout", $user);
         }
 
         if ($request->expectsJson()) {
