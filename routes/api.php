@@ -132,6 +132,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
             Route::get('/logs-stats', [AuditLogController::class, 'stats']);
         });
 
+        // ── Settings ──
+        Route::get('/settings', [\App\Http\Controllers\SettingController::class, 'index']);
+        Route::post('/settings', [\App\Http\Controllers\SettingController::class, 'update']);
+
     // Notifications & Sessions
     Route::get('/user/notifications', [NotificationController::class, 'index']);
     Route::get('/user/sessions', [SessionController::class, 'index']);

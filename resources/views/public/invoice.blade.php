@@ -92,11 +92,18 @@
 
 
     <div class="invoice-card">
+        @php
+            $settings = \App\Models\Setting::first();
+            $companyLogo = $settings->company_logo ?? '/admin/logo-nre.png';
+            $companyWebsite = $settings->company_website ?? 'www.rizquna.id';
+            $companyEmail = $settings->company_email ?? 'cv.rizquna@gmail.com';
+            $companyIG = $settings->company_ig ?? '@penerbit_rizquna';
+        @endphp
         <!-- Logo & Header (Matched to PDF) -->
         <div style="text-align: center; margin-bottom: 12px;">
-            <img src="/admin/logo-nre.png" alt="Logo" style="max-height: 85px; max-width: 100%; object-fit: contain; margin-bottom: 8px;">
+            <img src="{{ $companyLogo }}" alt="Logo" style="max-height: 85px; max-width: 100%; object-fit: contain; margin-bottom: 8px;">
             <div style="font-size: 13px; color: #000; font-weight: 500;">
-                <span style="color: #0000FF; text-decoration: underline;">www.rizquna.id</span> | cv.rizquna@gmail.com | IG: <span style="color: #0000FF; text-decoration: none;">@penerbit_rizquna</span>
+                <span style="color: #0000FF; text-decoration: underline;">{{ $companyWebsite }}</span> | {{ $companyEmail }} | IG: <span style="color: #0000FF; text-decoration: none;">{{ $companyIG }}</span>
             </div>
         </div>
 
@@ -164,11 +171,20 @@
         </table>
 
         <!-- Footer Section (Matched to PDF) -->
+        @php
+            $settings = \App\Models\Setting::first();
+            $directorName = $settings->director_name ?? 'SUDARYONO';
+            $directorTitle = $settings->director_title ?? 'Direktur';
+            $bankInfo = ($settings->invoice_bank_name ?? 'Bank BTPN / SMBC (kode 213)') . ' Account: ' . ($settings->invoice_bank_account ?? '902-4013-3956') . ' a.n ' . ($settings->invoice_bank_holder ?? 'FITRIANTO');
+            $companyName = $settings->company_name ?? 'RIZQUNA';
+            $companyLogo = $settings->company_logo ?? '/admin/logo-nre.png';
+            $footerNote = $settings->footer_note ?? 'Invoice ini diterbitkan secara elektronik dan sah sesuai sistem keuangan RIZQUNA.';
+        @endphp
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 35px; font-size: 13px;">
             <div style="flex: 1;">
                 <div style="font-size: 12px; color: #444;">
                     <div style="font-weight: 700; color: #000; margin-bottom: 2px;">Pembayaran via:</div>
-                    <div>Bank BTPN / SMBC (kode 213) Account: 902-4013-3956 a.n FITRIANTO</div>
+                    <div>{{ $bankInfo }}</div>
                     @if($status === 'partial')
                         <div style="margin-top: 5px; font-weight: 700; color: #ea580c; font-size: 13px;">
                             SISA TAGIHAN: Rp{{ number_format($invoice->amount - $invoice->paid_amount, 0, ',', '.') }}
@@ -180,20 +196,20 @@
                 </div>
             </div>
 
-            <div style="text-align: center; width: 200px;">
-                <div style="font-weight: 700; margin-bottom: 5px; font-size: 14px;">Direktur,</div>
+            <div style="text-align: center; width: 220px;">
+                <div style="font-weight: 700; margin-bottom: 5px; font-size: 14px;">{{ $directorTitle }},</div>
                 <div style="height: 100px; display: flex; align-items: center; justify-content: center; padding: 5px 0;">
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data={{ urlencode('https://invoice.rizquna.id/v/inv/' . $invoice->kodeinvoice) }}" alt="Digital Signature" style="width: 95px; height: 95px; opacity: 0.95;">
                 </div>
                 <div style="border-top: 1.5px solid #000; padding-top: 3px;">
-                    <div style="font-weight: 800; text-transform: uppercase; font-size: 14px;">SUDARYONO</div>
+                    <div style="font-weight: 800; text-transform: uppercase; font-size: 14px;">{{ $directorName }}</div>
                     <div style="font-size: 8px; color: #666; margin-top: 1px; letter-spacing: 0.8px; font-weight: 600;">DIGITALLY SIGNED & VERIFIED</div>
                 </div>
             </div>
         </div>
 
-        <div style="margin-top: 30px; font-size: 11px; color: #666; text-align: center; border-top: 1px solid #eee; paddingTop: 12px;">
-            Invoice ini diterbitkan secara elektronik dan sah sesuai sistem keuangan RIZQUNA.
+        <div style="margin-top: 30px; font-size: 11px; color: #666; text-align: center; border-top: 1px solid #eee; padding-top: 12px;">
+            {{ $footerNote }}
         </div>
     </div>
 </body>

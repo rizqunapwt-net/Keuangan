@@ -54,10 +54,22 @@ const InvoicesPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState('all');
     const { } = useAuth();
 
-    const settings = useMemo(() => {
+    const [settings, setSettings] = useState<any>(() => {
         const saved = localStorage.getItem('app_settings');
         return saved ? JSON.parse(saved) : null;
-    }, []);
+    });
+
+    const fetchSettings = async () => {
+        try {
+            const res = await api.get('/settings');
+            if (res.data?.data) {
+                setSettings(res.data.data);
+                localStorage.setItem('app_settings', JSON.stringify(res.data.data));
+            }
+        } catch (err) {
+            console.error('Failed to fetch settings:', err);
+        }
+    };
 
     const fetchInvoices = async () => {
         setLoading(true);
@@ -84,6 +96,7 @@ const InvoicesPage: React.FC = () => {
 
     useEffect(() => {
         fetchInvoices();
+        fetchSettings();
     }, [activeTab]);
 
     const handlePrint = (record: any) => {

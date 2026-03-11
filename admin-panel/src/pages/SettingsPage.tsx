@@ -222,19 +222,32 @@ const SettingsPage: React.FC = () => {
   const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(SETTINGS_KEY);
-    if (stored) {
+    const fetchSettings = async () => {
       try {
-        const parsed = JSON.parse(stored);
-        form.setFieldsValue({ ...defaultSettings, ...parsed });
-        if (parsed.company_logo) setLogoPreview(parsed.company_logo);
-
-      } catch {
-        form.setFieldsValue(defaultSettings);
+        const res = await api.get('/settings');
+        if (res.data?.data) {
+          const fetched = res.data.data;
+          form.setFieldsValue({ ...defaultSettings, ...fetched });
+          if (fetched.company_logo) setLogoPreview(fetched.company_logo);
+          // Also sync to localStorage for fast local access in components
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(fetched));
+        } else {
+          form.setFieldsValue(defaultSettings);
+        }
+      } catch (err) {
+        console.error('Failed to fetch settings:', err);
+        // Fallback to localStorage if API fails
+        const stored = localStorage.getItem(SETTINGS_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          form.setFieldsValue({ ...defaultSettings, ...parsed });
+          if (parsed.company_logo) setLogoPreview(parsed.company_logo);
+        } else {
+          form.setFieldsValue(defaultSettings);
+        }
       }
-    } else {
-      form.setFieldsValue(defaultSettings);
-    }
+    };
+    fetchSettings();
   }, [form]);
 
   const handleLogoUpload = (file: File) => {
@@ -278,10 +291,12 @@ const SettingsPage: React.FC = () => {
   const handleSave = async (values: AppSettings) => {
     setSaving(true);
     try {
+      await api.post('/settings', values);
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(values));
-      message.success('Pengaturan disimpan!');
+      message.success('Pengaturan berhasil disinkronkan ke server! ✅');
     } catch {
-      message.error('Gagal menyimpan.');
+      message.error('Gagal menyimpan ke server, tersimpan lokal saja.');
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(values));
     } finally {
       setSaving(false);
     }
