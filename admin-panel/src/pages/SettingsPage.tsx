@@ -33,7 +33,7 @@ interface AppSettings {
   company_ig: string;
   company_wa: string;
   company_logo: string;
-  company_signature: string;
+
   director_name: string;
   director_title: string;
   invoice_bank_name: string;
@@ -56,7 +56,7 @@ const defaultSettings: AppSettings = {
   company_ig: '@penerbit_rizquna',
   company_wa: '0812-9485-6272',
   company_logo: '/admin/logo-nre.png',
-  company_signature: '',
+
   director_name: 'SUDARYONO',
   director_title: 'Direktur',
   invoice_bank_name: 'Bank BTPN / SMBC (kode 213)',
@@ -221,7 +221,7 @@ const SettingsPage: React.FC = () => {
   const [passwordForm] = Form.useForm();
   const [saving, setSaving] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string>('');
-  const [signaturePreview, setSignaturePreview] = useState<string>('');
+
   const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
@@ -231,7 +231,7 @@ const SettingsPage: React.FC = () => {
         const parsed = JSON.parse(stored);
         form.setFieldsValue({ ...defaultSettings, ...parsed });
         if (parsed.company_logo) setLogoPreview(parsed.company_logo);
-        if (parsed.company_signature) setSignaturePreview(parsed.company_signature);
+
       } catch {
         form.setFieldsValue(defaultSettings);
       }
@@ -263,26 +263,7 @@ const SettingsPage: React.FC = () => {
     message.info('Logo dihapus');
   };
 
-  const handleSignatureUpload = (file: File) => {
-    const isImage = file.type.startsWith('image/');
-    if (!isImage) { message.error('Tipe file tidak didukung!'); return false; }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target?.result as string;
-      setSignaturePreview(base64);
-      form.setFieldsValue({ company_signature: base64 });
-      message.success('Tanda tangan diperbarui!');
-    };
-    reader.readAsDataURL(file);
-    return false;
-  };
 
-  const handleRemoveSignature = () => {
-    setSignaturePreview('');
-    form.setFieldsValue({ company_signature: '' });
-    message.info('Tanda tangan dihapus');
-  };
 
   const handleChangePassword = async (values: any) => {
     setChangingPassword(true);
@@ -396,36 +377,7 @@ const SettingsPage: React.FC = () => {
                 </div>
               </Form.Item>
 
-              <Form.Item name="company_signature" hidden><Input /></Form.Item>
-              <Form.Item label={<Text strong style={{ fontSize: 13 }}>Tanda Tangan & STEMPEL</Text>} style={{ marginTop: 8 }}>
-                <div style={{
-                  border: '2px dashed #eee',
-                  borderRadius: 16,
-                  padding: signaturePreview ? 20 : 32,
-                  textAlign: 'center',
-                  background: '#fcfcfc',
-                  transition: 'all 0.3s ease'
-                }}>
-                  {signaturePreview ? (
-                    <div>
-                      <img src={signaturePreview} alt="Signature" style={{ maxHeight: 72, maxWidth: '100%', objectFit: 'contain', marginBottom: 16 }} />
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-                        <Upload showUploadList={false} beforeUpload={handleSignatureUpload as any} accept="image/*">
-                          <Button size="small" style={{ borderRadius: 8, fontSize: 12, fontWeight: 600 }}>Ganti</Button>
-                        </Upload>
-                        <Button size="small" danger onClick={handleRemoveSignature} style={{ borderRadius: 8, fontSize: 12, fontWeight: 600 }}>Hapus</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <Upload showUploadList={false} beforeUpload={handleSignatureUpload as any} accept="image/*">
-                      <div style={{ cursor: 'pointer' }}>
-                        <PictureOutlined style={{ fontSize: 32, color: '#ccc', marginBottom: 8 }} />
-                        <div style={{ color: '#aaa', fontSize: 12, fontWeight: 600 }}>Klik untuk upload TTD / Stempel</div>
-                      </div>
-                    </Upload>
-                  )}
-                </div>
-              </Form.Item>
+
             </Card>
           </Col>
 
