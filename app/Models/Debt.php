@@ -6,10 +6,39 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class Debt extends Model
 {
     use HasFactory;
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if ($model->type === 'receivable' && ! $model->kodeinvoice) {
+                // Get last invoice number from the prefix
+                $lastInvoice = static::where('type', 'receivable')
+                    ->whereNotNull('kodeinvoice')
+                    ->orderBy('id', 'desc')
+                    ->first();
+
+                $number = 1000; // Default starting number if no invoices exist
+                if ($lastInvoice && preg_match('/^(\d+)-/', $lastInvoice->kodeinvoice, $matches)) {
+                    $number = (int) $matches[1] + 1;
+                }
+
+                // If number is somehow less than ID (e.g. migration gap), use ID
+                // But for now, let's stick to the pattern: {NUMBER}-{RAND3}-{MM}-{YYYY}
+                $rand = strtolower(Str::random(3));
+                $month = date('m');
+                $year = date('Y');
+
+                $model->kodeinvoice = sprintf('%d-%s-%s-%s', $number, $rand, $month, $year);
+            }
+        });
+    }
 
     protected $fillable = [
         'type',

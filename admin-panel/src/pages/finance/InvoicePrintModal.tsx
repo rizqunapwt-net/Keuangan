@@ -27,6 +27,7 @@ interface InvoiceData {
         name: string;
     };
     contactName?: string;
+    kodeinvoice?: string;
     description?: string;
     items?: InvoiceItem[];
 }
@@ -238,18 +239,28 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                         </tfoot>
                     </table>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: 20, fontSize: 13 }}>
-                        <div>Dibuat pada tanggal : {fmtDate(invoice.date)}</div>
-                        <div style={{ marginBottom: 12 }}>Terima kasih atas kepercayaan Anda kepada kami:</div>
-                        
-                        <div style={{ position: 'relative', textAlign: 'center', width: 220, paddingRight: 40 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 30, fontSize: 13 }}>
+                        {/* QR Code Verification Section */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1px solid #eee', padding: '8px 12px', borderRadius: 8 }}>
+                            <img 
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(window.location.origin + '/v/inv/' + (invoice.kodeinvoice || invoice.refNumber))}`} 
+                                alt="QR Verifikasi" 
+                                style={{ width: 65, height: 65 }} 
+                            />
+                            <div style={{ fontSize: 9, color: '#666', maxWidth: 100, lineHeight: 1.2 }}>
+                                <div style={{ fontWeight: 800, color: '#000', marginBottom: 2 }}>VERIFIKASI DIGITAL</div>
+                                Pindai QR ini untuk memverifikasi keaslian invoice secara online di sistem kami.
+                            </div>
+                        </div>
+
+                        <div style={{ position: 'relative', textAlign: 'center', width: 220 }}>
                             <div style={{ fontWeight: 700, marginBottom: 4 }}>{authorizedTitle || 'Direktur'},</div>
-                            <div style={{ height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 {companySignature && (
-                                    <img src={companySignature} alt="Signature" style={{ maxHeight: 85, maxWidth: '100%', objectFit: 'contain' }} />
+                                    <img src={companySignature} alt="Signature" style={{ maxHeight: 75, maxWidth: '100%', objectFit: 'contain' }} />
                                 )}
                             </div>
-                            <div style={{ fontWeight: 800, textTransform: 'uppercase' }}>{authorizedName || companyName}</div>
+                            <div style={{ fontWeight: 800, textTransform: 'uppercase', borderTop: '1px solid #000', paddingTop: 2 }}>{authorizedName || companyName}</div>
                         </div>
                     </div>
 

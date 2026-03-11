@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Route;
  |--------------------------------------------------------------------------
  */
 
+// Public Invoice View (Accessible via QR Code)
+Route::get('/v/inv/{kodeinvoice}', [\App\Http\Controllers\PublicInvoiceController::class, 'show'])->name('public.invoice');
+
 // Explicit redirects for root and legacy paths
 Route::redirect('/', '/admin/dashboard');
 Route::redirect('/login', '/admin/login');
