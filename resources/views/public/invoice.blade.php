@@ -68,7 +68,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 italic">
-                        @php $items = is_array($invoice->items) ? $invoice->items : json_decode($invoice->items, true) ?: []; @endphp
+                        @php $items = is_array($invoice->items) ? $invoice->items : (json_decode($invoice->items, true) ?: []); @endphp
                         @forelse($items as $item)
                             <tr class="text-slate-700">
                                 <td class="py-4 px-6">
