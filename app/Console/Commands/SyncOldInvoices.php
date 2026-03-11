@@ -47,47 +47,61 @@ class SyncOldInvoices extends Command
                 return;
             }
 
+            // GROUP BY kodeinvoice (or a unique order identifier)
+            // If kodeinvoice is empty, we use a combination of id/client/date to avoid grouping everything together.
+            $grouped = collect($invoices)->groupBy(function($item) {
+                return $item['kodeinvoice'] ?: ('TMP-' . $item['id']);
+            });
+
             $count = 0;
-            foreach ($invoices as $inv) {
-                // Tentukan data berdasarkan kolom lama
+            foreach ($grouped as $kode => $rows) {
+                $first = $rows->first();
                 $items = [];
-                if (!empty($inv['nama_produk'])) {
-                    $items[] = [
-                        'nama_produk' => $inv['nama_produk'],
-                        'jumlah' => $inv['jumlah'] ?: 1,
-                        'satuan' => 'Pcs',
-                        'harga' => $inv['htm'] ?: 0,
-                        'diskon' => $inv['diskon'] ?: 0,
-                    ];
+                $totalAmount = 0;
+
+                foreach ($rows as $row) {
+                    if (!empty($row['nama_produk'])) {
+                        $items[] = [
+                            'nama_produk' => $row['nama_produk'],
+                            'jumlah' => $row['jumlah'] ?: 1,
+                            'satuan' => 'Pcs',
+                            'harga' => (float) ($row['htm'] ?: 0),
+                            'diskon' => (float) ($row['diskon'] ?: 0),
+                        ];
+                    }
+                    // Accumulate price if the source provides per-item price
+                    // Usually 'harga' in the export-sync might be the TOTAL or the ITEM price.
+                    // If multiple rows have the same kodeinvoice, it's likely item prices.
+                    $totalAmount += (float) ($row['harga'] ?? 0);
                 }
 
-                $totalAmount = $inv['harga'] ?? 0;
-                // Old app sets statusbayar = 'lunas' or 'belum'
-                $isLunas = strtolower($inv['statusbayar']) === 'lunas' || strtolower($inv['statusbayar']) === 'piutang'; // menyesuaikan old
-                $status = ($inv['statusbayar'] === 'lunas') ? 'paid' : 'unpaid';
-                $paidAmount = $status === 'paid' ? $totalAmount : 0;
+                $status = (strtolower($first['statusbayar']) === 'lunas') ? 'paid' : 'unpaid';
+                $paidAmount = ($status === 'paid') ? $totalAmount : 0;
+                $date = $first['tanggal'] ? Carbon::parse($first['tanggal']) : now();
 
-                // Create date
-                $date = $inv['tanggal'] ? Carbon::parse($inv['tanggal']) : now();
+                // Check if already exists to avoid duplicates
+                $invoiceNumber = $kode;
+                if (strpos($invoiceNumber, 'TMP-') === 0) {
+                    $invoiceNumber = sprintf('%d-%s-%s-%s', $first['id'], strtolower(Str::random(3)), $date->format('m'), $date->format('Y'));
+                }
 
-                // Kita bypass logic 'creating' di Debt model sejenak agar bisa set kodeinvoice custom
-                DB::table('debts')->insert([
-                    'type' => 'receivable',
-                    'client_name' => $inv['nama'] ?? 'Umum',
-                    'amount' => $totalAmount,
-                    'paid_amount' => $paidAmount,
-                    'status' => $status,
-                    'date' => $date->toDateString(),
-                    'description' => "Sinkronisasi dari App Lama (ID: {$inv['id']})",
-                    // Use their exact kodeinvoice or generate our standard
-                    'kodeinvoice' => $inv['kodeinvoice'] ?: sprintf('%d-%s-%s-%s', $inv['id'], strtolower(Str::random(3)), $date->format('m'), $date->format('Y')),
-                    'items' => json_encode($items),
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
+                DB::table('debts')->updateOrInsert(
+                    ['kodeinvoice' => $invoiceNumber],
+                    [
+                        'type' => 'receivable',
+                        'client_name' => $first['nama'] ?? 'Umum',
+                        'amount' => $totalAmount,
+                        'paid_amount' => $paidAmount,
+                        'status' => $status,
+                        'date' => $date->toDateString(),
+                        'description' => "Sinkronisasi dari App Lama (" . count($rows) . " item)",
+                        'items' => json_encode($items),
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]
+                );
 
-                // Update last sync ID
-                $lastSyncId = $inv['id'];
+                $lastSyncId = max($lastSyncId, ...$rows->pluck('id')->toArray());
                 $count++;
             }
 

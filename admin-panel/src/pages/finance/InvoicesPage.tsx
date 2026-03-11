@@ -15,6 +15,7 @@ import {
     Popconfirm,
     message,
     Tooltip,
+    Input,
 } from 'antd';
 import {
     PrinterOutlined,
@@ -38,6 +39,8 @@ const { Title, Text } = Typography;
 const InvoicesPage: React.FC = () => {
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [searchText, setSearchText] = useState('');
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [editInvoice, setEditInvoice] = useState<any>(null);
     const [printModalOpen, setPrintModalOpen] = useState(false);
@@ -242,6 +245,17 @@ const InvoicesPage: React.FC = () => {
         },
     ];
 
+    const filteredData = useMemo(() => {
+        if (!searchText) return data;
+        const low = searchText.toLowerCase();
+        return data.filter(inv => 
+            inv.invoice_number?.toLowerCase().includes(low) || 
+            inv.contact?.name?.toLowerCase().includes(low) ||
+            inv.client_name?.toLowerCase().includes(low) ||
+            inv.description?.toLowerCase().includes(low)
+        );
+    }, [data, searchText]);
+
     const stats = [
         { title: 'Total Invoice', value: data.length, icon: <FileTextOutlined />, color: '#3b82f6' },
         { title: 'Belum Lunas', value: data.filter(i => i.status !== 'paid').length, icon: <ClockCircleOutlined />, color: '#f59e0b' },
@@ -297,7 +311,13 @@ const InvoicesPage: React.FC = () => {
                             { key: 'paid', label: <span style={{ fontWeight: 600, fontSize: 13 }}>LUNAS</span> },
                         ]}
                     />
-                    <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <Input.Search 
+                            placeholder="Cari invoice/pelanggan..." 
+                            style={{ width: 250 }} 
+                            onSearch={setSearchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                        />
                         <Button type="primary" style={{ borderRadius: 12, height: 40, background: '#333', border: 'none' }} onClick={() => fetchInvoices()}>
                             Refresh
                         </Button>
@@ -307,14 +327,47 @@ const InvoicesPage: React.FC = () => {
                 <div style={{ padding: '0 8px' }}>
                     <Table
                         columns={columns}
-                        dataSource={data}
+                        dataSource={filteredData}
                         rowKey="id"
                         loading={loading}
+                        rowSelection={{
+                            type: 'checkbox',
+                            selectedRowKeys,
+                            onChange: (keys) => setSelectedRowKeys(keys),
+                        }}
+                        expandable={{
+                            expandedRowRender: (record) => (
+                                <div style={{ background: '#fefefe', padding: '16px 24px', borderRadius: 16, border: '1px dashed #d9d9d9' }}>
+                                    <Text strong style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', marginBottom: 12, display: 'block' }}>
+                                        Rincian Produk / Item ({record.items?.length || 0})
+                                    </Text>
+                                    <Table 
+                                        size="small"
+                                        pagination={false}
+                                        columns={[
+                                            { title: 'Item', dataIndex: 'nama_produk', key: 'name' },
+                                            { title: 'Qty', dataIndex: 'jumlah', key: 'qty', align: 'center' },
+                                            { title: 'Unit', dataIndex: 'satuan', key: 'unit', align: 'center' },
+                                            { title: 'Harga', dataIndex: 'harga', key: 'price', align: 'right', render: (v: any) => fmtRpCompact(v) },
+                                            { title: 'Sub', key: 'sub', align: 'right', render: (_: any, r: any) => fmtRpCompact((r.harga || 0) * (r.jumlah || 0) - (r.diskon || 0)) },
+                                        ]}
+                                        dataSource={record.items || []}
+                                        rowKey={(r, i) => i!}
+                                    />
+                                    {record.description && (
+                                        <div style={{ marginTop: 12, fontSize: 12, color: '#666' }}>
+                                            <Text strong>Catatan:</Text> {record.description}
+                                        </div>
+                                    )}
+                                </div>
+                            ),
+                            rowExpandable: (record) => record.items?.length > 0,
+                        }}
                         onRow={(record) => ({
                             onClick: () => handlePrint(record),
                             style: { cursor: 'pointer' }
                         })}
-                        pagination={{ pageSize: 10, showSizeChanger: true }}
+                        pagination={{ pageSize: 15, showSizeChanger: true }}
                     />
                 </div>
             </Card>
