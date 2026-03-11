@@ -25,7 +25,6 @@ import {
   FileTextOutlined,
   ScheduleOutlined,
   PieChartOutlined,
-  LineChartOutlined,
   HistoryOutlined,
   PartitionOutlined,
   TransactionOutlined,
@@ -60,7 +59,6 @@ const BanksPage = React.lazy(() => import('./pages/finance/BanksPage'));
 const ContactsPage = React.lazy(() => import('./pages/finance/ContactsPage'));
 
 // Reports
-const ReportsPage = React.lazy(() => import('./pages/finance/ReportsIndexPage'));
 const ProfitLossPage = React.lazy(() => import('./pages/finance/ProfitLossPage'));
 const BalanceSheetPage = React.lazy(() => import('./pages/finance/BalanceSheetPage'));
 const CashFlowPage = React.lazy(() => import('./pages/finance/CashFlowPage'));
@@ -138,7 +136,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         { key: '/finance/receivables', icon: <TransactionOutlined style={{ color: '#10b981' }} />, label: 'Piutang' },
         { key: '/finance/cash-book', icon: <WalletOutlined style={{ color: '#6366f1' }} />, label: 'Buku Kas' },
         { key: '/finance/reports', icon: <PieChartOutlined style={{ color: '#f97316' }} />, label: 'Laporan Kas' },
-        { key: '/finance/reports-index', icon: <LineChartOutlined style={{ color: '#8b5cf6' }} />, label: 'Laporan Akuntansi' },
+
         { key: '/finance/journals', icon: <HistoryOutlined style={{ color: '#64748b' }} />, label: 'Jurnal' },
         { key: '/finance/accounts', icon: <PartitionOutlined style={{ color: '#a855f7' }} />, label: 'Akun' },
         { key: '/finance/banks', icon: <BankOutlined style={{ color: '#0ea5e9' }} />, label: 'Bank' },
@@ -366,7 +364,7 @@ const App: React.FC = () => {
                           <Route path="/finance/receivables" element={<ReceivablesPage />} />
                           <Route path="/finance/cash-book" element={<CashBookPage />} />
                           <Route path="/finance/reports" element={<FinanceReportsPage />} />
-                          <Route path="/finance/reports-index" element={<ReportsPage />} />
+
                           <Route path="/finance/journals" element={<JournalEntriesPage />} />
                           <Route path="/finance/accounts" element={<ChartOfAccountsPage />} />
                           {/* Bank page — protected by PIN guard (sensitive account data) */}
