@@ -18,40 +18,36 @@
 <body class="bg-slate-50 min-h-screen py-10 px-4">
     <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden print-shadow-none">
         
-        <!-- Header Section -->
-        <div class="bg-slate-900 px-8 py-10 text-white flex flex-col md:flex-row justify-between items-center md:items-start gap-6">
-            <div>
-                <h1 class="text-3xl font-bold tracking-tight">INVOICE</h1>
-                <p class="text-slate-400 mt-1">#{{ $invoice->kodeinvoice }}</p>
-                @if($invoice->status === 'paid')
-                    <span class="inline-block mt-4 px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-sm font-semibold uppercase tracking-wider">LUNAS</span>
-                @else
-                    <span class="inline-block mt-4 px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-sm font-semibold uppercase tracking-wider">BELUM LUNAS</span>
-                @endif
+        <!-- Header Section (Matched to Admin style) -->
+        <div class="px-8 py-10 text-center border-b-2 border-slate-900">
+            <div class="mb-4">
+                <img src="/admin/logo-nre.png" alt="Logo" class="max-h-24 mx-auto object-contain mb-3">
+                <div class="text-xs font-semibold text-slate-600 tracking-wide">
+                    <span class="text-blue-600 underline">www.rizquna.id</span> | cv.rizquna@gmail.com | IG: <span class="text-blue-600">@penerbit_rizquna</span>
+                </div>
             </div>
-            <div class="text-center md:text-right">
-                <h2 class="text-xl font-bold">PT. Rizquna Publishing</h2>
-                <p class="text-sm text-slate-400 mt-2">Jl. Raya Purwokerto - No. 123</p>
-                <p class="text-sm text-slate-400">Jawa Tengah, Indonesia</p>
-            </div>
+        </div>
+
+        <div class="px-8 py-4 flex flex-col md:flex-row justify-between items-center bg-slate-50 border-b border-slate-200">
+            <h1 class="text-xl font-bold text-slate-800">INVOICE : {{ $invoice->kodeinvoice }}</h1>
+            <p class="text-sm font-semibold text-slate-500">Tanggal: {{ $invoice->date ? $invoice->date->format('d/m/Y') : '-' }}</p>
         </div>
 
         <!-- Info Grid -->
         <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-12">
             <div>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Ditujukan Kepada</p>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Pelanggan Yth:</p>
                 <h3 class="text-lg font-bold text-slate-800">{{ $invoice->client_name }}</h3>
-                <p class="text-slate-500 mt-1">{{ $invoice->description ?: 'No description provided.' }}</p>
+                <p class="text-slate-500 mt-1 text-sm leading-relaxed">{{ $invoice->description ?: 'Detail tagihan pesanan Anda.' }}</p>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Tanggal Transaksi</p>
-                    <p class="font-semibold text-slate-800">{{ $invoice->date ? $invoice->date->format('d M Y') : '-' }}</p>
-                </div>
-                <div>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Jatuh Tempo</p>
-                    <p class="font-semibold text-slate-800">{{ $invoice->due_date ? $invoice->due_date->format('d M Y') : '-' }}</p>
-                </div>
+            <div class="flex flex-col justify-end items-end space-y-2">
+                @if($invoice->status === 'paid')
+                    <div class="px-6 py-2 border-4 border-emerald-500 text-emerald-500 font-extrabold text-2xl rotate-[-12deg] opacity-70 rounded-lg">LUNAS</div>
+                @elseif($invoice->status === 'unpaid')
+                    <div class="px-6 py-2 border-4 border-red-500 text-red-500 font-extrabold text-2xl rotate-[-12deg] opacity-70 rounded-lg whitespace-nowrap">BELUM LUNAS</div>
+                @else
+                    <div class="px-6 py-2 border-4 border-orange-500 text-orange-500 font-extrabold text-2xl rotate-[-12deg] opacity-70 rounded-lg">CICILAN</div>
+                @endif
             </div>
         </div>
 
@@ -87,30 +83,44 @@
         </div>
 
         <!-- Summary & Footer -->
-        <div class="p-8 bg-slate-50 flex flex-col md:flex-row justify-between gap-8 border-t border-slate-100">
-            <!-- QR Code Section -->
-            <div class="flex items-center gap-6 bg-white p-4 rounded-xl border border-slate-200 shadow-sm w-fit">
-                @php $qrUrl = route('public.invoice', ['kodeinvoice' => $invoice->kodeinvoice]); @endphp
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode($qrUrl) }}" alt="QR Code" class="w-24 h-24">
-                <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-tight">Verifikasi Digital</p>
-                    <p class="text-[9px] text-slate-400 mt-1 max-w-[120px]">Pindai untuk memverifikasi keaslian invoice ini secara online.</p>
-                </div>
-            </div>
-
-            <!-- Totals -->
-            <div class="md:w-64 space-y-3">
-                <div class="flex justify-between text-slate-500">
+        <div class="p-8 bg-slate-50 flex flex-col md:flex-row justify-between items-end gap-8 border-t border-slate-100">
+            <!-- Totals (Left) -->
+            <div class="md:w-72 space-y-3 order-2 md:order-1">
+                <div class="flex justify-between text-slate-500 text-sm">
                     <span>Subtotal</span>
                     <span class="font-semibold text-slate-800 italic">Rp{{ number_format($invoice->amount, 0, ',', '.') }}</span>
                 </div>
-                <div class="flex justify-between text-slate-500">
-                    <span>Terbayar</span>
+                <div class="flex justify-between text-slate-500 text-sm">
+                    <span>Sudah Dibayar</span>
                     <span class="font-semibold text-emerald-600 italic">Rp{{ number_format($invoice->paid_amount, 0, ',', '.') }}</span>
                 </div>
-                <div class="pt-3 border-t border-slate-200 flex justify-between items-center">
-                    <span class="font-bold text-slate-900 uppercase tracking-wider text-sm">Sisa Tagihan</span>
-                    <span class="text-2xl font-bold text-slate-900 italic">Rp{{ number_format($invoice->amount - $invoice->paid_amount, 0, ',', '.') }}</span>
+                <div class="pt-3 border-t border-slate-300 flex justify-between items-center">
+                    <span class="font-bold text-slate-900 uppercase tracking-wider text-xs">Sisa Tagihan</span>
+                    <span class="text-xl font-black text-slate-900 italic">Rp{{ number_format(max(0, $invoice->amount - $invoice->paid_amount), 0, ',', '.') }}</span>
+                </div>
+                
+                @if($invoice->status !== 'paid')
+                <div class="mt-6 p-4 bg-white rounded-lg border border-slate-200 text-[10px] text-slate-500">
+                    <p class="font-bold text-slate-700 mb-1 tracking-tight">INFO PEMBAYARAN:</p>
+                    <p>Bank BTPN / SMBC (kode 213)</p>
+                    <p class="font-semibold text-slate-900">Acc: 902-4013-3956</p>
+                    <p>a.n FITRIANTO</p>
+                </div>
+                @endif
+            </div>
+
+            <!-- Signature (Right) Section -->
+            <div class="text-center w-64 order-1 md:order-2">
+                <p class="text-sm font-bold text-slate-800 mb-2">Direktur,</p>
+                <div class="flex justify-center items-center py-2">
+                    @php $qrUrl = "https://invoice.rizquna.id/v/inv/" . $invoice->kodeinvoice; @endphp
+                    <div class="relative">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode($qrUrl) }}" alt="Digital Signature" class="w-20 h-20 opacity-90">
+                    </div>
+                </div>
+                <div class="mt-2 border-t border-slate-800 pt-1">
+                    <p class="text-xs font-black uppercase tracking-widest text-slate-900">SUDARYONO</p>
+                    <p class="text-[7px] text-slate-400 mt-1 tracking-[0.2em]">DIGITALLY SIGNED & VERIFIED</p>
                 </div>
             </div>
         </div>
