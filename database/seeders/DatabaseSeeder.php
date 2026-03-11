@@ -15,8 +15,6 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             AdminUserSeeder::class,
             AccountingAccountSeeder::class,
-            ProductSeeder::class,
-            SampleFinanceSeeder::class,
         ]);
     }
 }
