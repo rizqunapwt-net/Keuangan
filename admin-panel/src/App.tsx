@@ -26,7 +26,6 @@ import {
   ScheduleOutlined,
   PieChartOutlined,
   HistoryOutlined,
-  PartitionOutlined,
   TransactionOutlined,
   AuditOutlined,
   GlobalOutlined,
@@ -54,7 +53,7 @@ const DashboardPage = React.lazy(() => import('./pages/DashboardPage'));
 const InvoicesPage = React.lazy(() => import('./pages/finance/InvoicesPage'));
 const ExpensesPage = React.lazy(() => import('./pages/finance/ExpensesPage'));
 const JournalEntriesPage = React.lazy(() => import('./pages/finance/JournalEntriesPage'));
-const ChartOfAccountsPage = React.lazy(() => import('./pages/finance/ChartOfAccountsPage'));
+
 const BanksPage = React.lazy(() => import('./pages/finance/BanksPage'));
 const ContactsPage = React.lazy(() => import('./pages/finance/ContactsPage'));
 
@@ -138,7 +137,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         { key: '/finance/reports', icon: <PieChartOutlined style={{ color: '#f97316' }} />, label: 'Laporan Kas' },
 
         { key: '/finance/journals', icon: <HistoryOutlined style={{ color: '#64748b' }} />, label: 'Jurnal' },
-        { key: '/finance/accounts', icon: <PartitionOutlined style={{ color: '#a855f7' }} />, label: 'Akun' },
+
         { key: '/finance/banks', icon: <BankOutlined style={{ color: '#0ea5e9' }} />, label: 'Bank' },
         { key: '/finance/contacts', icon: <ContactsOutlined style={{ color: '#ec4899' }} />, label: 'Kontak' },
       ]
@@ -366,7 +365,7 @@ const App: React.FC = () => {
                           <Route path="/finance/reports" element={<FinanceReportsPage />} />
 
                           <Route path="/finance/journals" element={<JournalEntriesPage />} />
-                          <Route path="/finance/accounts" element={<ChartOfAccountsPage />} />
+
                           {/* Bank page — protected by PIN guard (sensitive account data) */}
                           <Route path="/finance/banks" element={<FinancePinGuard><BanksPage /></FinancePinGuard>} />
                           <Route path="/finance/contacts" element={<ContactsPage />} />
