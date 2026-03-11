@@ -149,7 +149,7 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                                 borderColor: '#16a34a',
                             },
                             unpaid: {
-                                text: 'BELUM LUNAS',
+                                text: "BELUM\nLUNAS",
                                 color: '#dc2626',
                                 borderColor: '#dc2626',
                             },
@@ -192,7 +192,7 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                                         color: stampConfig.color,
                                         letterSpacing: '4px',
                                         textTransform: 'uppercase',
-                                        whiteSpace: 'nowrap',
+                                        whiteSpace: 'pre-wrap',
                                         fontFamily: "'Inter', 'Arial Black', sans-serif",
                                         textAlign: 'center',
                                         lineHeight: 1.2,
