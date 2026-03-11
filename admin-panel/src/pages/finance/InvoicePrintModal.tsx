@@ -261,7 +261,7 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                             <div style={{ fontWeight: 700, marginBottom: 4 }}>{authorizedTitle || 'Direktur'},</div>
                             <div style={{ height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5px 0' }}>
                                 <img 
-                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + '/v/inv/' + (invoice.kodeinvoice || invoice.refNumber))}`} 
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('https://invoice.rizquna.id/v/inv/' + (invoice.kodeinvoice || invoice.refNumber))}`} 
                                     alt="Digital Signature" 
                                     style={{ width: 85, height: 85, opacity: 0.9 }} 
                                 />
