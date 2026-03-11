@@ -42,6 +42,8 @@ class BankController extends Controller
         
         $bank = Bank::create($request->validated());
 
+        $this->logModification($bank, [], $bank->toArray(), "Menambah bank/kas baru: {$bank->bank_name}");
+
         return $this->success($bank->load('account', 'manager'), 201);
     }
 
@@ -56,7 +58,10 @@ class BankController extends Controller
     {
         Gate::authorize('update', $bank);
         
+        $oldValues = $bank->getOriginal();
         $bank->update($request->validated());
+
+        $this->logModification($bank, $oldValues, $bank->toArray(), "Mengubah bank/kas: {$bank->bank_name}");
 
         return $this->success($bank->load('account', 'manager'));
     }

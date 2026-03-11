@@ -74,6 +74,8 @@ class CashTransactionController extends Controller
             $validated['running_balance'] = $bank->balance;
             $transaction = CashTransaction::create($validated);
 
+            $this->logModification($transaction, [], $transaction->toArray(), "Mencatat transaksi kas: " . ($validated['type'] === 'income' ? 'Pemasukan' : 'Pengeluaran') . " Rp" . number_format($validated['amount'], 0, ',', '.') . " - " . ($validated['description'] ?? $validated['category'] ?? ''));
+
             return response()->json($transaction, 201);
         });
     }

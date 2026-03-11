@@ -13,11 +13,13 @@ use App\Models\Contact;
 use App\Models\Debt;
 use App\Models\Expense;
 use App\Services\Finance\ReportExportService;
+use App\Traits\LogsActivity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class FinanceController extends Controller
 {
+    use LogsActivity;
     public function __construct(
         protected AccountingService $accountingService,
         protected ReportService $reportService,
@@ -125,6 +127,9 @@ class FinanceController extends Controller
     {
         try {
             $expense = $this->accountingService->recordExpense($request->validated(), auth()->id());
+
+            $this->logActivity('created', 'expenses', "Mencatat biaya: {$request->description} - Rp" . number_format($request->amount, 0, ',', '.'), $expense, null, $request->validated());
+
             return response()->json([
                 'success' => true,
                 'message' => 'Biaya berhasil dicatat.',
@@ -252,6 +257,8 @@ class FinanceController extends Controller
             'items' => $items,
         ]);
 
+        $this->logActivity('created', 'debts', "Membuat invoice untuk {$clientName}: Rp" . number_format($total, 0, ',', '.') . " (" . count($items) . " item)", $debt, null, ['client_name' => $clientName, 'total' => $total, 'items' => $items]);
+
         return response()->json([
             'success' => true,
             'message' => 'Invoice berhasil dibuat.',
@@ -278,6 +285,8 @@ class FinanceController extends Controller
             'items.*.harga' => 'required|numeric|min:0',
             'items.*.diskon' => 'nullable|numeric|min:0',
         ]);
+
+        $oldValues = ['client_name' => $debt->client_name, 'amount' => $debt->amount, 'items' => $debt->items];
 
         if (isset($validated['client_name'])) {
             $debt->client_name = $validated['client_name'];
@@ -307,6 +316,9 @@ class FinanceController extends Controller
 
         $debt->save();
 
+        $invNumber = $debt->kodeinvoice ?: ('INV-' . str_pad($debt->id, 6, '0', STR_PAD_LEFT));
+        $this->logActivity('updated', 'debts', "Mengubah invoice {$invNumber} ({$debt->client_name})", $debt, $oldValues, $validated);
+
         return response()->json([
             'success' => true,
             'message' => 'Invoice berhasil diperbarui.',
@@ -324,8 +336,13 @@ class FinanceController extends Controller
             ], 422);
         }
 
+        $invNumber = $debt->kodeinvoice ?: ('INV-' . str_pad($debt->id, 6, '0', STR_PAD_LEFT));
+        $oldData = ['client_name' => $debt->client_name, 'amount' => $debt->amount, 'status' => $debt->status];
+
         $debt->payments()->delete();
         $debt->delete();
+
+        $this->logActivity('deleted', 'debts', "Menghapus invoice {$invNumber} ({$oldData['client_name']}) - Rp" . number_format($oldData['amount'], 0, ',', '.'), null, $oldData);
 
         return response()->json([
             'success' => true,
@@ -336,6 +353,7 @@ class FinanceController extends Controller
     public function togglePaidStatus(int $id): JsonResponse
     {
         $debt = Debt::where('type', 'receivable')->findOrFail($id);
+        $oldStatus = $debt->status;
 
         if ($debt->status === 'paid') {
             $debt->status = 'unpaid';
@@ -346,6 +364,9 @@ class FinanceController extends Controller
         }
 
         $debt->save();
+
+        $invNumber = $debt->kodeinvoice ?: ('INV-' . str_pad($debt->id, 6, '0', STR_PAD_LEFT));
+        $this->logActivity('status_changed', 'debts', "Mengubah status invoice {$invNumber} ({$debt->client_name}): {$oldStatus} → {$debt->status}", $debt, ['status' => $oldStatus], ['status' => $debt->status]);
 
         return response()->json([
             'success' => true,
@@ -379,6 +400,8 @@ class FinanceController extends Controller
         try {
             $journal = $accounting->recordJournal($validated, auth()->id());
 
+            $this->logActivity('created', 'journals', "Mencatat jurnal: {$request->description}", $journal, null, $validated);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Jurnal berhasil dicatat.',
@@ -398,6 +421,8 @@ class FinanceController extends Controller
 
         try {
             $reversed = $accounting->reverseJournal($journal, auth()->id());
+
+            $this->logActivity('voided', 'journals', "Membalik jurnal #{$journal->id}: {$journal->description}", $journal, ['status' => 'active'], ['status' => 'reversed']);
 
             return response()->json([
                 'success' => true,
@@ -468,6 +493,8 @@ class FinanceController extends Controller
 
         $contact = Contact::create($validated);
 
+        $this->logActivity('created', 'contacts', "Menambah kontak: {$contact->name} ({$contact->type})", $contact, null, $validated);
+
         return response()->json([
             'success' => true,
             'message' => 'Kontak berhasil dibuat.',
@@ -486,7 +513,10 @@ class FinanceController extends Controller
             ], 404);
         }
 
+        $contactName = $contact->name;
         $contact->delete();
+
+        $this->logActivity('deleted', 'contacts', "Menghapus kontak: {$contactName}", null, ['name' => $contactName, 'id' => $contactId]);
 
         return response()->json([
             'success' => true,

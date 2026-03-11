@@ -21,7 +21,8 @@ const AuditLogsPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
     const [eventType, setEventType] = useState<string | undefined>();
-    const [pagination, setPagination] = useState({ current: 1, pageSize: 20, total: 0 });
+    const [tableName, setTableName] = useState<string | undefined>();
+    const [pagination, setPagination] = useState({ current: 1, pageSize: 50, total: 0 });
 
     const fetchLogs = async (page = 1) => {
         setLoading(true);
@@ -31,7 +32,8 @@ const AuditLogsPage: React.FC = () => {
                     page,
                     per_page: pagination.pageSize,
                     search,
-                    event_type: eventType
+                    event_type: eventType,
+                    table_name: tableName,
                 }
             });
             const payload = response.data;
@@ -56,14 +58,38 @@ const AuditLogsPage: React.FC = () => {
     useEffect(() => {
         fetchLogs();
         fetchStats();
-    }, [eventType]);
+    }, [eventType, tableName]);
+
+    // Auto-refresh every 30s
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchLogs(pagination.current);
+            fetchStats();
+        }, 30000);
+        return () => clearInterval(interval);
+    }, [eventType, tableName, pagination.current]);
 
     const eventColors: Record<string, string> = {
         created: '#10b981',
         updated: '#3b82f6',
         deleted: '#ef4444',
+        status_changed: '#f59e0b',
+        voided: '#8b5cf6',
+        data_modified: '#06b6d4',
+        balance_changed: '#ec4899',
         login: '#8b5cf6',
         logout: '#64748b',
+    };
+
+    const eventLabels: Record<string, string> = {
+        created: 'BUAT',
+        updated: 'UBAH',
+        deleted: 'HAPUS',
+        status_changed: 'STATUS',
+        voided: 'VOID',
+        data_modified: 'MODIFIKASI',
+        balance_changed: 'SALDO',
+        login: 'LOGIN',
     };
 
     const columns = [
@@ -98,7 +124,7 @@ const AuditLogsPage: React.FC = () => {
             width: 120,
             render: (type: string) => (
                 <Tag color={eventColors[type] || 'default'} style={{ borderRadius: 6, fontWeight: 700, textTransform: 'uppercase', fontSize: 10 }}>
-                    {type}
+                    {eventLabels[type] || type}
                 </Tag>
             ),
         },
@@ -107,7 +133,17 @@ const AuditLogsPage: React.FC = () => {
             dataIndex: 'table_name',
             key: 'table_name',
             width: 150,
-            render: (table: string) => <Tag color="blue" bordered={false}>{table?.replace('_', ' ').toUpperCase()}</Tag>
+            render: (table: string) => {
+                const moduleLabels: Record<string, string> = {
+                    debts: 'Invoice/Piutang',
+                    expenses: 'Biaya',
+                    contacts: 'Kontak',
+                    journals: 'Jurnal',
+                    banks: 'Bank/Kas',
+                    cash_transactions: 'Buku Kas',
+                };
+                return <Tag color="blue" bordered={false}>{moduleLabels[table] || table?.replace('_', ' ').toUpperCase()}</Tag>;
+            }
         },
         {
             title: 'DESKRIPSI',
@@ -177,11 +213,27 @@ const AuditLogsPage: React.FC = () => {
                             allowClear 
                             onChange={v => setEventType(v)}
                             options={[
-                                { value: 'created', label: 'Created' },
-                                { value: 'updated', label: 'Updated' },
-                                { value: 'deleted', label: 'Deleted' },
-                                { value: 'login', label: 'Login' },
-                                { value: 'logout', label: 'Logout' },
+                                { value: 'created', label: '🟢 Buat' },
+                                { value: 'updated', label: '🔵 Ubah' },
+                                { value: 'deleted', label: '🔴 Hapus' },
+                                { value: 'status_changed', label: '🟡 Status' },
+                                { value: 'voided', label: '🟣 Void' },
+                                { value: 'data_modified', label: '🔷 Modifikasi' },
+                                { value: 'balance_changed', label: '🔷 Saldo' },
+                            ]}
+                        />
+                        <Select
+                            placeholder="Modul"
+                            style={{ width: 160 }}
+                            allowClear
+                            onChange={v => setTableName(v)}
+                            options={[
+                                { value: 'debts', label: 'Invoice/Piutang' },
+                                { value: 'expenses', label: 'Biaya' },
+                                { value: 'contacts', label: 'Kontak' },
+                                { value: 'journals', label: 'Jurnal' },
+                                { value: 'banks', label: 'Bank/Kas' },
+                                { value: 'cash_transactions', label: 'Buku Kas' },
                             ]}
                         />
                         <RangePicker style={{ width: 280 }} />
