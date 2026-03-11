@@ -9,7 +9,6 @@ import {
   Row,
   Col,
   Divider,
-  InputNumber,
   Upload,
 } from 'antd';
 import { SaveOutlined, LockOutlined, PictureOutlined, SafetyOutlined } from '@ant-design/icons';
@@ -41,8 +40,7 @@ interface AppSettings {
   invoice_bank_holder: string;
   currency: string;
   tax_rate: number;
-  invoice_prefix: string;
-  invoice_next_number: number;
+
   footer_note: string;
 }
 
@@ -64,8 +62,7 @@ const defaultSettings: AppSettings = {
   invoice_bank_holder: 'FITRIANTO',
   currency: 'IDR',
   tax_rate: 11,
-  invoice_prefix: 'INV-',
-  invoice_next_number: 1,
+
   footer_note: 'Terima kasih atas kepercayaan Anda kepada kami.',
 };
 
@@ -422,18 +419,7 @@ const SettingsPage: React.FC = () => {
 
               <Divider style={{ margin: '8px 0 24px' }} />
 
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item name="invoice_prefix" label={<Text strong style={{ fontSize: 13 }}>Prefix Invoice</Text>}>
-                    <Input style={{ borderRadius: 12, height: 44, background: '#fcfcfc' }} />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="invoice_next_number" label={<Text strong style={{ fontSize: 13 }}>Nomor Berikutnya</Text>}>
-                    <InputNumber min={1} style={{ width: '100%', borderRadius: 12, height: 44, background: '#fcfcfc', display: 'flex', alignItems: 'center' }} />
-                  </Form.Item>
-                </Col>
-              </Row>
+
 
               <Form.Item name="footer_note" label={<Text strong style={{ fontSize: 13 }}>Catatan Footer</Text>}>
                 <TextArea rows={2} style={{ borderRadius: 12, background: '#fcfcfc' }} />

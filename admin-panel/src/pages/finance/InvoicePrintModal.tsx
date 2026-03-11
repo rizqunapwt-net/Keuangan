@@ -54,7 +54,7 @@ interface InvoicePrintModalProps {
 
 const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
     open, onClose, invoice, settings,
-    companyName = settings?.company_name || 'CV. RIZQUNA MANDIRI',
+    companyName = settings?.company_name || 'RIZQUNA',
     companyEmail = settings?.company_email || 'cv.rizquna@gmail.com',
     companyWebsite = settings?.company_website || 'www.rizquna.id',
     companyIG = settings?.company_ig || '@penerbit_rizquna',
