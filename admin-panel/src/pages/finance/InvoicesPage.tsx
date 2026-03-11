@@ -9,24 +9,19 @@ import {
     Tabs,
     Row,
     Col,
-    Badge,
     Breadcrumb,
-    Avatar,
     Popconfirm,
     message,
-    Tooltip,
     Input,
     Select,
 } from 'antd';
 import {
-    PrinterOutlined,
     PlusOutlined,
     ClockCircleOutlined,
     AuditOutlined,
     EditOutlined,
     DeleteOutlined,
     CheckCircleOutlined,
-    UndoOutlined,
     SearchOutlined,
 } from '@ant-design/icons';
 import api from '../../api';
@@ -42,7 +37,6 @@ const { Option } = Select;
 const InvoicesPage: React.FC = () => {
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
     const [searchText, setSearchText] = useState('');
     const [searchCategory, setSearchCategory] = useState('nama');
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -50,7 +44,7 @@ const InvoicesPage: React.FC = () => {
     const [printModalOpen, setPrintModalOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
     const [activeTab, setActiveTab] = useState('all');
-    const { user } = useAuth();
+    const { } = useAuth();
 
     const settings = useMemo(() => {
         const saved = localStorage.getItem('app_settings');
@@ -120,11 +114,6 @@ const InvoicesPage: React.FC = () => {
         }
     };
 
-    // Helper to convert a flattened row back to the full invoice object for editing/printing
-    const rowToInvoice = (record: any) => {
-        // If it was a grouped row, it should already have full invoice properties
-        return record;
-    };
 
     const flattenedData = useMemo(() => {
         const rows: any[] = [];
@@ -208,7 +197,7 @@ const InvoicesPage: React.FC = () => {
             title: 'Tanggal order',
             dataIndex: 'date',
             key: 'date',
-            render: (date: string) => <small style={{ color: '#666' }}>{fmtDateShort(date, true)}</small>,
+            render: (date: string) => <small style={{ color: '#666' }}>{fmtDateShort(date)}</small>,
         },
         {
             title: 'Produk',
@@ -422,10 +411,5 @@ const InvoicesPage: React.FC = () => {
     );
 };
 
-const FileTextOutlined = () => (
-    <svg width="1em" height="1em" fill="currentColor" viewBox="0 0 1024 1024" style={{ verticalAlign: 'middle' }}>
-        <path d="M854.6 288.6L639.4 73.4c-6-6-14.1-9.4-22.6-9.4H132c-17.7 0-32 14.3-32 32v832c0 17.7 14.3 32 32 32h720c17.7 0 32-14.3 32-32V311.2c0-8.5-3.4-16.7-9.4-22.6zM790.2 326L602 326V137.8L790.2 326zM812 888H172V136h358v190c0 17.7 14.3 32 32 32h190v530z" />
-    </svg>
-);
 
 export default InvoicesPage;
