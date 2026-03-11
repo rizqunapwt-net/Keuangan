@@ -3,133 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice {{ $invoice->kodeinvoice }} - Rizquna Publishing</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Invoice {{ $invoice->kodeinvoice }} - RIZQUNA</title>
     <style>
-        body { font-family: 'Outfit', sans-serif; }
-        @media print {
-            .no-print { display: none; }
-            body { background: white; }
-            .print-shadow-none { box-shadow: none !important; border: 1px solid #eee; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', Helvetica, sans-serif; 
+            color: #000; 
+            background: #f8fafc; 
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
         }
+
+        .invoice-card {
+            background: #fff;
+            width: 100%;
+            max-width: 780px;
+            padding: 40px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            border-radius: 8px;
+        }
+
+        @media print {
+            body { background: #fff; padding: 0; }
+            .invoice-card { box-shadow: none; padding: 15px 20px; border-radius: 0; max-width: 100%; }
+            .no-print { display: none; }
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border-top: 1px solid #000; border-bottom: 1px solid #000; }
+        th { padding: 6px 8px; text-align: left; font-size: 13px; font-weight: 700; border-bottom: 1px solid #000; }
+        td { padding: 8px; font-size: 13px; border-right: 1px solid #000; }
+        td:last-child { border-right: none; }
+        
+        .stamp {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-18deg);
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .stamp-inner {
+            border: 5px solid;
+            border-radius: 12px;
+            padding: 8px 32px;
+            position: relative;
+        }
+        .stamp-border {
+            position: absolute;
+            inset: 3px;
+            border: 2px solid;
+            border-radius: 8px;
+        }
+        .stamp-text {
+            font-size: 36px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 1.2;
+            padding: 4px 0;
+        }
+
+        .btn-print {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #0fb9b1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(15, 185, 177, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+        }
+        .btn-print:hover { background: #0da49d; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen py-10 px-4">
-    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden print-shadow-none">
-        
-        <!-- Header Section (Matched to Admin style) -->
-        <div class="px-8 py-10 text-center border-b-2 border-slate-900">
-            <div class="mb-4">
-                <img src="/admin/logo-nre.png" alt="Logo" class="max-h-24 mx-auto object-contain mb-3">
-                <div class="text-xs font-semibold text-slate-600 tracking-wide">
-                    <span class="text-blue-600 underline">www.rizquna.id</span> | cv.rizquna@gmail.com | IG: <span class="text-blue-600">@penerbit_rizquna</span>
-                </div>
+<body>
+    <button class="btn-print no-print" onclick="window.print()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        CETAK INVOICE
+    </button>
+
+    <div class="invoice-card">
+        <!-- Logo & Header -->
+        <div style="text-align: center; margin-bottom: 10px;">
+            <img src="/admin/logo-nre.png" alt="Logo" style="max-height: 85px; max-width: 100%; object-fit: contain; margin-bottom: 6px;">
+            <div style="font-size: 13px; color: #000; font-weight: 500;">
+                <span style="color: #0000FF; text-decoration: underline;">www.rizquna.id</span> | cv.rizquna@gmail.com | IG: <span style="color: #0000FF;">@penerbit_rizquna</span>
             </div>
         </div>
 
-        <div class="px-8 py-4 flex flex-col md:flex-row justify-between items-center bg-slate-50 border-b border-slate-200">
-            <h1 class="text-xl font-bold text-slate-800">INVOICE : {{ $invoice->kodeinvoice }}</h1>
-            <p class="text-sm font-semibold text-slate-500">Tanggal: {{ $invoice->date ? $invoice->date->format('d/m/Y') : '-' }}</p>
+        <div style="border-top: 2px solid #000; margin-bottom: 8px;"></div>
+
+        <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0; display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 14px; font-weight: 600;">
+            <span>Kode Invoice : {{ $invoice->kodeinvoice }}</span>
+            <span>Tanggal order: {{ $invoice->date ? $invoice->date->format('d/m/Y') : '-' }}</span>
         </div>
 
-        <!-- Info Grid -->
-        <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-12">
-            <div>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Pelanggan Yth:</p>
-                <h3 class="text-lg font-bold text-slate-800">{{ $invoice->client_name }}</h3>
-                <p class="text-slate-500 mt-1 text-sm leading-relaxed">{{ $invoice->description ?: 'Detail tagihan pesanan Anda.' }}</p>
-            </div>
-            <div class="flex flex-col justify-end items-end space-y-2">
-                @if($invoice->status === 'paid')
-                    <div class="px-6 py-2 border-4 border-emerald-500 text-emerald-500 font-extrabold text-2xl rotate-[-12deg] opacity-70 rounded-lg">LUNAS</div>
-                @elseif($invoice->status === 'unpaid')
-                    <div class="px-6 py-2 border-4 border-red-500 text-red-500 font-extrabold text-2xl rotate-[-12deg] opacity-70 rounded-lg whitespace-nowrap">BELUM LUNAS</div>
-                @else
-                    <div class="px-6 py-2 border-4 border-orange-500 text-orange-500 font-extrabold text-2xl rotate-[-12deg] opacity-70 rounded-lg">CICILAN</div>
-                @endif
-            </div>
+        <div style="margin-bottom: 16px; font-size: 13px;">
+            <div style="font-weight: 800;">Kepada Yth: {{ $invoice->client_name }}</div>
+            <div>berikut adalah Detail Order Anda:</div>
         </div>
 
-        <!-- Table -->
-        <div class="px-8 pb-8">
-            <div class="overflow-x-auto rounded-xl border border-slate-100">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                            <th class="py-4 px-6">Produk / Layanan</th>
-                            <th class="py-4 px-2 text-center">Jumlah</th>
-                            <th class="py-4 px-2 text-right">Harga Satuan</th>
-                            <th class="py-4 px-6 text-right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 italic">
-                        @php $items = is_array($invoice->items) ? $invoice->items : (json_decode($invoice->items, true) ?: []); @endphp
-                        @forelse($items as $item)
-                            <tr class="text-slate-700">
-                                <td class="py-4 px-6">
-                                    <div class="font-semibold">{{ $item['nama_produk'] ?? $item['nama'] ?? 'Produk' }}</div>
-                                </td>
-                                <td class="py-4 px-2 text-center text-slate-500">{{ $item['jumlah'] }} {{ $item['satuan'] ?? 'Pcs' }}</td>
-                                <td class="py-4 px-2 text-right">Rp{{ number_format($item['harga'], 0, ',', '.') }}</td>
-                                <td class="py-4 px-6 text-right font-bold text-slate-900 italic">Rp{{ number_format(($item['harga'] * $item['jumlah']) - ($item['diskon'] ?? 0), 0, ',', '.') }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="4" class="py-10 text-center text-slate-400">No items found.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+        <!-- Stamp Section -->
+        @php
+            $status = $invoice->status;
+            $stamp = [
+                'paid' => ['text' => 'LUNAS', 'color' => '#16a34a'],
+                'unpaid' => ['text' => 'BELUM LUNAS', 'color' => '#dc2626'],
+                'partial' => ['text' => 'CICILAN', 'color' => '#ea580c']
+            ][$status] ?? ['text' => 'BELUM LUNAS', 'color' => '#dc2626'];
+        @endphp
+        <div class="stamp">
+            <div class="stamp-inner" style="border-color: {{ $stamp['color'] }};">
+                <div class="stamp-border" style="border-color: {{ $stamp['color'] }};"></div>
+                <div class="stamp-text" style="color: {{ $stamp['color'] }};">{{ $stamp['text'] }}</div>
             </div>
         </div>
 
-        <!-- Summary & Footer -->
-        <div class="p-8 bg-slate-50 flex flex-col md:flex-row justify-between items-end gap-8 border-t border-slate-100">
-            <!-- Totals (Left) -->
-            <div class="md:w-72 space-y-3 order-2 md:order-1">
-                <div class="flex justify-between text-slate-500 text-sm">
-                    <span>Subtotal</span>
-                    <span class="font-semibold text-slate-800 italic">Rp{{ number_format($invoice->amount, 0, ',', '.') }}</span>
+        <!-- Table Items -->
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40px;">No.</th>
+                    <th>Pemesanan</th>
+                    <th style="text-align: center; width: 60px;">Jumlah</th>
+                    <th style="text-align: center; width: 60px;">satuan</th>
+                    <th style="text-align: right; width: 100px;">Harga @</th>
+                    <th style="text-align: right; width: 80px;">Disc</th>
+                    <th style="text-align: right; width: 110px;">Sub Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php $items = is_array($invoice->items) ? $invoice->items : (json_decode($invoice->items, true) ?: []); @endphp
+                @foreach($items as $idx => $item)
+                    <tr>
+                        <td>{{ $idx + 1 }}</td>
+                        <td>{{ $item['nama_produk'] ?? $item['nama'] ?? 'Produk' }}</td>
+                        <td style="text-align: center;">{{ $item['jumlah'] }}</td>
+                        <td style="text-align: center;">{{ $item['satuan'] ?? 'Pcs' }}</td>
+                        <td style="text-align: right;">Rp{{ number_format($item['harga'] ?? 0, 0, ',', '.') }}</td>
+                        <td style="text-align: right;">{{ isset($item['diskon']) && $item['diskon'] > 0 ? 'Rp'.number_format($item['diskon'], 0, ',', '.') : 'Rp.0' }}</td>
+                        <td style="text-align: right;">Rp{{ number_format((($item['harga'] ?? 0) * ($item['jumlah'] ?? 0)) - ($item['diskon'] ?? 0), 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+            <tfoot>
+                <tr style="border-top: 1px solid #000; font-weight: 800;">
+                    <td colspan="6" style="padding: 8px; text-align: left; border-right: 1px solid #000;">TOTAL</td>
+                    <td style="padding: 8px; text-align: right;">Rp{{ number_format($invoice->amount, 0, ',', '.') }}</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Footer Section -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; font-size: 13px;">
+            <div style="flex: 1;">
+                <div style="font-size: 11px; color: #666;">
+                    @if($status === 'paid')
+                        <div style="font-weight: 700; color: #16a34a;">✅ Invoice ini sudah LUNAS. Terima kasih.</div>
+                    @else
+                        <div style="font-weight: 700;">Pembayaran via:</div>
+                        <div>Bank BTPN / SMBC (kode 213) Account: 902-4013-3956 a.n FITRIANTO</div>
+                        @if($status === 'partial')
+                            <div style="margin-top: 4px; font-weight: 600; color: #ea580c;">
+                                Sisa tagihan: Rp{{ number_format($invoice->amount - $invoice->paid_amount, 0, ',', '.') }}
+                            </div>
+                        @endif
+                    @endif
                 </div>
-                <div class="flex justify-between text-slate-500 text-sm">
-                    <span>Sudah Dibayar</span>
-                    <span class="font-semibold text-emerald-600 italic">Rp{{ number_format($invoice->paid_amount, 0, ',', '.') }}</span>
-                </div>
-                <div class="pt-3 border-t border-slate-300 flex justify-between items-center">
-                    <span class="font-bold text-slate-900 uppercase tracking-wider text-xs">Sisa Tagihan</span>
-                    <span class="text-xl font-black text-slate-900 italic">Rp{{ number_format(max(0, $invoice->amount - $invoice->paid_amount), 0, ',', '.') }}</span>
-                </div>
-                
-                @if($invoice->status !== 'paid')
-                <div class="mt-6 p-4 bg-white rounded-lg border border-slate-200 text-[10px] text-slate-500">
-                    <p class="font-bold text-slate-700 mb-1 tracking-tight">INFO PEMBAYARAN:</p>
-                    <p>Bank BTPN / SMBC (kode 213)</p>
-                    <p class="font-semibold text-slate-900">Acc: 902-4013-3956</p>
-                    <p>a.n FITRIANTO</p>
-                </div>
-                @endif
             </div>
 
-            <!-- Signature (Right) Section -->
-            <div class="text-center w-64 order-1 md:order-2">
-                <p class="text-sm font-bold text-slate-800 mb-2">Direktur,</p>
-                <div class="flex justify-center items-center py-2">
+            <div style="position: relative; text-align: center; width: 220px;">
+                <div style="font-weight: 700; margin-bottom: 4px;">Direktur,</div>
+                <div style="height: 90px; display: flex; align-items: center; justify-content: center; padding: 5px 0;">
                     @php $qrUrl = "https://invoice.rizquna.id/v/inv/" . $invoice->kodeinvoice; @endphp
-                    <div class="relative">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode($qrUrl) }}" alt="Digital Signature" class="w-20 h-20 opacity-90">
-                    </div>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode($qrUrl) }}" alt="Digital Signature" style="width: 85px; height: 85px; opacity: 0.9;">
                 </div>
-                <div class="mt-2 border-t border-slate-800 pt-1">
-                    <p class="text-xs font-black uppercase tracking-widest text-slate-900">SUDARYONO</p>
-                    <p class="text-[7px] text-slate-400 mt-1 tracking-[0.2em]">DIGITALLY SIGNED & VERIFIED</p>
-                </div>
+                <div style="font-weight: 800; text-transform: uppercase; border-top: 1px solid #000; padding-top: 2px;">SUDARYONO</div>
+                <div style="font-size: 7px; color: #888; margin-top: 2px; letter-spacing: 0.5px;">DIGITALLY SIGNED & VERIFIED</div>
             </div>
         </div>
 
-        <div class="p-8 text-center border-t border-slate-100">
-            <p class="text-xs text-slate-400 tracking-wide">&copy; {{ date('Y') }} PT. Rizquna Publishing. Terima kasih atas kepercayaan Anda.</p>
-            <div class="mt-6 no-print">
-                <button onclick="window.print()" class="px-6 py-2 bg-slate-900 text-white rounded-full font-semibold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200">Cetak Invoice</button>
-            </div>
+        <div style="margin-top: 12px; font-size: 10px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 8px;">
+            Invoice ini diterbitkan secara elektronik dan sah sesuai sistem keuangan RIZQUNA.
         </div>
     </div>
 </body>
