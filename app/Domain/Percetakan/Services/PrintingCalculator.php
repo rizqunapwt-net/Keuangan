@@ -730,7 +730,7 @@ class PrintingCalculator
 
     private function legacySpandukMaterial(array $payload): string
     {
-        if (!empty($payload['material'])) {
+        if (! empty($payload['material'])) {
             return (string) $payload['material'];
         }
 
@@ -745,7 +745,7 @@ class PrintingCalculator
 
     private function legacyBukuCover(array $payload): string
     {
-        if (!empty($payload['cover_type'])) {
+        if (! empty($payload['cover_type'])) {
             return (string) $payload['cover_type'];
         }
 

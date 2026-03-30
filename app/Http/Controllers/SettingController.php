@@ -10,17 +10,18 @@ class SettingController extends Controller
     public function index()
     {
         $settings = Setting::first();
+
         return response()->json([
             'status' => 'success',
-            'data' => $settings
+            'data' => $settings,
         ]);
     }
 
     public function update(Request $request)
     {
         $settings = Setting::first();
-        if (!$settings) {
-            $settings = new Setting();
+        if (! $settings) {
+            $settings = new Setting;
         }
 
         $settings->fill($request->all());
@@ -29,7 +30,7 @@ class SettingController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Settings updated successfully',
-            'data' => $settings
+            'data' => $settings,
         ]);
     }
 }

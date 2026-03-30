@@ -37,7 +37,7 @@ class DebtPayment extends Model
     {
         static::created(function ($payment) {
             $payment->debt->updateStatus();
-            
+
             // 1. Update Bank Balance
             if ($payment->bank_id) {
                 $bank = \App\Models\Bank::find($payment->bank_id);
@@ -57,7 +57,7 @@ class DebtPayment extends Model
                         'date' => $payment->date ?? now(),
                         'amount' => $payment->amount,
                         'category' => 'Cicilan Hutang/Piutang',
-                        'description' => ($isIncome ? 'Terima Pembayaran' : 'Bayar Cicilan') . ' - ' . $payment->debt->client_name . ' (' . ($payment->debt->kodeinvoice ?? '#'.$payment->debt->id) . ')',
+                        'description' => ($isIncome ? 'Terima Pembayaran' : 'Bayar Cicilan').' - '.$payment->debt->client_name.' ('.($payment->debt->kodeinvoice ?? '#'.$payment->debt->id).')',
                         'running_balance' => $bank->balance,
                     ]);
 
@@ -65,12 +65,12 @@ class DebtPayment extends Model
                     // Debit: Bank Utama (1102), Credit: Piutang Usaha (1103)
                     $piutangAccount = \App\Models\Accounting\Account::where('code', '1103')->first();
                     $bankAccount = $bank->account_id ? \App\Models\Accounting\Account::find($bank->account_id) : \App\Models\Accounting\Account::where('code', '1102')->first();
-                    
+
                     if ($piutangAccount && $bankAccount) {
                         $accounting = app(\App\Domain\Finance\Services\AccountingService::class);
                         $accounting->recordJournal([
                             'date' => $payment->date ?? now(),
-                            'description' => 'Pembayaran ' . ($isIncome ? 'Piutang' : 'Hutang') . ' - ' . $payment->debt->client_name,
+                            'description' => 'Pembayaran '.($isIncome ? 'Piutang' : 'Hutang').' - '.$payment->debt->client_name,
                             'reference' => $payment->debt->kodeinvoice ?? '#'.$payment->debt->id,
                             'items' => [
                                 [
@@ -92,7 +92,7 @@ class DebtPayment extends Model
 
         static::deleted(function ($payment) {
             $payment->debt->updateStatus();
-            
+
             // Reverse balance if needed (optional, typically handled in controller for safety)
             // But for full automation, we could reverse it here.
         });

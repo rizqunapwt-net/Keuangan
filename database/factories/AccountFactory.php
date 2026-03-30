@@ -17,7 +17,7 @@ class AccountFactory extends Factory
 
         return [
             'code' => fake()->unique()->numerify('ACC-####'),
-            'name' => fake()->word() . ' ' . ucfirst($type),
+            'name' => fake()->word().' '.ucfirst($type),
             'type' => $type,
             'description' => fake()->optional()->sentence(),
             'is_active' => true,
@@ -28,7 +28,7 @@ class AccountFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'asset',
-            'name' => fake()->word() . ' Asset',
+            'name' => fake()->word().' Asset',
         ]);
     }
 
@@ -36,7 +36,7 @@ class AccountFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'liability',
-            'name' => fake()->word() . ' Liability',
+            'name' => fake()->word().' Liability',
         ]);
     }
 
@@ -44,7 +44,7 @@ class AccountFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'equity',
-            'name' => fake()->word() . ' Equity',
+            'name' => fake()->word().' Equity',
         ]);
     }
 
@@ -52,7 +52,7 @@ class AccountFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'revenue',
-            'name' => fake()->word() . ' Revenue',
+            'name' => fake()->word().' Revenue',
         ]);
     }
 
@@ -60,7 +60,7 @@ class AccountFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'expense',
-            'name' => fake()->word() . ' Expense',
+            'name' => fake()->word().' Expense',
         ]);
     }
 

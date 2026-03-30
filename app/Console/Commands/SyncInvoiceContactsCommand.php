@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 class SyncInvoiceContactsCommand extends Command
 {
     protected $signature = 'contacts:sync-from-invoices';
+
     protected $description = 'Add all unique client names from invoices to contacts table';
 
     public function handle(): int
@@ -23,23 +24,26 @@ class SyncInvoiceContactsCommand extends Command
 
         $existingNames = Contact::whereNull('deleted_at')
             ->pluck('name')
-            ->map(fn($n) => strtolower(trim($n)));
+            ->map(fn ($n) => strtolower(trim($n)));
 
-        $missing = $clients->filter(fn($c) => !$existingNames->contains(strtolower(trim($c))));
+        $missing = $clients->filter(fn ($c) => ! $existingNames->contains(strtolower(trim($c))));
 
         $this->info("Total unique clients in invoices: {$clients->count()}");
-        $this->info("Already in contacts: " . ($clients->count() - $missing->count()));
+        $this->info('Already in contacts: '.($clients->count() - $missing->count()));
         $this->info("Need to add: {$missing->count()}");
 
         if ($missing->isEmpty()) {
             $this->info('✅ All clients already in contacts!');
+
             return 0;
         }
 
         $added = 0;
         foreach ($missing as $name) {
             $name = trim($name);
-            if (empty($name) || $name === '-' || $name === 'Umum') continue;
+            if (empty($name) || $name === '-' || $name === 'Umum') {
+                continue;
+            }
 
             Contact::create([
                 'name' => $name,
@@ -52,6 +56,7 @@ class SyncInvoiceContactsCommand extends Command
 
         $this->newLine();
         $this->info("Done! Added {$added} new contacts.");
+
         return 0;
     }
 }

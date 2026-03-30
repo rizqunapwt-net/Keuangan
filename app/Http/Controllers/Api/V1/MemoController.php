@@ -19,7 +19,7 @@ class MemoController extends Controller
             $search = $request->string('search')->toString();
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('content', 'like', "%{$search}%");
+                    ->orWhere('content', 'like', "%{$search}%");
             });
         }
 
@@ -87,8 +87,8 @@ class MemoController extends Controller
 
     public function togglePin(Memo $memo): JsonResponse
     {
-        $memo->update(['is_pinned' => !$memo->is_pinned]);
-        
+        $memo->update(['is_pinned' => ! $memo->is_pinned]);
+
         return response()->json([
             'success' => true,
             'message' => $memo->is_pinned ? 'Catatan disematkan.' : 'Sematkan dilepas.',

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Debt;
-use App\Models\DebtPayment;
 use App\Models\Bank;
 use App\Models\CashTransaction;
+use App\Models\Debt;
+use App\Models\DebtPayment;
 use App\Traits\Auditable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,11 +17,11 @@ use RuntimeException;
 class DebtController extends Controller
 {
     use Auditable;
-    
+
     public function index(Request $request)
     {
         Gate::authorize('viewAny', Debt::class);
-        
+
         $query = Debt::query();
 
         if ($request->has('type')) {
@@ -38,9 +38,9 @@ class DebtController extends Controller
 
         if ($request->has('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('client_name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -50,7 +50,7 @@ class DebtController extends Controller
     public function store(Request $request)
     {
         Gate::authorize('create', Debt::class);
-        
+
         $validated = $request->validate([
             'type' => 'required|in:payable,receivable',
             'date' => 'required|date',
@@ -88,7 +88,7 @@ class DebtController extends Controller
                     'date' => $debt->date,
                     'amount' => $debt->amount,
                     'category' => 'Hutang/Piutang',
-                    'description' => ($isIncome ? 'Terima Pinjaman' : 'Berikan Piutang') . ' dari ' . $debt->client_name,
+                    'description' => ($isIncome ? 'Terima Pinjaman' : 'Berikan Piutang').' dari '.$debt->client_name,
                     'running_balance' => $bank->balance,
                 ]);
             }
@@ -100,14 +100,14 @@ class DebtController extends Controller
     public function show(Debt $debt)
     {
         Gate::authorize('view', $debt);
-        
+
         return $debt->load('payments');
     }
 
     public function update(Request $request, Debt $debt)
     {
         Gate::authorize('update', $debt);
-        
+
         $validated = $request->validate([
             'date' => 'required|date',
             'due_date' => 'nullable|date',
@@ -125,7 +125,7 @@ class DebtController extends Controller
     public function destroy(Debt $debt)
     {
         Gate::authorize('delete', $debt);
-        
+
         return DB::transaction(function () use ($debt) {
             $paymentSnapshots = $debt->payments()->get();
 
@@ -138,13 +138,13 @@ class DebtController extends Controller
             foreach ($paymentSnapshots as $payment) {
                 $this->logDelete(
                     $payment,
-                    "Pembayaran #{$payment->id} sebesar Rp " . number_format((float) $payment->amount, 0, ',', '.') . " (debt #{$debt->id}) ikut terhapus karena cascade delete."
+                    "Pembayaran #{$payment->id} sebesar Rp ".number_format((float) $payment->amount, 0, ',', '.')." (debt #{$debt->id}) ikut terhapus karena cascade delete."
                 );
             }
 
             $this->logDelete(
                 $debt,
-                "Hutang/Piutang #{$debt->id} ({$debt->client_name}) sebesar Rp " . number_format((float) $debt->amount, 0, ',', '.') . " telah dihapus."
+                "Hutang/Piutang #{$debt->id} ({$debt->client_name}) sebesar Rp ".number_format((float) $debt->amount, 0, ',', '.').' telah dihapus.'
             );
 
             return response()->json(null, 204);
@@ -167,7 +167,7 @@ class DebtController extends Controller
             $remainingDebt = (float) $debt->amount - (float) $debt->paid_amount;
             if ((float) $validated['amount'] > $remainingDebt) {
                 throw ValidationException::withMessages([
-                    'amount' => ['Jumlah pembayaran melebihi sisa hutang/piutang. Sisa: Rp ' . number_format($remainingDebt, 0, ',', '.') . ', Anda membayar: Rp ' . number_format($validated['amount'], 0, ',', '.')],
+                    'amount' => ['Jumlah pembayaran melebihi sisa hutang/piutang. Sisa: Rp '.number_format($remainingDebt, 0, ',', '.').', Anda membayar: Rp '.number_format($validated['amount'], 0, ',', '.')],
                 ]);
             }
 
@@ -217,7 +217,7 @@ class DebtController extends Controller
             // Log audit untuk delete payment
             $this->logDelete(
                 $payment,
-                "Pembayaran #{$payment->id} sebesar Rp " . number_format($paymentAmount, 0, ',', '.') . " untuk {$debt->client_name} telah dihapus."
+                "Pembayaran #{$payment->id} sebesar Rp ".number_format($paymentAmount, 0, ',', '.')." untuk {$debt->client_name} telah dihapus."
             );
 
             $debt->updateStatus();

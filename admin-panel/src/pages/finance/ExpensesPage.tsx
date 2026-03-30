@@ -1,7 +1,7 @@
 import React from 'react';
 import { Table, Button, Tag, Card, Typography, Row, Col, Space, Input, Popconfirm, message } from 'antd';
 import { fmtRp } from '../../utils/formatters';
-import { PlusOutlined, SearchOutlined, PrinterOutlined, ExportOutlined, StopOutlined, DollarOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, PrinterOutlined, ExportOutlined, StopOutlined, DollarOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api';
 import AccessControl from '../../components/AccessControl';
@@ -38,6 +38,16 @@ const ExpensesPage: React.FC = () => {
             queryClient.invalidateQueries({ queryKey: ['expenses'] });
         } catch {
             message.error('Gagal membatalkan biaya');
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        try {
+            await api.delete(`/finance/expenses/${id}`);
+            message.success('Biaya berhasil dihapus');
+            queryClient.invalidateQueries({ queryKey: ['expenses'] });
+        } catch {
+            message.error('Gagal menghapus biaya');
         }
     };
 
@@ -104,15 +114,26 @@ const ExpensesPage: React.FC = () => {
             width: 80,
             align: 'right' as const,
             render: (_: unknown, record: any) => record.status !== 'void' ? (
-                <Popconfirm
-                    title="Batalkan biaya ini?"
-                    onConfirm={() => handleVoid(record.id)}
-                    okText="Ya, Void"
-                    cancelText="Batal"
-                    okButtonProps={{ danger: true }}
-                >
-                    <Button type="text" danger icon={<StopOutlined />} size="small" style={{ color: '#aaa' }} />
-                </Popconfirm>
+                <Space size={4}>
+                    <Popconfirm
+                        title="Batalkan biaya ini?"
+                        onConfirm={() => handleVoid(record.id)}
+                        okText="Ya, Void"
+                        cancelText="Batal"
+                        okButtonProps={{ danger: true }}
+                    >
+                        <Button type="text" danger icon={<StopOutlined />} size="small" style={{ color: '#aaa' }} />
+                    </Popconfirm>
+                    <Popconfirm
+                        title="Hapus permanen biaya ini?"
+                        onConfirm={() => handleDelete(record.id)}
+                        okText="Hapus"
+                        cancelText="Batal"
+                        okButtonProps={{ danger: true }}
+                    >
+                        <Button type="text" danger icon={<DeleteOutlined />} size="small" style={{ color: '#aaa' }} />
+                    </Popconfirm>
+                </Space>
             ) : null,
         },
     ];

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBankRequest;
 use App\Http\Requests\UpdateBankRequest;
 use App\Models\Bank;
-use App\Models\AuditLog;
 use App\Support\ApiResponse;
 use App\Traits\Auditable;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +19,7 @@ class BankController extends Controller
     public function index(Request $request): JsonResponse
     {
         Gate::authorize('viewAny', Bank::class);
-        
+
         $query = Bank::query();
 
         if ($request->has('status')) {
@@ -39,7 +38,7 @@ class BankController extends Controller
     public function store(StoreBankRequest $request): JsonResponse
     {
         Gate::authorize('create', Bank::class);
-        
+
         $bank = Bank::create($request->validated());
 
         $this->logModification($bank, [], $bank->toArray(), "Menambah bank/kas baru: {$bank->bank_name}");
@@ -50,14 +49,14 @@ class BankController extends Controller
     public function show(Bank $bank): JsonResponse
     {
         Gate::authorize('view', $bank);
-        
+
         return $this->success($bank->load('account', 'manager'));
     }
 
     public function update(UpdateBankRequest $request, Bank $bank): JsonResponse
     {
         Gate::authorize('update', $bank);
-        
+
         $oldValues = $bank->getOriginal();
         $bank->update($request->validated());
 
@@ -69,11 +68,11 @@ class BankController extends Controller
     public function destroy(Bank $bank): JsonResponse
     {
         Gate::authorize('delete', $bank);
-        
+
         // Log audit sebelum delete
         $this->logDelete(
             $bank,
-            "Akun Bank/Kas #{$bank->id} ({$bank->bank_name}) dengan saldo akhir Rp " . number_format($bank->balance, 0, ',', '.') . " telah dihapus"
+            "Akun Bank/Kas #{$bank->id} ({$bank->bank_name}) dengan saldo akhir Rp ".number_format($bank->balance, 0, ',', '.').' telah dihapus'
         );
 
         $bank->delete();

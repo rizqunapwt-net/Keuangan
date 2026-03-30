@@ -15,7 +15,7 @@ class PrintingCalculatorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->calculator = new PrintingCalculator();
+        $this->calculator = new PrintingCalculator;
     }
 
     public function test_calculate_brosur_with_default_options(): void

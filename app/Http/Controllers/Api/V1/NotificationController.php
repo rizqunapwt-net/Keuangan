@@ -50,7 +50,7 @@ class NotificationController extends Controller
     public function updatePreferences(Request $request): JsonResponse
     {
         $user = auth()->user();
-        
+
         $validated = $request->validate([
             'notification_preferences' => ['required', 'array'],
             'notification_preferences.email_new_order' => ['nullable', 'boolean'],
@@ -58,10 +58,10 @@ class NotificationController extends Controller
             'notification_preferences.push_alerts' => ['nullable', 'boolean'],
         ]);
 
-        // Stores in a settings column in users table or similar. 
+        // Stores in a settings column in users table or similar.
         // For now, we'll just return success as a placeholder if column doesn't exist,
         // or actually update if we have a generic 'settings' json column.
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Preferensi notifikasi berhasil diperbarui.',

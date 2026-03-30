@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Debt;
-use Illuminate\Http\Request;
 
 class PublicInvoiceController extends Controller
 {

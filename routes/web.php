@@ -49,7 +49,7 @@ Route::get('/{any}', function () {
         if ($candidate['rewrite_assets']) {
             $html = preg_replace('/([\'"])\/assets\//', '$1/admin/assets/', $html) ?? $html;
             $html = preg_replace('/([\'"])\/vite\.svg/', '$1/admin/vite.svg', $html) ?? $html;
-            
+
             // Fix double /admin/admin/ if it happens
             $html = str_replace('/admin/admin/', '/admin/', $html);
         }

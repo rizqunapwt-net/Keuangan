@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreExpenseRequest;
 use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Expense;
-use App\Models\AuditLog;
 use App\Support\ApiResponse;
 use App\Traits\Auditable;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +19,7 @@ class ExpenseController extends Controller
     public function index(Request $request): JsonResponse
     {
         Gate::authorize('viewAny', Expense::class);
-        
+
         $query = Expense::query();
 
         if ($request->has('status')) {
@@ -43,7 +42,7 @@ class ExpenseController extends Controller
     public function store(StoreExpenseRequest $request): JsonResponse
     {
         Gate::authorize('create', Expense::class);
-        
+
         $data = $request->validated();
 
         if ($request->hasFile('attachment_path')) {
@@ -58,14 +57,14 @@ class ExpenseController extends Controller
     public function show(Expense $expense): JsonResponse
     {
         Gate::authorize('view', $expense);
-        
+
         return $this->success($expense->load('account', 'creator', 'approver', 'voidedBy'));
     }
 
     public function update(UpdateExpenseRequest $request, Expense $expense): JsonResponse
     {
         Gate::authorize('update', $expense);
-        
+
         $data = $request->validated();
         if ($request->hasFile('attachment_path')) {
             $data['attachment_path'] = $request->file('attachment_path')->store('expenses', 'public');
@@ -79,20 +78,22 @@ class ExpenseController extends Controller
     public function void(Request $request, Expense $expense): JsonResponse
     {
         Gate::authorize('void', $expense);
-        
+
         $request->validate([
-            'void_reason' => 'required|string|max:500',
+            'void_reason' => 'nullable|string|max:500',
         ]);
+
+        $reason = $request->get('void_reason') ?? 'Dibatalkan oleh pengguna';
 
         // Simpan old values untuk audit
         $oldValues = $expense->toArray();
 
-        $expense->void(auth()->id(), $request->get('void_reason'));
+        $expense->void(auth()->id() ?? 1, $reason);
 
         // Log audit untuk void
         $this->logVoid(
             $expense,
-            $request->get('void_reason'),
+            $reason,
             $oldValues
         );
 
@@ -102,11 +103,11 @@ class ExpenseController extends Controller
     public function destroy(Expense $expense): JsonResponse
     {
         Gate::authorize('delete', $expense);
-        
+
         // Log audit sebelum delete
         $this->logDelete(
             $expense,
-            "Biaya #{$expense->id} ({$expense->description}) sebesar Rp " . number_format($expense->amount, 0, ',', '.') . " telah dihapus"
+            "Biaya #{$expense->id} ({$expense->description}) sebesar Rp ".number_format((float) $expense->amount, 0, ',', '.').' telah dihapus'
         );
 
         $expense->delete();

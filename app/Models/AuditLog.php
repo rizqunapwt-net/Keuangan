@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * AuditLog Model
- * 
+ *
  * Mencatat setiap aktivitas sensitif untuk keperluan security audit.
  */
 class AuditLog extends Model
@@ -79,13 +79,22 @@ class AuditLog extends Model
      * Event types constants
      */
     public const EVENT_CREATED = 'created';
+
     public const EVENT_UPDATED = 'updated';
+
     public const EVENT_DELETED = 'deleted';
+
     public const EVENT_STATUS_CHANGED = 'status_changed';
+
     public const EVENT_VOIDED = 'voided';
+
     public const EVENT_BALANCE_CHANGED = 'balance_changed';
+
     public const EVENT_UNAUTHORIZED_ACCESS = 'unauthorized_access';
+
     public const EVENT_DATA_MODIFIED = 'data_modified';
+
     public const EVENT_EXPORT_DATA = 'export_data';
+
     public const EVENT_LOGIN = 'login';
 }

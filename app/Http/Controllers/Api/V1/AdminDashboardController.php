@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Expense;
 use App\Models\Debt;
+use App\Models\Expense;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class AdminDashboardController extends Controller
 {
@@ -31,7 +30,7 @@ class AdminDashboardController extends Controller
         $outstandingInvoices = Debt::where('type', 'receivable')
             ->whereIn('status', ['unpaid', 'partial'])
             ->get()
-            ->sum(fn($d) => $d->amount - $d->paid_amount);
+            ->sum(fn ($d) => $d->amount - $d->paid_amount);
 
         // Recent Invoices / Receivables
         $recentInvoices = Debt::where('type', 'receivable')
@@ -43,7 +42,7 @@ class AdminDashboardController extends Controller
                 'type' => 'Invoice',
                 'amount' => (float) $d->amount,
                 'status' => $d->status,
-                'date' => $d->date?->format('Y-m-d') . ' ' . $d->created_at->format('H:i'),
+                'date' => $d->date?->format('Y-m-d').' '.$d->created_at->format('H:i'),
                 'contact' => $d->client_name,
             ]);
 

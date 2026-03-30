@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Finance\Services\AccountingService;
 use App\Domain\Finance\Services\ReportService;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Finance\StoreExpenseRequest;
 use App\Models\Accounting\Account;
 use App\Models\Contact;
 use App\Models\Debt;
@@ -18,6 +17,7 @@ use Illuminate\Http\Request;
 class FinanceController extends Controller
 {
     use LogsActivity;
+
     public function __construct(
         protected AccountingService $accountingService,
         protected ReportService $reportService,
@@ -30,6 +30,7 @@ class FinanceController extends Controller
     {
         ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
         $report = $this->reportService->getProfitAndLoss($start, $end);
+
         return response()->json(['success' => true, 'data' => $report]);
     }
 
@@ -37,6 +38,7 @@ class FinanceController extends Controller
     {
         $asOf = $request->input('as_of', now()->format('Y-m-d'));
         $report = $this->reportService->getBalanceSheet($asOf);
+
         return response()->json(['success' => true, 'data' => $report]);
     }
 
@@ -44,6 +46,7 @@ class FinanceController extends Controller
     {
         ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
         $report = $this->reportService->getCashFlow($start, $end);
+
         return response()->json(['success' => true, 'data' => $report]);
     }
 
@@ -52,6 +55,7 @@ class FinanceController extends Controller
         $start = now()->startOfMonth()->toDateString();
         $end = now()->endOfMonth()->toDateString();
         $pl = $this->reportService->getProfitAndLoss($start, $end);
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -67,36 +71,42 @@ class FinanceController extends Controller
     public function exportProfitLossPdf(Request $request)
     {
         ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
+
         return $this->exportService->exportProfitLossPdf($start, $end);
     }
 
     public function exportProfitLossExcel(Request $request)
     {
         ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
+
         return $this->exportService->exportProfitLossExcel($start, $end);
     }
 
     public function exportBalanceSheetPdf(Request $request)
     {
         $asOf = $request->input('as_of', now()->format('Y-m-d'));
+
         return $this->exportService->exportBalanceSheetPdf($asOf);
     }
 
     public function exportBalanceSheetExcel(Request $request)
     {
         $asOf = $request->input('as_of', now()->format('Y-m-d'));
+
         return $this->exportService->exportBalanceSheetExcel($asOf);
     }
 
     public function exportCashFlowPdf(Request $request)
     {
         ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
+
         return $this->exportService->exportCashFlowPdf($start, $end);
     }
 
     public function exportCashFlowExcel(Request $request)
     {
-        ['start_date' =>  $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
+        ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
+
         return $this->exportService->exportCashFlowExcel($start, $end);
     }
 
@@ -136,7 +146,7 @@ class FinanceController extends Controller
         try {
             // Find the bank that is linked to the payFromAccountId
             $bank = \App\Models\Bank::where('account_id', $validated['payFromAccountId'])->first();
-            
+
             $expense = Expense::create([
                 'expense_date' => $validated['transDate'],
                 'reference_number' => $validated['refNumber'],
@@ -149,7 +159,7 @@ class FinanceController extends Controller
                 'status' => \App\Enums\ExpenseStatus::APPROVED, // Directly approve
             ]);
 
-            $this->logActivity('created', 'expenses', "Mencatat biaya: {$request->description} - Rp" . number_format($request->amount, 0, ',', '.'), $expense, null, $validated);
+            $this->logActivity('created', 'expenses', "Mencatat biaya: {$request->description} - Rp".number_format($request->amount, 0, ',', '.'), $expense, null, $validated);
 
             return response()->json([
                 'success' => true,
@@ -189,8 +199,9 @@ class FinanceController extends Controller
         $invoices = $query->get()->map(function ($d) {
             $total = (float) $d->amount;
             $paid = (float) $d->paid_amount;
-            $invNumber = $d->kodeinvoice ?: ('INV-' . str_pad($d->id, 6, '0', STR_PAD_LEFT));
+            $invNumber = $d->kodeinvoice ?: ('INV-'.str_pad($d->id, 6, '0', STR_PAD_LEFT));
             $items = $d->items ? (is_string($d->items) ? json_decode($d->items, true) : $d->items) : [];
+
             return [
                 'id' => $d->id,
                 'type' => 'sales',
@@ -211,7 +222,7 @@ class FinanceController extends Controller
                 'customer_name' => $d->client_name ?? '-',
                 'contactName' => $d->client_name ?? '-',
                 'contact' => [
-                    'name' => $d->client_name ?? '-'
+                    'name' => $d->client_name ?? '-',
                 ],
                 'description' => $d->description,
                 'items' => $items,
@@ -241,12 +252,12 @@ class FinanceController extends Controller
         ]);
 
         $clientName = $validated['client_name'] ?? null;
-        if (!empty($validated['contactId'])) {
+        if (! empty($validated['contactId'])) {
             $contact = Contact::find($validated['contactId']);
             $clientName = $contact->name;
         }
 
-        $items = collect($validated['items'])->map(fn($item) => [
+        $items = collect($validated['items'])->map(fn ($item) => [
             'nama_produk' => $item['nama_produk'],
             'jumlah' => (int) $item['jumlah'],
             'satuan' => $item['satuan'],
@@ -254,7 +265,7 @@ class FinanceController extends Controller
             'diskon' => (float) ($item['diskon'] ?? 0),
         ])->toArray();
 
-        $total = collect($items)->sum(fn($i) => ($i['harga'] * $i['jumlah']) - $i['diskon']);
+        $total = collect($items)->sum(fn ($i) => ($i['harga'] * $i['jumlah']) - $i['diskon']);
 
         $debt = Debt::create([
             'type' => 'receivable',
@@ -268,14 +279,14 @@ class FinanceController extends Controller
             'items' => $items,
         ]);
 
-        $this->logActivity('created', 'debts', "Membuat invoice untuk {$clientName}: Rp" . number_format($total, 0, ',', '.') . " (" . count($items) . " item)", $debt, null, ['client_name' => $clientName, 'total' => $total, 'items' => $items]);
+        $this->logActivity('created', 'debts', "Membuat invoice untuk {$clientName}: Rp".number_format($total, 0, ',', '.').' ('.count($items).' item)', $debt, null, ['client_name' => $clientName, 'total' => $total, 'items' => $items]);
 
         return response()->json([
             'success' => true,
             'message' => 'Invoice berhasil dibuat.',
             'data' => [
                 'id' => $debt->id,
-                'refNumber' => 'INV-' . str_pad($debt->id, 6, '0', STR_PAD_LEFT),
+                'refNumber' => 'INV-'.str_pad($debt->id, 6, '0', STR_PAD_LEFT),
             ],
         ], 201);
     }
@@ -313,7 +324,7 @@ class FinanceController extends Controller
         }
 
         if (isset($validated['items'])) {
-            $items = collect($validated['items'])->map(fn($item) => [
+            $items = collect($validated['items'])->map(fn ($item) => [
                 'nama_produk' => $item['nama_produk'],
                 'jumlah' => (int) $item['jumlah'],
                 'satuan' => $item['satuan'],
@@ -322,12 +333,12 @@ class FinanceController extends Controller
             ])->toArray();
 
             $debt->items = $items;
-            $debt->amount = collect($items)->sum(fn($i) => ($i['harga'] * $i['jumlah']) - $i['diskon']);
+            $debt->amount = collect($items)->sum(fn ($i) => ($i['harga'] * $i['jumlah']) - $i['diskon']);
         }
 
         $debt->save();
 
-        $invNumber = $debt->kodeinvoice ?: ('INV-' . str_pad($debt->id, 6, '0', STR_PAD_LEFT));
+        $invNumber = $debt->kodeinvoice ?: ('INV-'.str_pad($debt->id, 6, '0', STR_PAD_LEFT));
         $this->logActivity('updated', 'debts', "Mengubah invoice {$invNumber} ({$debt->client_name})", $debt, $oldValues, $validated);
 
         return response()->json([
@@ -347,13 +358,13 @@ class FinanceController extends Controller
             ], 422);
         }
 
-        $invNumber = $debt->kodeinvoice ?: ('INV-' . str_pad($debt->id, 6, '0', STR_PAD_LEFT));
+        $invNumber = $debt->kodeinvoice ?: ('INV-'.str_pad($debt->id, 6, '0', STR_PAD_LEFT));
         $oldData = ['client_name' => $debt->client_name, 'amount' => $debt->amount, 'status' => $debt->status];
 
         $debt->payments()->delete();
         $debt->delete();
 
-        $this->logActivity('deleted', 'debts', "Menghapus invoice {$invNumber} ({$oldData['client_name']}) - Rp" . number_format($oldData['amount'], 0, ',', '.'), null, $oldData);
+        $this->logActivity('deleted', 'debts', "Menghapus invoice {$invNumber} ({$oldData['client_name']}) - Rp".number_format($oldData['amount'], 0, ',', '.'), null, $oldData);
 
         return response()->json([
             'success' => true,
@@ -372,7 +383,7 @@ class FinanceController extends Controller
         } else {
             // LUNASKAN: Buat pembayaran penuh ke bank pertama (BCA)
             $bank = \App\Models\Bank::orderBy('id')->first();
-            if (!$bank) {
+            if (! $bank) {
                 return response()->json(['success' => false, 'message' => 'Silakan buat data Bank terlebih dahulu.'], 422);
             }
 
@@ -385,8 +396,8 @@ class FinanceController extends Controller
         }
 
         $debt->refresh();
-        $invNumber = $debt->kodeinvoice ?: ('INV-' . str_pad($debt->id, 6, '0', STR_PAD_LEFT));
-        
+        $invNumber = $debt->kodeinvoice ?: ('INV-'.str_pad($debt->id, 6, '0', STR_PAD_LEFT));
+
         return response()->json([
             'success' => true,
             'message' => $debt->status === 'paid' ? 'Invoice ditandai LUNAS.' : 'Invoice ditandai BELUM LUNAS.',

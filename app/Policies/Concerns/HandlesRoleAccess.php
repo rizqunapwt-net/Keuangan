@@ -10,6 +10,7 @@ trait HandlesRoleAccess
      * Role names as constants for maintainability
      */
     protected const ROLE_ADMIN = 'Admin';
+
     protected const ROLE_KASIR = 'Kasir';
 
     /**

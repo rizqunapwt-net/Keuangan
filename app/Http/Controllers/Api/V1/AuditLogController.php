@@ -26,7 +26,7 @@ class AuditLogController extends Controller
         if ($request->has('start_date') && $request->has('end_date')) {
             $query->whereBetween('created_at', [
                 $request->start_date,
-                $request->end_date
+                $request->end_date,
             ]);
         }
 
@@ -35,7 +35,7 @@ class AuditLogController extends Controller
         }
 
         if ($request->has('search') && $request->search) {
-            $query->where('description', 'like', '%' . $request->search . '%');
+            $query->where('description', 'like', '%'.$request->search.'%');
         }
 
         return response()->json(

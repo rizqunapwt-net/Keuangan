@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\AuditLog;
 use App\Models\Accounting\Account;
+use App\Models\AuditLog;
 use App\Models\Bank;
 use App\Models\CashTransaction;
 use App\Models\Contact;

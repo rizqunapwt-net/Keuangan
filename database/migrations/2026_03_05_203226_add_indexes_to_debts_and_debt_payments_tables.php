@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Add indexes for better query performance on filtering and sorting.
      */
     public function up(): void

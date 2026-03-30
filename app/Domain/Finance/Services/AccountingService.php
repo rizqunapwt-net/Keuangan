@@ -2,9 +2,9 @@
 
 namespace App\Domain\Finance\Services;
 
-use App\Models\Expense;
 use App\Models\Accounting\Journal;
 use App\Models\Accounting\JournalEntry;
+use App\Models\Expense;
 use Illuminate\Support\Facades\DB;
 
 class AccountingService

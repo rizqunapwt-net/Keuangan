@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -139,7 +139,7 @@ return new class extends Migration
                 $hasEntries = DB::table('accounting_journal_entries')
                     ->where('account_id', $accountId)
                     ->exists();
-                if (!$hasEntries) {
+                if (! $hasEntries) {
                     DB::table('accounting_accounts')->where('id', $accountId)->delete();
                 }
             }

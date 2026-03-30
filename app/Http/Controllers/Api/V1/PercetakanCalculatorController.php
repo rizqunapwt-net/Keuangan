@@ -10,9 +10,7 @@ use InvalidArgumentException;
 
 class PercetakanCalculatorController extends Controller
 {
-    public function __construct(protected PrintingCalculator $calculator)
-    {
-    }
+    public function __construct(protected PrintingCalculator $calculator) {}
 
     public function calculate(Request $request): JsonResponse
     {

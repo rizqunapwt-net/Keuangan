@@ -3,13 +3,13 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class CashFlowExport implements FromCollection, WithHeadings, WithTitle, WithStyles, WithColumnWidths
+class CashFlowExport implements FromCollection, WithColumnWidths, WithHeadings, WithStyles, WithTitle
 {
     public function __construct(
         private array $data,
@@ -55,9 +55,9 @@ class CashFlowExport implements FromCollection, WithHeadings, WithTitle, WithSty
     {
         return [
             ['LAPORAN ARUS KAS'],
-            ['Periode: ' . $this->start . ' s/d ' . $this->end],
+            ['Periode: '.$this->start.' s/d '.$this->end],
             [''],
-            ['Kategori', 'Keterangan', 'Jumlah (Rp)']
+            ['Kategori', 'Keterangan', 'Jumlah (Rp)'],
         ];
     }
 

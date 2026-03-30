@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 class SyncPaidInvoicesCommand extends Command
 {
     protected $signature = 'invoices:sync-payments {--dry-run : Show what would be synced without making changes}';
+
     protected $description = 'Create payment records for old invoices marked as paid but missing DebtPayment entries';
 
     public function handle(): int
@@ -24,39 +25,42 @@ class SyncPaidInvoicesCommand extends Command
             ->whereDoesntHave('payments')
             ->get();
 
-        $this->info("=== Sync Paid Invoices to Buku Kas ===");
+        $this->info('=== Sync Paid Invoices to Buku Kas ===');
         $this->info("Paid invoices without payment records: {$paidWithoutPayment->count()}");
 
         if ($paidWithoutPayment->isEmpty()) {
             $this->info('✅ All paid invoices already have payment records!');
+
             return 0;
         }
 
         // Get default bank (first bank)
         $bank = Bank::orderBy('id')->first();
-        if (!$bank) {
+        if (! $bank) {
             $this->error('❌ No bank found! Please create a bank account first.');
+
             return 1;
         }
 
-        $this->info("Default bank: {$bank->name} (current balance: Rp " . number_format($bank->balance, 0, ',', '.') . ")");
+        $this->info("Default bank: {$bank->name} (current balance: Rp ".number_format($bank->balance, 0, ',', '.').')');
 
         if ($dryRun) {
-            $this->warn("🔍 DRY RUN — no changes will be made");
+            $this->warn('🔍 DRY RUN — no changes will be made');
             $this->newLine();
-            
+
             $totalAmount = 0;
             foreach ($paidWithoutPayment as $debt) {
                 $amount = (float) $debt->amount;
                 $totalAmount += $amount;
-                $this->line("  📝 {$debt->kodeinvoice} | {$debt->client_name} | Rp " . number_format($amount, 0, ',', '.') . " | {$debt->date->format('Y-m-d')}");
+                $this->line("  📝 {$debt->kodeinvoice} | {$debt->client_name} | Rp ".number_format($amount, 0, ',', '.')." | {$debt->date->format('Y-m-d')}");
             }
-            
+
             $this->newLine();
-            $this->info("Total would be synced: Rp " . number_format($totalAmount, 0, ',', '.'));
-            $this->info("New bank balance would be: Rp " . number_format((float)$bank->balance + $totalAmount, 0, ',', '.'));
+            $this->info('Total would be synced: Rp '.number_format($totalAmount, 0, ',', '.'));
+            $this->info('New bank balance would be: Rp '.number_format((float) $bank->balance + $totalAmount, 0, ',', '.'));
             $this->newLine();
-            $this->warn("Run without --dry-run to apply changes.");
+            $this->warn('Run without --dry-run to apply changes.');
+
             return 0;
         }
 
@@ -104,11 +108,11 @@ class SyncPaidInvoicesCommand extends Command
         if ($errors > 0) {
             $this->warn("⚠️  Errors: {$errors}");
         }
-        $this->info("💰 Total amount synced: Rp " . number_format($totalAmount, 0, ',', '.'));
-        
+        $this->info('💰 Total amount synced: Rp '.number_format($totalAmount, 0, ',', '.'));
+
         // Show updated bank balance
         $bank->refresh();
-        $this->info("🏦 Updated bank balance ({$bank->name}): Rp " . number_format($bank->balance, 0, ',', '.'));
+        $this->info("🏦 Updated bank balance ({$bank->name}): Rp ".number_format($bank->balance, 0, ',', '.'));
 
         $cashCount = CashTransaction::count();
         $this->info("📖 Total cash transactions now: {$cashCount}");

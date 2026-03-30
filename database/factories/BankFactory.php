@@ -16,7 +16,7 @@ class BankFactory extends Factory
         $openingBalance = fake()->numberBetween(1000000, 100000000);
 
         return [
-            'bank_code' => strtoupper(fake()->unique()->lexify('???')) . '-' . date('YmdHis'),
+            'bank_code' => strtoupper(fake()->unique()->lexify('???')).'-'.date('YmdHis'),
             'bank_name' => fake()->randomElement(['BCA', 'Mandiri', 'BNI', 'CIMB Niaga', 'Permata Bank']),
             'branch_name' => fake()->city(),
             'account_number' => fake()->unique()->numerify('##############'),

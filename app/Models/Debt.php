@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Debt extends Model
@@ -58,7 +58,7 @@ class Debt extends Model
                     $accounting = app(\App\Domain\Finance\Services\AccountingService::class);
                     $accounting->recordJournal([
                         'date' => $model->date ?? now(),
-                        'description' => 'Penjualan - ' . $model->client_name,
+                        'description' => 'Penjualan - '.$model->client_name,
                         'reference' => $model->kodeinvoice ?? '#'.$model->id,
                         'items' => [
                             [
@@ -114,7 +114,7 @@ class Debt extends Model
     public function updateStatus(): void
     {
         $this->paid_amount = $this->payments()->sum('amount');
-        
+
         if ($this->paid_amount <= 0) {
             $this->status = 'unpaid';
         } elseif ($this->paid_amount >= $this->amount) {
@@ -122,7 +122,7 @@ class Debt extends Model
         } else {
             $this->status = 'partial';
         }
-        
+
         $this->save();
     }
 }
