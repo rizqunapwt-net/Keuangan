@@ -83,6 +83,7 @@ class Debt extends Model
         'status',
         'date',
         'due_date',
+        'contact_id',
         'client_name',
         'client_phone',
         'description',

@@ -23,15 +23,19 @@ return new class extends Migration
             'authors',
             'marketplaces',
         ];
+
+        $isPostgres = DB::getDriverName() === 'pgsql';
+        $cascade = $isPostgres ? ' CASCADE' : '';
+
         foreach ($tablesToDrop as $table) {
-            DB::statement("DROP TABLE IF EXISTS \"{$table}\" CASCADE");
+            DB::statement("DROP TABLE IF EXISTS \"{$table}\"{$cascade}");
         }
 
         // =====================================================
         // 2. DROP DUPLICATE accounting_expenses TABLE
         //    Keep 'expenses' (26 cols, more complete)
         // =====================================================
-        DB::statement('DROP TABLE IF EXISTS "accounting_expenses" CASCADE');
+        DB::statement("DROP TABLE IF EXISTS \"accounting_expenses\"{$cascade}");
 
         // =====================================================
         // 3. FIX PRICE TIERS — Buku Softcover

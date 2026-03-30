@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Debt;
 use App\Models\DebtPayment;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,7 +16,9 @@ class DebtAuditLoggingTest extends TestCase
 
     public function test_deleting_debt_logs_deleted_event_for_debt_and_cascaded_payments(): void
     {
+        $this->seed(RolePermissionSeeder::class);
         $user = User::factory()->create();
+        $this->actingAsWithRole($user, 'Admin');
 
         $debt = Debt::create([
             'type' => 'receivable',
@@ -58,7 +61,10 @@ class DebtAuditLoggingTest extends TestCase
 
     public function test_deleting_payment_without_bank_still_creates_audit_log(): void
     {
+        $this->seed(RolePermissionSeeder::class);
+        /** @var User $user */
         $user = User::factory()->create();
+        $this->actingAsWithRole($user, 'Admin');
 
         $debt = Debt::create([
             'type' => 'receivable',

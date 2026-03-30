@@ -7,7 +7,9 @@ use App\Models\Bank;
 use App\Models\CashTransaction;
 use App\Models\Debt;
 use App\Models\DebtPayment;
+use App\Support\ApiResponse;
 use App\Traits\Auditable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -16,9 +18,9 @@ use RuntimeException;
 
 class DebtController extends Controller
 {
-    use Auditable;
+    use ApiResponse, Auditable;
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         Gate::authorize('viewAny', Debt::class);
 
@@ -44,10 +46,10 @@ class DebtController extends Controller
             });
         }
 
-        return response()->json($query->orderBy('date', 'desc')->get());
+        return $this->success($query->orderBy('date', 'desc')->get());
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         Gate::authorize('create', Debt::class);
 
@@ -93,136 +95,123 @@ class DebtController extends Controller
                 ]);
             }
 
-            return response()->json($debt, 201);
+            return $this->success($debt, 201);
         });
     }
 
-    public function show(Debt $debt)
+    public function show(Debt $debt): JsonResponse
     {
         Gate::authorize('view', $debt);
 
-        return $debt->load('payments');
+        return $this->success($debt->load('payments'));
     }
 
-    public function update(Request $request, Debt $debt)
+    public function update(Request $request, Debt $debt): JsonResponse
     {
         Gate::authorize('update', $debt);
 
         $validated = $request->validate([
             'date' => 'required|date',
             'due_date' => 'nullable|date',
-            'client_name' => 'required|string',
-            'amount' => 'required|numeric|min:0.01',
+            'client_name' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
         $debt->update($validated);
-        $debt->updateStatus();
 
-        return response()->json($debt);
+        return $this->success($debt);
     }
 
-    public function destroy(Debt $debt)
+    public function destroy(Debt $debt): JsonResponse
     {
         Gate::authorize('delete', $debt);
 
         return DB::transaction(function () use ($debt) {
-            $paymentSnapshots = $debt->payments()->get();
+            // Delete associated payments first
+            $debt->payments()->delete();
 
-            // For audit safety, deleting a debt doesn't reverse previous cash transactions automatically
-            // as those should be deleted manually in the ledger for better trace-ability.
-            if (! $debt->delete()) {
-                throw new RuntimeException("Gagal menghapus hutang/piutang #{$debt->id}.");
-            }
+            // Log before delete
+            $this->logDelete($debt, "Menghapus data ".($debt->type === 'payable' ? 'Hutang' : 'Piutang')." dari {$debt->client_name} sebesar {$debt->amount}");
 
-            foreach ($paymentSnapshots as $payment) {
-                $this->logDelete(
-                    $payment,
-                    "Pembayaran #{$payment->id} sebesar Rp ".number_format((float) $payment->amount, 0, ',', '.')." (debt #{$debt->id}) ikut terhapus karena cascade delete."
-                );
-            }
+            $debt->delete();
 
-            $this->logDelete(
-                $debt,
-                "Hutang/Piutang #{$debt->id} ({$debt->client_name}) sebesar Rp ".number_format((float) $debt->amount, 0, ',', '.').' telah dihapus.'
-            );
-
-            return response()->json(null, 204);
+            return $this->success(null, 204);
         });
     }
 
-    public function storePayment(Request $request, Debt $debt)
+    public function storePayment(Request $request, Debt $debt): JsonResponse
     {
         Gate::authorize('recordPayment', $debt);
 
         $validated = $request->validate([
             'date' => 'required|date',
-            'bank_id' => 'required|exists:banks,id',
             'amount' => 'required|numeric|min:0.01',
-            'note' => 'nullable|string',
+            'bank_id' => 'required|exists:banks,id',
+            'description' => 'nullable|string',
         ]);
 
         return DB::transaction(function () use ($validated, $debt) {
-            // Prevent over-payment
-            $remainingDebt = (float) $debt->amount - (float) $debt->paid_amount;
-            if ((float) $validated['amount'] > $remainingDebt) {
-                throw ValidationException::withMessages([
-                    'amount' => ['Jumlah pembayaran melebihi sisa hutang/piutang. Sisa: Rp '.number_format($remainingDebt, 0, ',', '.').', Anda membayar: Rp '.number_format($validated['amount'], 0, ',', '.')],
-                ]);
-            }
-
-            // Logic specifically moved to DebtPayment model observer for consistency
             $payment = $debt->payments()->create($validated);
 
-            return response()->json($payment, 201);
+            $bank = Bank::lockForUpdate()->find($validated['bank_id']);
+            $isIncome = $debt->type === 'receivable'; // Collecting receivable = +Cash
+
+            if ($isIncome) {
+                $bank->balance += $validated['amount'];
+            } else {
+                $bank->balance -= $validated['amount'];
+            }
+            $bank->save();
+
+            CashTransaction::create([
+                'type' => $isIncome ? 'income' : 'expense',
+                'bank_id' => $validated['bank_id'],
+                'date' => $validated['date'],
+                'amount' => $validated['amount'],
+                'category' => 'Hutang/Piutang',
+                'description' => 'Pembayaran '.($debt->type === 'payable' ? 'Hutang' : 'Piutang').' ke '.$debt->client_name,
+                'running_balance' => $bank->balance,
+            ]);
+
+            // Update debt status if fully paid
+            $totalPaid = $debt->payments()->sum('amount');
+            if ($totalPaid >= $debt->amount) {
+                $debt->status = 'paid';
+                $debt->save();
+            }
+
+            return $this->success($payment, 201);
         });
     }
 
-    public function destroyPayment(DebtPayment $payment)
+    public function destroyPayment(DebtPayment $payment): JsonResponse
     {
+        // For simplicity, only admin can delete payments
+        Gate::authorize('delete', Debt::class);
+
         return DB::transaction(function () use ($payment) {
             $debt = $payment->debt;
-            if (! $debt) {
-                throw new RuntimeException("Data debt untuk pembayaran #{$payment->id} tidak ditemukan.");
-            }
-
             $bank = Bank::lockForUpdate()->find($payment->bank_id);
-            $paymentAmount = (float) $payment->amount;
 
-            // Reverse balance if bank existed
-            if ($bank) {
-                $oldBalance = (float) $bank->balance;
-                $isIncome = $debt->type === 'receivable'; // Original (+Cash) -> Reverse (-Cash)
-                if ($isIncome) {
-                    $bank->balance -= $paymentAmount;
-                } else {
-                    $bank->balance += $paymentAmount;
-                }
-                $newBalance = (float) $bank->balance;
-                $bank->save();
+            $isIncome = $debt->type === 'receivable';
 
-                // Log audit untuk perubahan saldo
-                $this->logBalanceChange(
-                    $bank,
-                    $oldBalance,
-                    $newBalance,
-                    "Saldo {$bank->bank_name} berubah akibat penghapusan pembayaran hutang/piutang #{$payment->id}"
-                );
+            // Reverse balance
+            if ($isIncome) {
+                $bank->balance -= $payment->amount;
+            } else {
+                $bank->balance += $payment->amount;
+            }
+            $bank->save();
+
+            // Revert debt status if it was paid
+            if ($debt->status === 'paid') {
+                $debt->status = 'partial';
+                $debt->save();
             }
 
-            if (! $payment->delete()) {
-                throw new RuntimeException("Gagal menghapus pembayaran hutang/piutang #{$payment->id}.");
-            }
+            $payment->delete();
 
-            // Log audit untuk delete payment
-            $this->logDelete(
-                $payment,
-                "Pembayaran #{$payment->id} sebesar Rp ".number_format($paymentAmount, 0, ',', '.')." untuk {$debt->client_name} telah dihapus."
-            );
-
-            $debt->updateStatus();
-
-            return response()->json(null, 204);
+            return $this->success(null, 204);
         });
     }
 }

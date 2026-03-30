@@ -24,12 +24,13 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Assign a role (web guard) and actAs the user via web guard.
-     * Routes use role:Admin,web so middleware checks Auth::guard('web')->user().
+     * Assign a role (web guard) and actAs the user via web and sanctum guards.
      */
     protected function actingAsWithRole(\App\Models\User $user, string $role): static
     {
         $user->assignRole(\Spatie\Permission\Models\Role::findByName($role, 'web'));
+
+        \Laravel\Sanctum\Sanctum::actingAs($user);
 
         return $this->actingAs($user);
     }

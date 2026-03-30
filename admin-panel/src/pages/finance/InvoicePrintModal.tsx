@@ -94,7 +94,7 @@ const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                 @media print { body { padding: 15px 20px; } }
             </style>
         </head><body>${content.innerHTML}
-            <script>window.onload = function() { window.print(); }<\/script>
+            <script>window.onload = function() { window.print(); }</script>
         </body></html>`);
         pw.document.close();
     };

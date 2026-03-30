@@ -69,6 +69,18 @@ class BankController extends Controller
     {
         Gate::authorize('delete', $bank);
 
+        if ($bank->cashTransactions()->exists()) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'message' => 'Gagal menghapus bank.',
+                    'errors' => [
+                        'bank' => ['Akun bank/kas tidak dapat dihapus karena sudah memiliki histori transaksi keuangan.'],
+                    ],
+                ],
+            ], 422);
+        }
+
         // Log audit sebelum delete
         $this->logDelete(
             $bank,

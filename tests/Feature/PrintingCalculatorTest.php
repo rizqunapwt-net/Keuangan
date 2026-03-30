@@ -137,6 +137,37 @@ class PrintingCalculatorTest extends TestCase
         $this->assertGreaterThan($softcoverResult['pricing']['total'], $hardcoverResult['pricing']['total']);
     }
 
+    public function test_calculate_kartu_nama_with_finishing(): void
+    {
+        $result = $this->calculator->calculateKartuNama(
+            quantity: 200,
+            printSides: '2_sides',
+            lamination: 'matte',
+            finishingOptions: ['hotprint']
+        );
+
+        $this->assertEquals('kartu_nama', $result['product_type']);
+        $this->assertEquals(200, $result['specifications']['quantity']);
+        $this->assertGreaterThan(0, $result['pricing']['finishing_total']);
+        $this->assertGreaterThan(0, $result['total_price']);
+    }
+
+    public function test_calculate_stiker_with_cutting(): void
+    {
+        $result = $this->calculator->calculateStiker(
+            width: 5,
+            height: 5,
+            sheetCount: 10,
+            material: 'vinyl',
+            cutType: 'kiss_cut'
+        );
+
+        $this->assertEquals('stiker', $result['product_type']);
+        $this->assertEquals('vinyl', $result['specifications']['material']);
+        $this->assertEquals('kiss_cut', $result['specifications']['cut_type']);
+        $this->assertGreaterThan(0, $result['pricing']['finishing_cost_per_unit']);
+    }
+
     public function test_production_time_estimation(): void
     {
         // Brosur should take 2 days
@@ -191,6 +222,9 @@ class PrintingCalculatorTest extends TestCase
             ->assertJsonStructure([
                 'success',
                 'data' => [
+                    'unit_price',
+                    'total_price',
+                    'estimated_days',
                     'product_type',
                     'specifications',
                     'pricing' => [
@@ -224,6 +258,10 @@ class PrintingCalculatorTest extends TestCase
             ->assertJsonStructure([
                 'success',
                 'data' => [
+                    'unit_price',
+                    'total_price',
+                    'estimated_days',
+                    'print_method',
                     'product_type',
                     'specifications' => [
                         'width_cm',
@@ -254,6 +292,10 @@ class PrintingCalculatorTest extends TestCase
             ->assertJsonStructure([
                 'success',
                 'data' => [
+                    'unit_price',
+                    'total_price',
+                    'estimated_days',
+                    'spine_width_mm',
                     'product_type',
                     'specifications' => [
                         'pages',
@@ -263,6 +305,70 @@ class PrintingCalculatorTest extends TestCase
                     ],
                     'pricing',
                     'production_time',
+                ],
+            ]);
+    }
+
+    public function test_calculate_kartu_nama_api(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/v1/percetakan/calculator/kartu-nama', [
+            'quantity' => 200,
+            'print_sides' => '2_sides',
+            'lamination' => 'matte',
+            'finishing' => ['hotprint'],
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'product_type',
+                    'unit_price',
+                    'total_price',
+                    'finishing_fees',
+                    'estimated_days',
+                    'specifications' => [
+                        'quantity',
+                        'paper_type',
+                        'print_sides',
+                    ],
+                    'pricing',
+                ],
+            ]);
+    }
+
+    public function test_calculate_stiker_api(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/v1/percetakan/calculator/stiker', [
+            'width_cm' => 5,
+            'height_cm' => 5,
+            'sheet_count' => 10,
+            'material' => 'vinyl',
+            'cut_type' => 'die_cut',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'product_type',
+                    'unit_price',
+                    'total_price',
+                    'estimated_days',
+                    'specifications' => [
+                        'width_cm',
+                        'height_cm',
+                        'sheet_count',
+                        'material',
+                        'cut_type',
+                    ],
+                    'pricing',
                 ],
             ]);
     }

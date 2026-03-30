@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\Route;
 // Public Invoice View (Accessible via QR Code)
 Route::get('/v/inv/{kodeinvoice}', [\App\Http\Controllers\PublicInvoiceController::class, 'show'])->name('public.invoice');
 
+// Password reset route (required by Laravel's built-in ResetPassword notification)
+Route::get('/reset-password/{token}', function (string $token) {
+    return redirect("/admin/login?reset_token={$token}");
+})->name('password.reset');
+
 // Explicit redirects for root and legacy paths
 Route::redirect('/', '/admin/dashboard');
 Route::redirect('/login', '/admin/login');

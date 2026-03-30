@@ -25,13 +25,13 @@ class UserManagementTest extends TestCase
     public function test_user_can_login_with_valid_credentials()
     {
         $response = $this->postJson('/api/v1/auth/login', [
-            'email' => 'admin@test.com',
+            'login' => 'admin@test.com',
             'password' => 'password',
             'device_name' => 'test-device',
         ]);
 
         $response->assertStatus(200);
-        $this->assertArrayHasKey('message', $response->json());
+        $this->assertArrayHasKey('message', $response->json('data'));
     }
 
     /** @test */
@@ -114,8 +114,8 @@ class UserManagementTest extends TestCase
     {
         $response = $this->actingAs($this->user)->postJson('/api/v1/auth/change-password', [
             'current_password' => 'password',
-            'password' => 'new-password',
-            'password_confirmation' => 'new-password',
+            'new_password' => 'New-Password123',
+            'new_password_confirmation' => 'New-Password123',
         ]);
 
         $response->assertStatus(200);
@@ -126,8 +126,8 @@ class UserManagementTest extends TestCase
     {
         $response = $this->actingAs($this->user)->postJson('/api/v1/auth/change-password', [
             'current_password' => 'wrong-password',
-            'password' => 'new-password',
-            'password_confirmation' => 'new-password',
+            'new_password' => 'New-Password123',
+            'new_password_confirmation' => 'New-Password123',
         ]);
 
         $response->assertStatus(422);
@@ -161,7 +161,8 @@ class UserManagementTest extends TestCase
         ]);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['email', 'password']);
+        $this->assertArrayHasKey('email', $response->json('error.errors'));
+        $this->assertArrayHasKey('password', $response->json('error.errors'));
     }
 
     /** @test */
@@ -170,8 +171,8 @@ class UserManagementTest extends TestCase
         $response = $this->actingAs($this->user)->postJson('/api/v1/users', [
             'name' => 'New User',
             'email' => 'newuser@test.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'New-Password123',
+            'password_confirmation' => 'New-Password123',
         ]);
 
         $response->assertStatus(201);

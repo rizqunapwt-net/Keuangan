@@ -13,8 +13,8 @@ class AuthenticationTest extends TestCase
 
     public function test_login_screen_can_be_rendered(): void
     {
-        // GET /login now serves React SPA (returns 200 in testing)
-        $response = $this->get('/login');
+        // GET /admin/login serves React SPA (returns 200 in testing)
+        $response = $this->get('/admin/login');
 
         $response->assertOk();
     }

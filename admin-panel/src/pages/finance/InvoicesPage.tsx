@@ -60,7 +60,7 @@ const InvoicesPage: React.FC = () => {
     const [printModalOpen, setPrintModalOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
     const [activeTab, setActiveTab] = useState('all');
-    const { } = useAuth();
+    useAuth();
 
     const [settings, setSettings] = useState<any>(() => {
         const saved = localStorage.getItem('app_settings');

@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use App\Enums\ExpenseStatus;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\JournalEntry;
+use App\Enums\ExpenseStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -89,7 +89,7 @@ class Expense extends Model
                         'date' => $expense->expense_date ?? now(),
                         'amount' => $expense->amount,
                         'category' => $expense->category ?? 'Biaya Operasional',
-                        'description' => 'Biaya: '.($expense->description ?? ($expense->expense_code ?? '#'.$expense->id)),
+                        'description' => 'Biaya: ' . ($expense->description ?? ($expense->expense_code ?? '#'.$expense->id)),
                         'running_balance' => $bank->balance,
                     ]);
 
@@ -97,13 +97,13 @@ class Expense extends Model
                     // Debit: Expense Account (account_id), Credit: Bank Utama (from bank relationship/default)
                     $expenseAccount = $expense->account_id ? \App\Models\Accounting\Account::find($expense->account_id) : null;
                     $bankAccount = $bank->account_id ? \App\Models\Accounting\Account::find($bank->account_id) : \App\Models\Accounting\Account::where('code', '1102')->first();
-
+                    
                     if ($expenseAccount && $bankAccount) {
                         try {
                             $accounting = app(\App\Domain\Finance\Services\AccountingService::class);
                             $accounting->recordJournal([
                                 'date' => $expense->expense_date ?? now(),
-                                'description' => 'Biaya - '.($expense->description ?? ($expense->expense_code ?? '#'.$expense->id)),
+                                'description' => 'Biaya - ' . ($expense->description ?? ($expense->expense_code ?? '#'.$expense->id)),
                                 'reference' => $expense->reference_number ?? ($expense->expense_code ?? '#'.$expense->id),
                                 'items' => [
                                     [
@@ -119,43 +119,10 @@ class Expense extends Model
                                 ],
                             ], auth()->id() ?? 1);
                         } catch (\Exception $e) {
-                            \Illuminate\Support\Facades\Log::error('Failed to record journal for expense: '.$e->getMessage());
+                            \Illuminate\Support\Facades\Log::error("Failed to record journal for expense: " . $e->getMessage());
                         }
                     }
                 }
-            }
-        });
-
-        static::deleted(function (self $expense) {
-            // Restore bank balance if deleted
-            if ($expense->bank_id) {
-                $bank = \App\Models\Bank::find($expense->bank_id);
-                if ($bank) {
-                    $bank->balance += $expense->amount;
-                    $bank->save();
-
-                    // Mark Cash Transactions as voided or delete them?
-                    // Usually we mark as voided for history.
-                    \App\Models\CashTransaction::where('bank_id', $expense->bank_id)
-                        ->where('amount', $expense->amount)
-                        ->where('date', $expense->expense_date)
-                        ->where('description', 'like', "%{$expense->expense_code}%")
-                        ->delete(); // For soft delete or just delete them if we want to remove mistake.
-                }
-            }
-
-            // Journal Reversal?
-            // Usually we create a reversal journal entry.
-            // But if it's a hard delete/soft delete of a mistake, maybe we just want it gone?
-            // Accounting-wise, we should reverse.
-            try {
-                $journal = \App\Models\Accounting\Journal::where('reference', $expense->reference_number ?? ($expense->expense_code ?? '#'.$expense->id))->first();
-                if ($journal && $journal->status !== 'draft') {
-                    $accounting = app(\App\Domain\Finance\Services\AccountingService::class);
-                    $accounting->reverseJournal($journal, auth()->id() ?? 1);
-                }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to reverse journal on expense delete: '.$e->getMessage());
             }
         });
     }

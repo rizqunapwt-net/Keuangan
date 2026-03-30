@@ -29,6 +29,7 @@ import {
   TransactionOutlined,
   AuditOutlined,
   GlobalOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -87,6 +88,10 @@ const BeratCalculatorPage = React.lazy(() => import('./pages/kalkulator/BeratCal
 
 // Settings
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
+
+// Admin
+const UserManagementPage = React.lazy(() => import('./pages/admin/UserManagementPage'));
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f8fafc' }}>
@@ -149,7 +154,8 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     },
 
     {
-      label: 'KEAMANAN', type: 'group', children: [
+      label: 'ADMIN', type: 'group', children: [
+        { key: '/admin/users', icon: <TeamOutlined style={{ color: '#8b5cf6' }} />, label: 'Pengguna' },
         { key: '/audit/logs', icon: <AuditOutlined style={{ color: '#6366f1' }} />, label: 'Log Aktivitas' },
         { key: '/user/sessions', icon: <GlobalOutlined style={{ color: '#14b8a6' }} />, label: 'Sesi Aktif' },
       ]
@@ -388,10 +394,12 @@ const App: React.FC = () => {
                           <Route path="/kalkulator/spine" element={<SpineCalculatorPage />} />
                           <Route path="/kalkulator/berat" element={<BeratCalculatorPage />} />
 
+                          <Route path="/admin/users" element={<UserManagementPage />} />
+
                           <Route path="/settings" element={<SettingsPage />} />
                           <Route path="/profile" element={<ProfilePage />} />
 
-                          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                          <Route path="*" element={<NotFoundPage />} />
                         </Routes>
                       </MainLayout>
                     </AuthGuard>

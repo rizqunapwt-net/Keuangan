@@ -31,14 +31,16 @@ class FinanceReportController extends Controller
     public function monthly(Request $request)
     {
         $year = $request->get('year', date('Y'));
+        $isSqlite = DB::getDriverName() === 'sqlite';
+        $monthExpr = $isSqlite ? "strftime('%m', date)" : "EXTRACT(MONTH FROM date)";
 
         $data = CashTransaction::select(
-            DB::raw('EXTRACT(MONTH FROM date) as month'),
+            DB::raw("{$monthExpr} as month"),
             DB::raw('SUM(CASE WHEN type = \'income\' THEN amount ELSE 0 END) as income'),
             DB::raw('SUM(CASE WHEN type = \'expense\' THEN amount ELSE 0 END) as expense')
         )
             ->whereYear('date', $year)
-            ->groupBy(DB::raw('EXTRACT(MONTH FROM date)'))
+            ->groupBy(DB::raw($monthExpr))
             ->orderBy('month', 'asc')
             ->get();
 
@@ -47,12 +49,15 @@ class FinanceReportController extends Controller
 
     public function yearly()
     {
+        $isSqlite = DB::getDriverName() === 'sqlite';
+        $yearExpr = $isSqlite ? "strftime('%Y', date)" : "EXTRACT(YEAR FROM date)";
+
         $data = CashTransaction::select(
-            DB::raw('EXTRACT(YEAR FROM date) as year'),
+            DB::raw("{$yearExpr} as year"),
             DB::raw('SUM(CASE WHEN type = \'income\' THEN amount ELSE 0 END) as income'),
             DB::raw('SUM(CASE WHEN type = \'expense\' THEN amount ELSE 0 END) as expense')
         )
-            ->groupBy(DB::raw('EXTRACT(YEAR FROM date)'))
+            ->groupBy(DB::raw($yearExpr))
             ->orderBy('year', 'asc')
             ->get();
 
