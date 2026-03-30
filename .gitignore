@@ -30,3 +30,5 @@ yarn-error.log
 nre_deploy.zip
 invoice_rizquna_dump.sql
 .tmp-invoice/
+*.pdf
+*.log

@@ -11,29 +11,24 @@ use Illuminate\Support\Str;
 
 class SyncOldInvoices extends Command
 {
-    protected $signature = 'sync:old-invoices';
+    protected $signature = 'sync:old-invoices {--force : Sinkronisasi ulang semua data}';
     protected $description = 'Sinksronisasi data invoice baru dari sistem lawas (8089) ke sistem kasir baru (8000)';
 
     public function handle()
     {
         $this->info("Memulai sinkronisasi invoice dari sistem lawas...");
 
-        // Ambil ID tertinggi dari referensi lama (asumsi kodeinvoice menggunakan ID lama)
-        // Kita bisa menyimpan last state ID di file atau DB. 
-        // Berhubung migrations tidak punya kolom "old_id", kita cari aja dari "refNumber" atau kodeinvoice.
-        // Tapi old invoices di DB itu ada yang ID-nya sampe 1770 ke atas dan sudah di-seed.
-        // Mari kita cari data source old app dari HTTP param.
+        // Jika force, mulai dari ID kecil.
+        $lastSyncId = $this->option('force') ? 0 : cache()->get('last_invoice_sync_id', 1770);
         
-        // Paling aman: kita simpan 'last_sync_id' di file cache, jika belum ada set 1770
-        $lastSyncId = cache()->get('last_invoice_sync_id', 1770);
-        $this->info("Mengambil tagihan dari Invoice App mulai ID > {$lastSyncId}");
+        // Catch up sedikit IDs untuk update status
+        $fetchId = max(0, $lastSyncId - 100);
+
+        $this->info("Mengambil tagihan dari Invoice App mulai ID > {$fetchId}");
 
         try {
-            // Karena command ini jalan di docker container keuangan_app yg satu host dengan invoice_app di cloudflare/network, 
-            // kita gunakan API URL `http://192.168.18.210:8089/api/export-sync` (karena dari host yang sama)
-            // Sebaiknya baca dari env, tapi hardcode saja juga bisa untuk environment lokal server
             $response = Http::timeout(30)->get("http://192.168.18.210:8089/api/export-sync", [
-                'last_id' => $lastSyncId
+                'last_id' => $fetchId
             ]);
 
             if (!$response->successful()) {
@@ -47,39 +42,55 @@ class SyncOldInvoices extends Command
                 return;
             }
 
-            // GROUP BY kodeinvoice (or a unique order identifier)
-            // If kodeinvoice is empty, we use a combination of id/client/date to avoid grouping everything together.
             $grouped = collect($invoices)->groupBy(function($item) {
                 return $item['kodeinvoice'] ?: ('TMP-' . $item['id']);
             });
 
             $count = 0;
+            $maxId = $lastSyncId;
+
             foreach ($grouped as $kode => $rows) {
                 $first = $rows->first();
                 $items = [];
                 $totalAmount = 0;
+                $totalDiscount = 0;
 
                 foreach ($rows as $row) {
+                    $maxId = max($maxId, (int)$row['id']);
+                    $qty = (int)($row['jumlah'] ?: 1);
+                    $unitPrice = (float)($row['htm'] ?: $row['harga'] ?: 0);
+                    $itemDiscount = (float)($row['diskon'] ?: 0);
+
                     if (!empty($row['nama_produk'])) {
                         $items[] = [
                             'nama_produk' => $row['nama_produk'],
-                            'jumlah' => $row['jumlah'] ?: 1,
-                            'satuan' => 'Pcs',
-                            'harga' => (float) ($row['htm'] ?: 0),
-                            'diskon' => (float) ($row['diskon'] ?: 0),
+                            'jumlah' => $qty,
+                            'satuan' => $row['satuan'] ?: 'Pcs',
+                            'harga' => $unitPrice,
+                            'diskon' => $itemDiscount,
                         ];
                     }
-                    // Accumulate price if the source provides per-item price
-                    // Usually 'harga' in the export-sync might be the TOTAL or the ITEM price.
-                    // If multiple rows have the same kodeinvoice, it's likely item prices.
-                    $totalAmount += (float) ($row['harga'] ?? 0);
+                    
+                    // Kalkulasi Total: (Qty * Harga Satuan)
+                    $totalAmount += ($qty * $unitPrice);
+                    
+                    // Diskon di sistem lama biasanya per BARIS atau global per invoice tapi terekam di baris.
+                    // Jika satu invoice memiliki multiple rows dengan diskon yang sama (misal 200rb) di tiap baris, 
+                    // ini bisa menjebak. Tapi biasanya diskon akumulatif atau diletakkan di satu baris.
+                    // Namun di API Bapak, diskon di record per row (id 1776 diskon 200rb, id 1777 diskon 200rb).
+                    // Tunggu, mari kita cek apakah diskon itu per invoice atau per item.
+                    // Di data moa: id 1773 diskon 250rb.
+                    // Di data xhf: id 1776, 1777, 1778 diskon 200rb (tengah), 200rb (tengah), 0 (bawah).
+                    // Ini menandakan diskon mungkin PER BARIS.
+                    $totalDiscount += $itemDiscount;
                 }
 
+                $finalAmount = max(0, $totalAmount - $totalDiscount);
+                
                 $status = (strtolower($first['statusbayar']) === 'lunas') ? 'paid' : 'unpaid';
-                $paidAmount = ($status === 'paid') ? $totalAmount : 0;
+                $paidAmount = ($status === 'paid') ? $finalAmount : 0;
                 $date = $first['tanggal'] ? Carbon::parse($first['tanggal']) : now();
 
-                // Check if already exists to avoid duplicates
                 $invoiceNumber = $kode;
                 if (strpos($invoiceNumber, 'TMP-') === 0) {
                     $invoiceNumber = sprintf('%d-%s-%s-%s', $first['id'], strtolower(Str::random(3)), $date->format('m'), $date->format('Y'));
@@ -90,23 +101,22 @@ class SyncOldInvoices extends Command
                     [
                         'type' => 'receivable',
                         'client_name' => $first['nama'] ?? 'Umum',
-                        'amount' => $totalAmount,
+                        'amount' => $finalAmount,
                         'paid_amount' => $paidAmount,
                         'status' => $status,
                         'date' => $date->toDateString(),
                         'description' => "Sinkronisasi dari App Lama (" . count($rows) . " item)",
                         'items' => json_encode($items),
-                        'created_at' => now(),
-                        'updated_at' => now()
+                        'updated_at' => now(),
+                        'created_at' => DB::raw("COALESCE((SELECT created_at FROM debts d2 WHERE d2.kodeinvoice = '" . $invoiceNumber . "' LIMIT 1), '" . now() . "')"),
                     ]
                 );
 
-                $lastSyncId = max($lastSyncId, ...$rows->pluck('id')->toArray());
                 $count++;
             }
 
-            cache()->put('last_invoice_sync_id', $lastSyncId, now()->addYear());
-            $this->info("Berhasil sinkronisasi {$count} invoice baru. Last ID: {$lastSyncId}");
+            cache()->put('last_invoice_sync_id', $maxId, now()->addYear());
+            $this->info("Berhasil sinkronisasi/update {$count} invoice. Last ID: {$maxId}");
 
         } catch (\Exception $e) {
             $this->error("Terjadi kesalahan: " . $e->getMessage());

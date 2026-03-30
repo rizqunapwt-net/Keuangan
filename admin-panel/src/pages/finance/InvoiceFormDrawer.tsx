@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Drawer, Form, Input, Button, Select, DatePicker, message, Space, InputNumber, Typography, Divider, Row, Col, Popconfirm } from 'antd';
+import { Drawer, Form, Input, Button, Select, DatePicker, message, Space, InputNumber, Typography, Divider, Row, Col, Popconfirm, AutoComplete } from 'antd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     PlusOutlined,
@@ -193,32 +193,18 @@ const InvoiceFormDrawer: React.FC<InvoiceFormDrawerProps> = ({ open, onClose, on
                         label={<Text strong><UserOutlined /> Nama Pelanggan</Text>}
                         rules={[{ required: true, message: 'Masukkan nama pelanggan' }]}
                     >
-                        <Select
-                            showSearch
+                        <AutoComplete
                             allowClear
-                            mode={undefined}
                             placeholder="Ketik atau pilih pelanggan..."
                             size="large"
                             style={{ width: '100%' }}
-                            optionFilterProp="children"
                             options={contacts.map((c: any) => ({
                                 value: c.name,
                                 label: c.name,
                             }))}
-                            // Allow free-text entry
                             filterOption={(input, option) =>
-                                String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                                String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())
                             }
-                            onSearch={() => {}}
-                            // If user types something not in the dropdown, let them use it
-                            dropdownRender={(menu) => (
-                                <>
-                                    {menu}
-                                    <div style={{ padding: '4px 8px', color: '#aaa', fontSize: 11, borderTop: '1px solid #f0f0f0' }}>
-                                        Ketik nama baru jika belum terdaftar
-                                    </div>
-                                </>
-                            )}
                         />
                     </Form.Item>
 
