@@ -12,7 +12,3 @@ Artisan::command('inspire', function () {
 Schedule::command(AuditExportCommand::class)
     ->monthlyOn(1, '00:20')
     ->withoutOverlapping();
-
-Schedule::command(\App\Console\Commands\SyncOldInvoices::class)
-    ->everyFiveMinutes()
-    ->withoutOverlapping();

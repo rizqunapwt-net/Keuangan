@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Accounting\Expense;
+use App\Models\Expense;
 use App\Models\Debt;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;

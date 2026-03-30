@@ -23,6 +23,7 @@
 /public/admin
 /admin-panel/node_modules
 /admin-panel/dist
+/mcp-server/node_modules
 
 # Misc
 npm-debug.log

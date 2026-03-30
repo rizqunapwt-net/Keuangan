@@ -6,9 +6,7 @@ use App\Domain\Finance\Services\AccountingService;
 use App\Domain\Finance\Services\ReportService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Finance\StoreExpenseRequest;
-use App\Http\Requests\Finance\StoreJournalRequest;
 use App\Models\Accounting\Account;
-use App\Models\Accounting\Journal;
 use App\Models\Contact;
 use App\Models\Debt;
 use App\Models\Expense;
@@ -150,17 +148,7 @@ class FinanceController extends Controller
         ]);
     }
 
-    public function journals(): JsonResponse
-    {
-        $journals = Journal::with(['entries.account', 'user'])
-            ->latest('date')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $journals,
-        ]);
-    }
+    // ═══════ INVOICES ═══════
 
     public function invoices(Request $request): JsonResponse
     {
@@ -355,19 +343,27 @@ class FinanceController extends Controller
         $debt = Debt::where('type', 'receivable')->findOrFail($id);
         $oldStatus = $debt->status;
 
-        if ($debt->status === 'paid') {
-            $debt->status = 'unpaid';
-            $debt->paid_amount = 0;
+        if ($debt->status === 'paid' || $debt->status === 'lunas') {
+            // Jika membatalkan lunas, hapus semua pembayaran terkait
+            $debt->payments()->delete();
         } else {
-            $debt->status = 'paid';
-            $debt->paid_amount = $debt->amount;
+            // LUNASKAN: Buat pembayaran penuh ke bank pertama (BCA)
+            $bank = \App\Models\Bank::orderBy('id')->first();
+            if (!$bank) {
+                return response()->json(['success' => false, 'message' => 'Silakan buat data Bank terlebih dahulu.'], 422);
+            }
+
+            $debt->payments()->create([
+                'bank_id' => $bank->id,
+                'date' => now(),
+                'amount' => $debt->amount - $debt->paid_amount,
+                'note' => 'Pelunasan otomatis dari toggle status',
+            ]);
         }
 
-        $debt->save();
-
+        $debt->refresh();
         $invNumber = $debt->kodeinvoice ?: ('INV-' . str_pad($debt->id, 6, '0', STR_PAD_LEFT));
-        $this->logActivity('status_changed', 'debts', "Mengubah status invoice {$invNumber} ({$debt->client_name}): {$oldStatus} → {$debt->status}", $debt, ['status' => $oldStatus], ['status' => $debt->status]);
-
+        
         return response()->json([
             'success' => true,
             'message' => $debt->status === 'paid' ? 'Invoice ditandai LUNAS.' : 'Invoice ditandai BELUM LUNAS.',
@@ -375,67 +371,7 @@ class FinanceController extends Controller
         ]);
     }
 
-    public function storeJournal(Request $request, AccountingService $accounting): JsonResponse
-    {
-        $validated = $request->validate([
-            'date' => 'required|date',
-            'description' => 'required|string|max:500',
-            'reference' => 'nullable|string|max:100',
-            'items' => 'required|array|min:2',
-            'items.*.account_id' => 'required|exists:accounting_accounts,id',
-            'items.*.type' => 'required|in:debit,credit',
-            'items.*.amount' => 'required|numeric|min:0',
-        ]);
-
-        $debitTotal = collect($request->items)->filter(fn ($i) => $i['type'] === 'debit')->sum('amount');
-        $creditTotal = collect($request->items)->filter(fn ($i) => $i['type'] === 'credit')->sum('amount');
-
-        if ($debitTotal != $creditTotal) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Total Debit dan Credit tidak seimbang.',
-            ], 422);
-        }
-
-        try {
-            $journal = $accounting->recordJournal($validated, auth()->id());
-
-            $this->logActivity('created', 'journals', "Mencatat jurnal: {$request->description}", $journal, null, $validated);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Jurnal berhasil dicatat.',
-                'data' => $journal,
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mencatat jurnal: '.$e->getMessage(),
-            ], 500);
-        }
-    }
-
-    public function reverseJournal(int $journalId, AccountingService $accounting): JsonResponse
-    {
-        $journal = Journal::findOrFail($journalId);
-
-        try {
-            $reversed = $accounting->reverseJournal($journal, auth()->id());
-
-            $this->logActivity('voided', 'journals', "Membalik jurnal #{$journal->id}: {$journal->description}", $journal, ['status' => 'active'], ['status' => 'reversed']);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Jurnal berhasil dibalik.',
-                'data' => $reversed,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal membalik jurnal: '.$e->getMessage(),
-            ], 500);
-        }
-    }
+    // ═══════ CONTACTS ═══════
 
     public function contacts(Request $request): JsonResponse
     {

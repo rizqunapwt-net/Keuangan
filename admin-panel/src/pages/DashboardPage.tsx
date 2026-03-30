@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Row, Col, Card, Typography, Button, Badge, Spin } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import {
     ArrowUpOutlined,
     ArrowDownOutlined,
@@ -30,6 +31,7 @@ const { Title, Text } = Typography;
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
 const DashboardPage: React.FC = () => {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState({
         invoices: [],
@@ -173,19 +175,6 @@ const DashboardPage: React.FC = () => {
                                 Pantau kesehatan finansial Rizquna Kasir Anda dalam satu tampilan cerdas. Semua data diperbarui secara real-time.
                             </Text>
                             <div style={{ marginTop: 24 }}>
-                                <Button 
-                                    size="large" 
-                                    style={{ borderRadius: 14, fontWeight: 700, height: 48, padding: '0 32px', color: '#0fb9b1', border: 'none' }}
-                                    onClick={() => {
-                                        const params = new URLSearchParams({
-                                            start_date: dayjs().startOf('month').format('YYYY-MM-DD'),
-                                            end_date: dayjs().endOf('month').format('YYYY-MM-DD'),
-                                        });
-                                        window.open(`${import.meta.env.VITE_API_URL}/finance/reports/profit-loss/excel?${params.toString()}`, '_blank');
-                                    }}
-                                >
-                                    Export Laporan Excel
-                                </Button>
                             </div>
                         </Col>
                     </Row>
@@ -200,6 +189,13 @@ const DashboardPage: React.FC = () => {
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 + (idx * 0.1) }}
+                            onClick={() => {
+                                if (stat.title === 'LABA BERSIH') navigate('/reports/profit-loss');
+                                if (stat.title === 'TOTAL PENJUALAN') navigate('/finance/invoices');
+                                if (stat.title === 'TOTAL PEMBELIAN') navigate('/finance/debts');
+                                if (stat.title === 'TOTAL BIAYA') navigate('/finance/expenses');
+                            }}
+                            style={{ cursor: 'pointer' }}
                         >
                             <Card className="premium-card" style={{ borderRadius: 20 }} bodyStyle={{ padding: '30px 24px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>

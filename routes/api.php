@@ -58,9 +58,6 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
             Route::put('/invoices/{id}', [FinanceController::class, 'updateInvoice'])->middleware('throttle:30,1');
             Route::delete('/invoices/{id}', [FinanceController::class, 'deleteInvoice'])->middleware('throttle:20,1');
             Route::patch('/invoices/{id}/toggle-paid', [FinanceController::class, 'togglePaidStatus'])->middleware('throttle:30,1');
-            Route::get('/journals', [FinanceController::class, 'journals']);
-            Route::post('/journals', [FinanceController::class, 'storeJournal'])->middleware('throttle:30,1');
-            Route::put('/journals/{journal}/reverse', [FinanceController::class, 'reverseJournal']);
 
             // Contacts
             Route::get('/contacts', [FinanceController::class, 'contacts']);

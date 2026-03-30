@@ -1,5 +1,5 @@
 import { Card, Typography, Space, DatePicker, Row, Col, Statistic, Table, Breadcrumb, message, Button } from 'antd';
-import { ExportOutlined, FileExcelOutlined } from '@ant-design/icons';
+import { ExportOutlined, FileExcelOutlined, LoadingOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import api from '../../api';
 import { useState, useEffect } from 'react';
@@ -16,13 +16,15 @@ const { RangePicker } = DatePicker;
 const ProfitLossPage: React.FC = () => {
     const [data, setData] = useState<ProfitLossData | null>(null);
     const [dates, setDates] = useState<[Dayjs, Dayjs]>([dayjs().startOf('month'), dayjs()]);
+    const [exportingExcel, setExportingExcel] = useState(false);
+    const [exportingPdf, setExportingPdf] = useState(false);
 
     const fetchReport = async () => {
         try {
-            const response = await api.get('/reports/profit-loss', {
+            const response = await api.get('/finance/reports/profit-loss', {
                 params: {
-                    startDate: dates[0].format('YYYY-MM-DD'),
-                    endDate: dates[1].format('YYYY-MM-DD'),
+                    start_date: dates[0].format('YYYY-MM-DD'),
+                    end_date: dates[1].format('YYYY-MM-DD'),
                 }
             });
             setData(response.data);
@@ -30,6 +32,38 @@ const ProfitLossPage: React.FC = () => {
             message.error('Gagal mengambil laporan Laba Rugi');
         } finally {
             // Done
+        }
+    };
+
+    const handleExport = async (type: 'excel' | 'pdf') => {
+        const setLoading = type === 'excel' ? setExportingExcel : setExportingPdf;
+        setLoading(true);
+        try {
+            const response = await api.get(`/finance/reports/profit-loss/${type}`, {
+                params: {
+                    start_date: dates[0].format('YYYY-MM-DD'),
+                    end_date: dates[1].format('YYYY-MM-DD'),
+                },
+                responseType: 'blob',
+            });
+            const ext = type === 'excel' ? 'xlsx' : 'pdf';
+            const mimeType = type === 'excel'
+                ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                : 'application/pdf';
+            const blob = new Blob([response.data], { type: mimeType });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `laba-rugi-${dates[0].format('YYYY-MM-DD')}_${dates[1].format('YYYY-MM-DD')}.${ext}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            message.success(`Berhasil mengunduh laporan ${type.toUpperCase()}`);
+        } catch {
+            message.error(`Gagal mengunduh laporan ${type.toUpperCase()}`);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -56,28 +90,18 @@ const ProfitLossPage: React.FC = () => {
                         className="rounded-lg"
                     />
                     <Button
-                        icon={<FileExcelOutlined />}
+                        icon={exportingExcel ? <LoadingOutlined /> : <FileExcelOutlined />}
                         className="text-green-600 border-green-600 hover:bg-green-50"
-                        onClick={() => {
-                            const params = new URLSearchParams({
-                                start_date: dates[0].format('YYYY-MM-DD'),
-                                end_date: dates[1].format('YYYY-MM-DD')
-                            });
-                            window.open(`${import.meta.env.VITE_API_URL}/finance/reports/profit-loss/excel?${params.toString()}`, '_blank');
-                        }}
+                        loading={exportingExcel}
+                        onClick={() => handleExport('excel')}
                     >
                         Export Excel
                     </Button>
                     <Button
                         type="primary"
-                        icon={<ExportOutlined />}
-                        onClick={() => {
-                            const params = new URLSearchParams({
-                                start_date: dates[0].format('YYYY-MM-DD'),
-                                end_date: dates[1].format('YYYY-MM-DD')
-                            });
-                            window.open(`${import.meta.env.VITE_API_URL}/finance/reports/profit-loss/pdf?${params.toString()}`, '_blank');
-                        }}
+                        icon={exportingPdf ? <LoadingOutlined /> : <ExportOutlined />}
+                        loading={exportingPdf}
+                        onClick={() => handleExport('pdf')}
                     >
                         Export PDF
                     </Button>

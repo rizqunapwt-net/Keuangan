@@ -171,35 +171,8 @@ class DebtController extends Controller
                 ]);
             }
 
-            $bank = Bank::lockForUpdate()->find($validated['bank_id']);
-            if (! $bank) {
-                throw ValidationException::withMessages([
-                    'bank_id' => ['Bank tidak ditemukan atau sudah dihapus.'],
-                ]);
-            }
-
-            $isIncome = $debt->type === 'receivable'; // Paying us = +Cash
-
-            if ($isIncome) {
-                $bank->balance += $validated['amount'];
-            } else {
-                $bank->balance -= $validated['amount'];
-            }
-            $bank->save();
-
+            // Logic specifically moved to DebtPayment model observer for consistency
             $payment = $debt->payments()->create($validated);
-
-            CashTransaction::create([
-                'type' => $isIncome ? 'income' : 'expense',
-                'bank_id' => $validated['bank_id'],
-                'date' => $validated['date'],
-                'amount' => $validated['amount'],
-                'category' => 'Cicilan Hutang/Piutang',
-                'description' => ($isIncome ? 'Terima Pembayaran' : 'Bayar Cicilan') . ' - ' . $debt->client_name,
-                'running_balance' => $bank->balance,
-            ]);
-
-            $debt->updateStatus(); // Recalculates paid_amount and status
 
             return response()->json($payment, 201);
         });

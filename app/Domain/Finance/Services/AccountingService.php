@@ -2,7 +2,7 @@
 
 namespace App\Domain\Finance\Services;
 
-use App\Models\Accounting\Expense;
+use App\Models\Expense;
 use App\Models\Accounting\Journal;
 use App\Models\Accounting\JournalEntry;
 use Illuminate\Support\Facades\DB;

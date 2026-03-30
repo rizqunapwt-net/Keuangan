@@ -34,12 +34,20 @@ const fmtPhpRp = (n: number | string | null | undefined): string => {
     return `Rp.${Number(n).toLocaleString('en-US')}`; 
 };
 
-// Exactly match PHP date: 11/02/2026 07:53:00
+// Format tanggal: DD/MM/YYYY (tanpa jam jika date-only)
 const fmtPhpDate = (d: string | Date): string => {
     if (!d) return '-';
-    const date = new Date(d);
+    const str = typeof d === 'string' ? d : d.toISOString();
+    // Jika date-only format YYYY-MM-DD, tampilkan tanggal saja tanpa jam
+    const dateOnlyMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnlyMatch) {
+        return `${dateOnlyMatch[3]}/${dateOnlyMatch[2]}/${dateOnlyMatch[1]}`;
+    }
+    // Jika ada timestamp lengkap
+    const date = new Date(str);
+    if (isNaN(date.getTime())) return '-';
     const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
 const InvoicesPage: React.FC = () => {
@@ -178,120 +186,135 @@ const InvoicesPage: React.FC = () => {
 
     const columns = [
         {
-            title: <span style={{ fontSize: 11 }}>No</span>,
+            title: <span style={{ fontSize: 10, color: '#666' }}>No</span>,
             key: 'no',
             width: 35,
             render: (_: any, __: any, index: number) => <span style={{ fontSize: 11 }}>{index + 1}</span>,
         },
         {
-            title: <span style={{ fontSize: 11 }}>Kode tagihan</span>,
+            title: <span style={{ fontSize: 10, color: '#666' }}>Kode tagihan</span>,
             dataIndex: 'invoice_number',
             key: 'invoice_number',
-            render: (text: string, record: any) => (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                    <Button 
-                        size="small" 
-                        type="primary" 
-                        style={{ 
-                            fontSize: 9, 
-                            fontWeight: 700, 
-                            borderRadius: 3,
-                            background: record.status === 'paid' ? '#28a745' : '#dc3545',
-                            border: 'none',
-                            minWidth: 70,
-                            padding: '0 4px',
-                            height: 18
-                        }}
-                        onClick={() => handlePrint(record)}
-                    >
-                        {text}
-                    </Button>
-                    <a href="#" style={{ fontSize: 9, color: '#007bff' }}>tambah item?</a>
-                </div>
-            ),
+            render: (text: string, record: any) => {
+                const isPaid = record.status === 'paid' || record.status === 'lunas';
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                        <Button 
+                            size="small" 
+                            style={{ 
+                                fontSize: 9, 
+                                fontWeight: 700, 
+                                borderRadius: 4,
+                                background: isPaid ? '#28a745' : '#dc3545',
+                                color: '#fff',
+                                border: 'none',
+                                minWidth: 80,
+                                padding: '4px 10px',
+                                height: 'auto',
+                                lineHeight: 'normal',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                            }}
+                            onClick={() => handlePrint(record)}
+                        >
+                            {text}
+                        </Button>
+                        <a href="#" style={{ fontSize: 9, color: '#007bff', fontWeight: 500, opacity: 0.8 }}>tambah item?</a>
+                    </div>
+                );
+            }
         },
         {
-            title: <span style={{ fontSize: 11 }}>Nama user</span>,
+            title: <span style={{ fontSize: 10, color: '#666' }}>Nama user</span>,
             key: 'client_name',
-            render: (record: any) => <span style={{ fontSize: 11 }}>{record.contact?.name || record.client_name || 'Umum'}</span>,
+            render: (record: any) => <span style={{ fontSize: 11, color: '#333' }}>{record.contact?.name || record.client_name || 'Umum'}</span>,
         },
         {
-            title: <span style={{ fontSize: 11 }}>Tanggal order</span>,
-            dataIndex: 'date',
+            title: <span style={{ fontSize: 10, color: '#666' }}>Tanggal order</span>,
+            dataIndex: 'created_at',
             key: 'date',
-            render: (date: string) => <span style={{ color: '#333', fontSize: 10, whiteSpace: 'nowrap' }}>{fmtPhpDate(date)}</span>,
+            render: (date: string) => <span style={{ color: '#555', fontSize: 10, whiteSpace: 'nowrap' }}>{fmtPhpDate(date)}</span>,
         },
         {
-            title: <span style={{ fontSize: 11 }}>Produk</span>,
+            title: <span style={{ fontSize: 10, color: '#666' }}>Produk</span>,
             dataIndex: '_item_name',
             key: 'produk',
-            render: (text: string) => <span style={{ fontSize: 11 }}>{text}</span>
+            render: (text: string) => <span style={{ fontSize: 11, color: '#333' }}>{text}</span>
         },
         {
-            title: <span style={{ fontSize: 11 }}>harga @</span>,
+            title: <span style={{ fontSize: 10, color: '#666' }}>harga @</span>,
             dataIndex: '_item_price',
             key: 'price',
             align: 'right' as const,
-            render: (v: number) => <span style={{ fontSize: 11 }}>{fmtPhpRp(v)}</span>,
+            render: (v: number) => <span style={{ fontSize: 11, color: '#333' }}>{fmtPhpRp(v)}</span>,
         },
         {
-            title: <span style={{ fontSize: 11 }}>disc</span>,
+            title: <span style={{ fontSize: 10, color: '#666' }}>disc</span>,
             dataIndex: '_item_discount',
             key: 'discount',
             align: 'right' as const,
-            render: (v: number) => <span style={{ fontSize: 11 }}>{fmtPhpRp(v)}</span>,
+            render: (v: number) => <span style={{ fontSize: 11, color: '#333' }}>{fmtPhpRp(v)}</span>,
         },
         {
-            title: <span style={{ fontSize: 11 }}>Total</span>,
+            title: <span style={{ fontSize: 10, color: '#666' }}>Total</span>,
             dataIndex: '_item_total',
             key: 'total',
             align: 'right' as const,
-            render: (v: number) => <span style={{ fontWeight: 700, fontSize: 11 }}>{fmtPhpRp(v)}</span>,
+            render: (v: number) => <span style={{ fontWeight: 700, fontSize: 11, color: '#000' }}>{fmtPhpRp(v)}</span>,
         },
         {
-            title: <span style={{ fontSize: 11 }}>Status bayar</span>,
+            title: <span style={{ fontSize: 10, color: '#666' }}>Status bayar</span>,
             dataIndex: 'status',
             key: 'status_text',
-            render: (status: string) => <span style={{ fontSize: 10 }}>{status === 'paid' ? 'lunas' : status}</span>,
+            render: (status: string) => {
+                const label = status === 'paid' ? 'lunas' : (status === 'unpaid' ? 'belum' : status);
+                return <span style={{ fontSize: 10, color: '#555' }}>{label}</span>;
+            }
         },
         {
-            title: <span style={{ fontSize: 11 }}>status pembayaran</span>,
+            title: <span style={{ fontSize: 10, color: '#666' }}>status pembayaran</span>,
             key: 'status_label',
-            render: (record: any) => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Tag 
-                        color={record.status === 'paid' ? '#28a745' : '#dc3545'}
-                        style={{ borderRadius: 3, fontWeight: 700, fontSize: 9, margin: 0, padding: '0 3px', lineHeight: '14px' }}
-                    >
-                        {record.status === 'paid' ? 'lunas' : record.status}
-                    </Tag>
-                    <Popconfirm
-                        title={record.status === 'paid' ? 'Batal tandai lunas?' : 'Tandai sebagai LUNAS?'}
-                        onConfirm={() => handleTogglePaid(record.id)}
-                        okText="Ya"
-                        cancelText="Batal"
-                    >
-                        <Button 
-                            type="primary" 
-                            size="small" 
-                            style={{ 
-                                padding: '0 2px', 
-                                height: 16, 
-                                background: '#28a745', 
-                                border: 'none',
-                                display: 'flex',
-                                alignItems: 'center',
-                                fontSize: 10
-                            }}
+            render: (record: any) => {
+                const isPaid = record.status === 'paid' || record.status === 'lunas';
+                return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Tag 
+                            color={isPaid ? '#28a745' : '#dc3545'}
+                            style={{ borderRadius: 3, fontWeight: 700, fontSize: 9, margin: 0, padding: '0 3px', lineHeight: '14px', border: 'none' }}
                         >
-                            <CheckCircleOutlined style={{ fontSize: 10 }} />
-                        </Button>
-                    </Popconfirm>
-                </div>
-            ),
+                            {isPaid ? 'lunas' : 'belum'}
+                        </Tag>
+                        <Popconfirm
+                            title={isPaid ? 'Batal tandai lunas?' : 'Tandai sebagai LUNAS?'}
+                            onConfirm={() => handleTogglePaid(record.id)}
+                            okText="Ya"
+                            cancelText="Batal"
+                        >
+                            <Button 
+                                size="small" 
+                                style={{ 
+                                    padding: '0 2px', 
+                                    height: 16, 
+                                    background: '#28a745', 
+                                    color: '#fff',
+                                    border: 'none',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    fontSize: 10,
+                                    borderRadius: 3
+                                }}
+                            >
+                                <CheckCircleOutlined style={{ fontSize: 10 }} />
+                            </Button>
+                        </Popconfirm>
+                    </div>
+                );
+            }
         },
         {
-            title: <span style={{ fontSize: 11 }}>aksi</span>,
+            title: <span style={{ fontSize: 10, color: '#666' }}>aksi</span>,
             key: 'actions',
             align: 'right' as const,
             width: 70,
@@ -299,7 +322,7 @@ const InvoicesPage: React.FC = () => {
                 <Space size={2}>
                     <Button
                         size="small"
-                        style={{ background: '#ffc107', border: 'none', color: '#000', padding: '0 4px', height: 20, width: 22 }}
+                        style={{ background: '#ffc107', border: 'none', color: '#000', padding: '0 4px', height: 20, width: 22, borderRadius: 3 }}
                         icon={<EditOutlined style={{ fontSize: 10 }} />}
                         onClick={() => handleEdit(record)}
                     />
@@ -314,7 +337,7 @@ const InvoicesPage: React.FC = () => {
                             type="primary"
                             danger
                             icon={<CloseOutlined style={{ fontSize: 10 }} />}
-                            style={{ background: '#dc3545', border: 'none', padding: '0 4px', height: 20, width: 22 }}
+                            style={{ background: '#dc3545', border: 'none', padding: '0 4px', height: 20, width: 22, borderRadius: 3 }}
                         />
                     </Popconfirm>
                 </Space>
