@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\Finance\ExpenseController;
 use App\Http\Controllers\Api\V1\FinanceController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\PercetakanCalculatorController;
 
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\UnifiedLoginController;
@@ -73,8 +74,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
             Route::delete('/accounts/{id}', [AccountController::class, 'destroy'])->middleware('throttle:20,1');
 
             // Expenses
-            Route::get('/expenses', [ExpenseController::class, 'index']);
-            Route::post('/expenses', [ExpenseController::class, 'store'])->middleware('throttle:30,1');
+            Route::get('/expenses', [FinanceController::class, 'expenses']);
+            Route::post('/expenses', [FinanceController::class, 'storeExpense'])->middleware('throttle:30,1');
             Route::get('/expenses/{expense}', [ExpenseController::class, 'show']);
             Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->middleware('throttle:30,1');
             Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->middleware('throttle:20,1');
@@ -120,7 +121,17 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function (): void {
 
         });
 
-
+        // ── Percetakan ──
+        Route::prefix('percetakan/calculator')->middleware(['throttle:60,1'])->group(function () {
+            Route::post('/calculate', [PercetakanCalculatorController::class, 'calculate']);
+            Route::post('/brosur', [PercetakanCalculatorController::class, 'calculateBrosur']);
+            Route::post('/spanduk', [PercetakanCalculatorController::class, 'calculateSpanduk']);
+            Route::post('/buku', [PercetakanCalculatorController::class, 'calculateBuku']);
+            Route::post('/kartu-nama', [PercetakanCalculatorController::class, 'calculateKartuNama']);
+            Route::post('/stiker', [PercetakanCalculatorController::class, 'calculateStiker']);
+            Route::get('/options', [PercetakanCalculatorController::class, 'getOptions']);
+            Route::post('/quick', [PercetakanCalculatorController::class, 'quickCalculate']);
+        });
 
         // ── Audit Logs (Security) ──
         Route::prefix('audit')->group(function () {

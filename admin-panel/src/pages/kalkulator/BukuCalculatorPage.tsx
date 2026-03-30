@@ -47,11 +47,16 @@ const BukuCalculatorPage: React.FC = () => {
         setLoading(true);
         try {
             const v = form.getFieldsValue();
-            const res = await api.post('/percetakan/calculator/calculate', {
-                product_id: prod.id, quantity: v.quantity || 25,
-                paper_size: v.paper_size, paper_type: v.paper_type,
-                page_count: v.page_count, color_mode: v.color_mode,
-                binding_type: v.binding_type, lamination: v.lamination,
+            const coverType = prod.id === 10 ? 'hardcover' : prod.id === 11 ? 'booklet' : 'softcover';
+            const res = await api.post('/percetakan/calculator/buku', {
+                quantity: v.quantity || 25,
+                pages: v.page_count,
+                size: v.paper_size,
+                cover_type: coverType,
+                paper_type: v.paper_type,
+                color_mode: v.color_mode,
+                binding_type: v.binding_type,
+                lamination: v.lamination,
             });
             if (res.data?.success) setResult(res.data.data);
         } catch (err: any) {

@@ -111,22 +111,45 @@ class FinanceController extends Controller
 
         $data = $query->get()->map(fn ($e) => [
             'id' => $e->id,
-            'refNumber' => $e->expense_code,
+            'refNumber' => $e->reference_number ?? $e->expense_code,
             'transDate' => $e->expense_date?->format('Y-m-d'),
-            'status' => $e->status,
+            'status' => $e->isVoided() ? 'void' : 'recorded',
             'amount' => (float) $e->amount,
             'description' => $e->description,
+            'category' => $e->category,
         ]);
 
         return response()->json(['success' => true, 'data' => $data]);
     }
 
-    public function storeExpense(StoreExpenseRequest $request): JsonResponse
+    public function storeExpense(Request $request): JsonResponse
     {
-        try {
-            $expense = $this->accountingService->recordExpense($request->validated(), auth()->id());
+        $validated = $request->validate([
+            'refNumber' => 'required|string',
+            'transDate' => 'required|date',
+            'accountId' => 'required|exists:accounting_accounts,id',
+            'payFromAccountId' => 'required|exists:accounting_accounts,id',
+            'amount' => 'required|numeric|min:0.01',
+            'description' => 'nullable|string|max:500',
+        ]);
 
-            $this->logActivity('created', 'expenses', "Mencatat biaya: {$request->description} - Rp" . number_format($request->amount, 0, ',', '.'), $expense, null, $request->validated());
+        try {
+            // Find the bank that is linked to the payFromAccountId
+            $bank = \App\Models\Bank::where('account_id', $validated['payFromAccountId'])->first();
+            
+            $expense = Expense::create([
+                'expense_date' => $validated['transDate'],
+                'reference_number' => $validated['refNumber'],
+                'account_id' => $validated['accountId'],
+                'bank_id' => $bank?->id,
+                'amount' => $validated['amount'],
+                'description' => $validated['description'],
+                'payment_method' => $bank ? $bank->bank_name : 'Cash',
+                'category' => 'Operasional',
+                'status' => \App\Enums\ExpenseStatus::APPROVED, // Directly approve
+            ]);
+
+            $this->logActivity('created', 'expenses', "Mencatat biaya: {$request->description} - Rp" . number_format($request->amount, 0, ',', '.'), $expense, null, $validated);
 
             return response()->json([
                 'success' => true,

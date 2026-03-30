@@ -2,321 +2,241 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Percetakan\Services\PrintingCalculator;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
-/**
- * Percetakan Calculator API Controller
- * 
- * Simple calculator for printing prices (spanduk, sticker, display)
- * Used by frontend and MCP agents
- */
 class PercetakanCalculatorController extends Controller
 {
-    /**
-     * Hardcoded pricing data (can be moved to database later)
-     */
-    private const PRODUCT_PRICES = [
-        // Spanduk (per m²)
-        'spanduk_vinyl_280' => 25000,
-        'spanduk_vinyl_340' => 32000,
-        'spanduk_vinyl_440' => 42000,
-        'spanduk_kain' => 35000,
-        'spanduk_canvas' => 65000,
-        'spanduk_albatros' => 28000,
-        'spanduk_luster' => 32000,
-        'spanduk_mesh' => 55000,
-        
-        // Sticker (per m²)
-        'sticker_vinyl' => 55000,
-        'sticker_ritrama' => 75000,
-        'sticker_one_way' => 95000,
-        
-        // Display (per unit, stand included)
-        'rollup_banner' => 150000,
-        'x_banner' => 100000,
-        'backdrop_portable' => 200000,
-        
-        // Flyer/Brosur (per 100 pcs, base price A4)
-        'flyer_art_paper_120gsm' => 8000,
-        'flyer_art_paper_150gsm' => 9500,
-        'flyer_art_paper_190gsm' => 12000,
-        'flyer_art_paper_230gsm' => 15000,
-        'flyer_art_paper_260gsm' => 18000,
-        'flyer_hvs_80gsm' => 6000,
-        'flyer_hvs_100gsm' => 7500,
-        'flyer_ivory_210gsm' => 14000,
-        'flyer_ivory_250gsm' => 17000,
-        'flyer_ivory_310gsm' => 21000,
-        
-        // Kartu Nama (per 100 pcs)
-        'kartu_nama_art_carton_260gsm' => 25000,
-        'kartu_nama_art_carton_310gsm' => 30000,
-        'kartu_nama_solid_white' => 35000,
-        'kartu_nama_transparent' => 45000,
-        
-        // NCR Form (per 100 sets, 2-4 ply)
-        'ncr_2ply_a4' => 18000,
-        'ncr_2ply_a5' => 12000,
-        'ncr_3ply_a4' => 24000,
-        'ncr_3ply_a5' => 16000,
-        'ncr_4ply_a4' => 30000,
-        'ncr_4ply_a5' => 20000,
-        
-        // Dokumen (per 100 pcs)
-        'amplop_f4' => 25000,
-        'amplop_a4' => 30000,
-        'map_kertas' => 35000,
-        
-        // Buku (per 50 pcs, per 100 pages)
-        'buku_softcover_a5' => 25000,
-        'buku_softcover_a4' => 35000,
-        'buku_hardcover_a5' => 45000,
-        'buku_hardcover_a4' => 60000,
-    ];
+    public function __construct(protected PrintingCalculator $calculator)
+    {
+    }
 
-    /**
-     * Finishing prices
-     */
-    private const FINISHING_PRICES = [
-        // Spanduk finishing
-        'mata_ayam' => 2000,
-        'mata_ayam_logam' => 3000,
-        'slongson' => 10000,
-        'lubang_kayu' => 15000,
-        'hemming' => 5000,
-        'lipat_saja' => 5000,
-        
-        // Brosur finishing
-        'laminasi_doff' => 200,
-        'laminasi_glossy' => 180,
-        'laminasi_elegant' => 350,
-        'lipat_2' => 50,
-        'lipat_3' => 80,
-        
-        // Sticker cutting
-        'kiss_cut' => 15000,
-        'die_cut' => 25000,
-        'square_cut' => 10000,
-    ];
-
-    /**
-     * Quantity discount tiers
-     */
-    private const QUANTITY_TIERS = [
-        'spanduk' => [
-            ['min' => 10, 'discount' => 8],
-            ['min' => 50, 'discount' => 16],
-            ['min' => 100, 'discount' => 24],
-        ],
-        'sticker' => [
-            ['min' => 10, 'discount' => 5],
-            ['min' => 50, 'discount' => 10],
-        ],
-        'rollup_banner' => [
-            ['min' => 5, 'discount' => 5],
-            ['min' => 10, 'discount' => 10],
-        ],
-    ];
-
-    /**
-     * Calculate printing price
-     * 
-     * @OA\Post(
-     *     path="/api/v1/percetakan/calculate",
-     *     summary="Calculate printing price",
-     *     tags={"Percetakan"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"category", "product_code", "quantity"},
-     *             @OA\Property(property="category", type="string", enum={"spanduk", "sticker", "display"}),
-     *             @OA\Property(property="product_code", type="string"),
-     *             @OA\Property(property="width_cm", type="number"),
-     *             @OA\Property(property="height_cm", type="number"),
-     *             @OA\Property(property="quantity", type="integer"),
-     *             @OA\Property(property="finishing", type="array", @OA\Items(type="string"))
-     *         )
-     *     )
-     * )
-     */
     public function calculate(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'category' => 'required|string|in:spanduk,sticker,display,flyer,kartu_nama,buku,ncr,dokumen',
-            'product_code' => 'required|string',
-            'width_cm' => 'nullable|numeric|min:1',
-            'height_cm' => 'nullable|numeric|min:1',
+            'product_id' => 'nullable|integer|required_without_all:category,product_code',
+            'category' => 'nullable|string|required_without_all:product_id,product_code',
+            'product_code' => 'nullable|string|required_without_all:product_id,category',
             'quantity' => 'required|integer|min:1',
+            'width' => 'nullable|numeric|min:0.1',
+            'height' => 'nullable|numeric|min:0.1',
+            'width_cm' => 'nullable|numeric|min:0.1',
+            'height_cm' => 'nullable|numeric|min:0.1',
+            'sheet_count' => 'nullable|integer|min:1',
+            'paper_type' => 'nullable|string',
+            'print_sides' => 'nullable|string',
+            'color_option' => 'nullable|string',
+            'lamination' => 'nullable|string',
+            'fold_type' => 'nullable|string',
+            'paper_size' => 'nullable|string',
+            'size' => 'nullable|string',
+            'page_count' => 'nullable|integer|min:8|max:2000',
             'pages' => 'nullable|integer|min:8|max:2000',
-            'ply' => 'nullable|integer|in:2,3,4', // For NCR
-            'size' => 'nullable|string|in:A3,A4,A5,A6,F4',
+            'color_mode' => 'nullable|string',
+            'binding_type' => 'nullable|string',
+            'cover_type' => 'nullable|string',
+            'material' => 'nullable|string',
+            'cut_type' => 'nullable|string',
+            'finishing' => 'nullable|array',
+            'finishing.*' => 'string',
+            'finishing_options' => 'nullable|array',
+            'finishing_options.*' => 'string',
+        ]);
+
+        return $this->respondSafely(fn (): array => $this->calculator->calculate($validated));
+    }
+
+    public function calculateBrosur(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'size' => 'nullable|string',
+            'paper_type' => 'nullable|string',
+            'color_option' => 'nullable|string',
+            'print_sides' => 'nullable|string',
+            'lamination' => 'nullable|string',
+            'fold_type' => 'nullable|string',
+            'finishing_options' => 'nullable|array',
+            'finishing_options.*' => 'string',
+        ]);
+
+        return $this->respondSafely(function () use ($validated): array {
+            $finishingOptions = $this->brosurFinishingFromRequest($validated);
+
+            return $this->calculator->calculateBrosur(
+                quantity: (int) $validated['quantity'],
+                size: (string) ($validated['size'] ?? 'A4'),
+                paperType: (string) ($validated['paper_type'] ?? 'art_paper_150gsm'),
+                colorOption: (string) ($validated['color_option'] ?? $validated['print_sides'] ?? '2_sides'),
+                finishingOptions: $finishingOptions,
+            );
+        });
+    }
+
+    public function calculateSpanduk(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'width' => 'nullable|numeric|min:0.1|required_without:width_cm',
+            'height' => 'nullable|numeric|min:0.1|required_without:height_cm',
+            'width_cm' => 'nullable|numeric|min:0.1|required_without:width',
+            'height_cm' => 'nullable|numeric|min:0.1|required_without:height',
+            'quantity' => 'required|integer|min:1',
+            'material' => 'nullable|string',
+            'product_code' => 'nullable|string',
+            'product_id' => 'nullable|integer',
             'finishing' => 'nullable|array',
             'finishing.*' => 'string',
         ]);
 
-        $category = $validated['category'];
-        $productCode = $validated['product_code'];
-        $widthCm = $validated['width_cm'] ?? null;
-        $heightCm = $validated['height_cm'] ?? null;
-        $quantity = $validated['quantity'];
-        $pages = $validated['pages'] ?? 100;
-        $size = $validated['size'] ?? 'A5';
-        $finishing = $validated['finishing'] ?? [];
+        return $this->respondSafely(function () use ($validated): array {
+            $material = (string) ($validated['material'] ?? $validated['product_code'] ?? $validated['product_id'] ?? 'vinyl');
 
-        // Convert cm to meters for area calculation
-        $widthM = $widthCm ? $widthCm / 100 : 1;
-        $heightM = $heightCm ? $heightCm / 100 : 1;
-        $area = ($category === 'spanduk' || $category === 'sticker') ? $widthM * $heightM : 0;
+            return $this->calculator->calculateSpanduk(
+                width: (float) ($validated['width'] ?? $validated['width_cm']),
+                height: (float) ($validated['height'] ?? $validated['height_cm']),
+                quantity: (int) $validated['quantity'],
+                material: $material,
+                finishingOptions: (array) ($validated['finishing'] ?? []),
+            );
+        });
+    }
 
-        // Get base price
-        $basePrice = self::PRODUCT_PRICES[$productCode] ?? 0;
+    public function calculateBuku(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'pages' => 'nullable|integer|min:8|max:2000',
+            'page_count' => 'nullable|integer|min:8|max:2000',
+            'size' => 'nullable|string',
+            'paper_size' => 'nullable|string',
+            'cover_type' => 'nullable|string',
+            'paper_type' => 'nullable|string',
+            'color_mode' => 'nullable|string',
+            'binding_type' => 'nullable|string',
+            'lamination' => 'nullable|string',
+        ]);
 
-        // Calculate billable quantity based on category
-        $billableQty = $quantity;
-        $unitPrice = $basePrice;
-        
-        if ($category === 'spanduk' || $category === 'sticker') {
-            // Area-based: m² × quantity (min 1 m²)
-            $billableQty = max($area, 1) * $quantity;
-        } elseif ($category === 'flyer' || $category === 'kartu_nama') {
-            // Volume-based: per 100 pcs
-            $billableQty = ceil($quantity / 100) * 100;
-        } elseif ($category === 'buku') {
-            // Book: per 50 pcs, adjusted by pages
-            $pageMultiplier = $pages / 100; // Base is 100 pages
-            $billableQty = ceil($quantity / 50) * 50;
-            $unitPrice = $basePrice * $pageMultiplier;
-        }
+        return $this->respondSafely(function () use ($validated): array {
+            return $this->calculator->calculateBuku(
+                quantity: (int) $validated['quantity'],
+                pages: (int) ($validated['pages'] ?? $validated['page_count'] ?? 100),
+                size: (string) ($validated['size'] ?? $validated['paper_size'] ?? 'A5'),
+                coverType: (string) ($validated['cover_type'] ?? 'softcover'),
+                paperType: (string) ($validated['paper_type'] ?? 'hvs_70gsm'),
+                colorMode: (string) ($validated['color_mode'] ?? 'bw'),
+                bindingType: (string) ($validated['binding_type'] ?? 'perfect'),
+                lamination: (string) ($validated['lamination'] ?? 'matte'),
+            );
+        });
+    }
 
-        // Apply tier discount
-        $discountPercent = 0;
-        $tiers = self::QUANTITY_TIERS[$category] ?? [];
-        foreach ($tiers as $tier) {
-            if ($billableQty >= $tier['min']) {
-                $discountPercent = $tier['discount'];
+    public function calculateKartuNama(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'print_sides' => 'nullable|string',
+            'lamination' => 'nullable|string',
+            'finishing' => 'nullable|array',
+            'finishing.*' => 'string',
+        ]);
+
+        return $this->respondSafely(function () use ($validated): array {
+            return $this->calculator->calculateKartuNama(
+                quantity: (int) $validated['quantity'],
+                printSides: (string) ($validated['print_sides'] ?? '2_sides'),
+                lamination: (string) ($validated['lamination'] ?? 'matte'),
+                finishingOptions: (array) ($validated['finishing'] ?? []),
+            );
+        });
+    }
+
+    public function calculateStiker(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'width' => 'nullable|numeric|min:0.1|required_without:width_cm',
+            'height' => 'nullable|numeric|min:0.1|required_without:height_cm',
+            'width_cm' => 'nullable|numeric|min:0.1|required_without:width',
+            'height_cm' => 'nullable|numeric|min:0.1|required_without:height',
+            'sheet_count' => 'required|integer|min:1',
+            'material' => 'nullable|string',
+            'cut_type' => 'nullable|string',
+        ]);
+
+        return $this->respondSafely(function () use ($validated): array {
+            return $this->calculator->calculateStiker(
+                width: (float) ($validated['width'] ?? $validated['width_cm']),
+                height: (float) ($validated['height'] ?? $validated['height_cm']),
+                sheetCount: (int) $validated['sheet_count'],
+                material: (string) ($validated['material'] ?? 'chromo'),
+                cutType: (string) ($validated['cut_type'] ?? 'die_cut'),
+            );
+        });
+    }
+
+    public function getOptions(): JsonResponse
+    {
+        return $this->respond($this->calculator->getAvailableOptions());
+    }
+
+    public function quickCalculate(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'product_type' => 'required|string',
+            'quantity' => 'nullable|integer|min:1',
+            'custom_params' => 'nullable|array',
+        ]);
+
+        return $this->respondSafely(function () use ($validated): array {
+            $params = (array) ($validated['custom_params'] ?? []);
+
+            if (isset($validated['quantity']) && ! isset($params['quantity'])) {
+                $params['quantity'] = (int) $validated['quantity'];
             }
-        }
 
-        // Calculate unit price with discount
-        $unitPrice = $basePrice * (1 - $discountPercent / 100);
+            return $this->calculator->quickCalculate(
+                (string) $validated['product_type'],
+                $params,
+            );
+        });
+    }
 
-        // Calculate base total
-        $baseTotal = $unitPrice * $billableQty;
-
-        // Calculate finishing
-        $finishingTotal = 0;
-        $finishingBreakdown = [];
-        foreach ($finishing as $finishingCode) {
-            $finishingPrice = self::FINISHING_PRICES[$finishingCode] ?? 0;
-            $finishingTotal += $finishingPrice;
-            $finishingBreakdown[] = [
-                'code' => $finishingCode,
-                'name' => str_replace('_', ' ', strtoupper($finishingCode)),
-                'price' => $finishingPrice,
-            ];
-        }
-
-        // Grand total
-        $grandTotal = $baseTotal + $finishingTotal;
-
-        // Production time
-        $productionTime = '2-3 hari';
-        if ($category === 'spanduk') {
-            $productionTime = '1-2 hari';
-        } elseif ($category === 'buku') {
-            $productionTime = (3 + (int)ceil($pages / 100)) . ' hari';
-        }
-        if ($quantity > 500) {
-            $productionTime = ((int)$productionTime + 2) . ' hari';
-        }
-
-        // Build response
-        $result = [
-            'product' => [
-                'code' => $productCode,
-                'category' => $category,
-                'name' => str_replace('_', ' ', strtoupper($productCode)),
-            ],
-            'specifications' => [
-                'dimensions' => $category === 'spanduk' ? "{$widthM}m × {$heightM}m" : null,
-                'area_m2' => $category === 'spanduk' ? round($area, 2) : null,
-                'quantity' => $quantity,
-                'billable_quantity' => round($billableQty, 2),
-            ],
-            'pricing' => [
-                'base_price' => $basePrice,
-                'discount_percent' => $discountPercent,
-                'unit_price' => round($unitPrice, 2),
-                'base_total' => round($baseTotal, 2),
-                'finishing' => $finishingBreakdown,
-                'finishing_total' => round($finishingTotal, 2),
-                'grand_total' => round($grandTotal, 2),
-            ],
-            'production_time' => $productionTime,
-            'breakdown' => [
-                'productName' => str_replace('_', ' ', strtoupper($productCode)),
-                'dimensions' => $category === 'spanduk' ? "{$widthM}m × {$heightM}m" : null,
-                'area' => $category === 'spanduk' ? round($area, 2) : null,
-                'quantity' => $quantity,
-                'unitPrice' => round($unitPrice, 2),
-                'subtotal' => round($baseTotal, 2),
-                'finishing' => $finishingBreakdown,
-                'finishingTotal' => round($finishingTotal, 2),
-                'total' => round($grandTotal, 2),
-                'productionTime' => $productionTime,
-            ],
-        ];
-
+    private function respond(array $data): JsonResponse
+    {
         return response()->json([
             'success' => true,
-            'data' => $result,
+            'data' => $data,
         ]);
     }
 
-    /**
-     * Get available products and prices
-     */
-    public function getProducts(): JsonResponse
+    private function respondSafely(callable $callback): JsonResponse
     {
-        $products = [];
-        foreach (self::PRODUCT_PRICES as $code => $price) {
-            $category = str_contains($code, 'spanduk') ? 'spanduk'
-                : (str_contains($code, 'sticker') ? 'sticker' : 'display');
-            
-            $products[] = [
-                'code' => $code,
-                'name' => str_replace('_', ' ', strtoupper($code)),
-                'category' => $category,
-                'price' => $price,
-                'unit' => $category === 'display' ? 'unit' : 'm²',
-            ];
+        try {
+            return $this->respond($callback());
+        } catch (InvalidArgumentException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
         }
-
-        return response()->json([
-            'success' => true,
-            'data' => $products,
-        ]);
     }
 
-    /**
-     * Get available finishing options
-     */
-    public function getFinishingOptions(): JsonResponse
+    private function brosurFinishingFromRequest(array $validated): array
     {
-        $finishing = [];
-        foreach (self::FINISHING_PRICES as $code => $price) {
-            $finishing[] = [
-                'code' => $code,
-                'name' => str_replace('_', ' ', strtoupper($code)),
-                'price' => $price,
-            ];
+        $finishing = array_values((array) ($validated['finishing_options'] ?? []));
+        $lamination = $validated['lamination'] ?? null;
+        $foldType = $validated['fold_type'] ?? null;
+
+        if (is_string($lamination) && trim($lamination) !== '' && strtolower($lamination) !== 'none') {
+            $finishing[] = $lamination;
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $finishing,
-        ]);
+        if (is_string($foldType) && trim($foldType) !== '' && strtolower($foldType) !== 'none') {
+            $finishing[] = $foldType;
+        }
+
+        return $finishing;
     }
 }

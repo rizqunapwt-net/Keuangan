@@ -70,10 +70,14 @@ const BrosurCalculatorPage: React.FC = () => {
         setLoading(true);
         try {
             const v = form.getFieldsValue();
-            const res = await api.post('/percetakan/calculator/calculate', {
-                product_id: prod.id, quantity: v.quantity || prod.min,
-                paper_type: v.paper_type, print_sides: v.print_sides,
-                lamination: v.lamination, fold_type: v.fold_type,
+            const size = prod.id === 7 ? 'A3' : prod.id === 8 ? 'A5' : 'A4';
+            const res = await api.post('/percetakan/calculator/brosur', {
+                quantity: v.quantity || prod.min,
+                size,
+                paper_type: v.paper_type,
+                print_sides: v.print_sides,
+                lamination: v.lamination,
+                fold_type: v.fold_type,
             });
             if (res.data?.success) setResult(res.data.data);
         } catch (err: any) {

@@ -61,10 +61,13 @@ const StikerCalculatorPage: React.FC = () => {
         setLoading(true);
         try {
             const v = form.getFieldsValue();
-            const res = await api.post('/percetakan/calculator/calculate', {
-                product_id: 13, quantity: sheetQty,
-                width_cm: v.stiker_w, height_cm: v.stiker_h,
-                sheet_count: sheetQty, cut_type: v.cut_type,
+            const materialKeys = ['chromo', 'vinyl', 'transparent'];
+            const res = await api.post('/percetakan/calculator/stiker', {
+                width_cm: v.stiker_w,
+                height_cm: v.stiker_h,
+                sheet_count: sheetQty,
+                material: materialKeys[selectedIdx] || 'chromo',
+                cut_type: v.cut_type,
             });
             if (res.data?.success) setResult(res.data.data);
         } catch (err: any) {
@@ -72,7 +75,7 @@ const StikerCalculatorPage: React.FC = () => {
             message.error(err?.response?.data?.message || err?.response?.data?.error?.message || 'Gagal menghitung');
         }
         finally { setLoading(false); }
-    }, [form, sheetQty]);
+    }, [form, selectedIdx, sheetQty]);
 
     const updateProduct = (idx: number, field: string, value: any) => {
         const updated = { ...settings }; (updated.products[idx] as any)[field] = value; setSettings(updated);
