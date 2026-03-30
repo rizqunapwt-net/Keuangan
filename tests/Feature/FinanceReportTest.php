@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\CashTransaction;
 use App\Models\Bank;
+use App\Models\CashTransaction;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,6 +14,7 @@ class FinanceReportTest extends TestCase
     use RefreshDatabase;
 
     protected $user;
+
     protected $bank;
 
     protected function setUp(): void
@@ -44,7 +45,7 @@ class FinanceReportTest extends TestCase
             'date' => $date,
         ]);
 
-        $response = $this->getJson('/api/v1/finance-reports/daily' . '?month=' . $date->month . '&year=' . $date->year);
+        $response = $this->getJson('/api/v1/finance/reports/daily'.'?month='.$date->month.'&year='.$date->year);
 
         $response->assertStatus(200);
         $data = $response->json();
@@ -73,7 +74,7 @@ class FinanceReportTest extends TestCase
             ]);
         }
 
-        $response = $this->getJson('/api/v1/finance-reports/monthly?year=' . $year);
+        $response = $this->getJson('/api/v1/finance/reports/monthly?year='.$year);
 
         $response->assertStatus(200);
         $data = $response->json();
@@ -94,7 +95,7 @@ class FinanceReportTest extends TestCase
             ]);
         }
 
-        $response = $this->getJson('/api/v1/finance-reports/yearly');
+        $response = $this->getJson('/api/v1/finance/reports/yearly');
 
         $response->assertStatus(200);
         $data = $response->json();
@@ -121,7 +122,7 @@ class FinanceReportTest extends TestCase
             'date' => $date,
         ]);
 
-        $response = $this->getJson('/api/v1/finance-reports/daily?month=' . $date->month . '&year=' . $date->year);
+        $response = $this->getJson('/api/v1/finance/reports/daily?month='.$date->month.'&year='.$date->year);
 
         $response->assertStatus(200);
         $data = $response->json();
@@ -140,7 +141,7 @@ class FinanceReportTest extends TestCase
         $futureMonth = now()->addYears(10)->month;
         $futureYear = now()->addYears(10)->year;
 
-        $response = $this->getJson('/api/v1/finance-reports/daily?month=' . $futureMonth . '&year=' . $futureYear);
+        $response = $this->getJson('/api/v1/finance/reports/daily?month='.$futureMonth.'&year='.$futureYear);
 
         $response->assertStatus(200);
         $data = $response->json();

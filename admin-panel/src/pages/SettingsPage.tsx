@@ -9,7 +9,6 @@ import {
   Row,
   Col,
   Divider,
-  InputNumber,
   Upload,
 } from 'antd';
 import { SaveOutlined, LockOutlined, PictureOutlined, SafetyOutlined } from '@ant-design/icons';
@@ -33,7 +32,7 @@ interface AppSettings {
   company_ig: string;
   company_wa: string;
   company_logo: string;
-  company_signature: string;
+
   director_name: string;
   director_title: string;
   invoice_bank_name: string;
@@ -41,8 +40,7 @@ interface AppSettings {
   invoice_bank_holder: string;
   currency: string;
   tax_rate: number;
-  invoice_prefix: string;
-  invoice_next_number: number;
+
   footer_note: string;
 }
 
@@ -56,7 +54,7 @@ const defaultSettings: AppSettings = {
   company_ig: '@penerbit_rizquna',
   company_wa: '0812-9485-6272',
   company_logo: '/admin/logo-nre.png',
-  company_signature: '',
+
   director_name: 'SUDARYONO',
   director_title: 'Direktur',
   invoice_bank_name: 'Bank BTPN / SMBC (kode 213)',
@@ -64,8 +62,7 @@ const defaultSettings: AppSettings = {
   invoice_bank_holder: 'FITRIANTO',
   currency: 'IDR',
   tax_rate: 11,
-  invoice_prefix: 'INV-',
-  invoice_next_number: 1,
+
   footer_note: 'Terima kasih atas kepercayaan Anda kepada kami.',
 };
 
@@ -221,23 +218,36 @@ const SettingsPage: React.FC = () => {
   const [passwordForm] = Form.useForm();
   const [saving, setSaving] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string>('');
-  const [signaturePreview, setSignaturePreview] = useState<string>('');
+
   const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(SETTINGS_KEY);
-    if (stored) {
+    const fetchSettings = async () => {
       try {
-        const parsed = JSON.parse(stored);
-        form.setFieldsValue({ ...defaultSettings, ...parsed });
-        if (parsed.company_logo) setLogoPreview(parsed.company_logo);
-        if (parsed.company_signature) setSignaturePreview(parsed.company_signature);
-      } catch {
-        form.setFieldsValue(defaultSettings);
+        const res = await api.get('/settings');
+        if (res.data?.data) {
+          const fetched = res.data.data;
+          form.setFieldsValue({ ...defaultSettings, ...fetched });
+          if (fetched.company_logo) setLogoPreview(fetched.company_logo);
+          // Also sync to localStorage for fast local access in components
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(fetched));
+        } else {
+          form.setFieldsValue(defaultSettings);
+        }
+      } catch (err) {
+        console.error('Failed to fetch settings:', err);
+        // Fallback to localStorage if API fails
+        const stored = localStorage.getItem(SETTINGS_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          form.setFieldsValue({ ...defaultSettings, ...parsed });
+          if (parsed.company_logo) setLogoPreview(parsed.company_logo);
+        } else {
+          form.setFieldsValue(defaultSettings);
+        }
       }
-    } else {
-      form.setFieldsValue(defaultSettings);
-    }
+    };
+    fetchSettings();
   }, [form]);
 
   const handleLogoUpload = (file: File) => {
@@ -263,26 +273,7 @@ const SettingsPage: React.FC = () => {
     message.info('Logo dihapus');
   };
 
-  const handleSignatureUpload = (file: File) => {
-    const isImage = file.type.startsWith('image/');
-    if (!isImage) { message.error('Tipe file tidak didukung!'); return false; }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target?.result as string;
-      setSignaturePreview(base64);
-      form.setFieldsValue({ company_signature: base64 });
-      message.success('Tanda tangan diperbarui!');
-    };
-    reader.readAsDataURL(file);
-    return false;
-  };
 
-  const handleRemoveSignature = () => {
-    setSignaturePreview('');
-    form.setFieldsValue({ company_signature: '' });
-    message.info('Tanda tangan dihapus');
-  };
 
   const handleChangePassword = async (values: any) => {
     setChangingPassword(true);
@@ -300,10 +291,12 @@ const SettingsPage: React.FC = () => {
   const handleSave = async (values: AppSettings) => {
     setSaving(true);
     try {
+      await api.post('/settings', values);
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(values));
-      message.success('Pengaturan disimpan!');
+      message.success('Pengaturan berhasil disinkronkan ke server! ✅');
     } catch {
-      message.error('Gagal menyimpan.');
+      message.error('Gagal menyimpan ke server, tersimpan lokal saja.');
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(values));
     } finally {
       setSaving(false);
     }
@@ -365,6 +358,7 @@ const SettingsPage: React.FC = () => {
                 </Col>
               </Row>
 
+              <Form.Item name="company_logo" hidden><Input /></Form.Item>
               <Form.Item label={<Text strong style={{ fontSize: 13 }}>Logo Instansi</Text>} style={{ marginTop: 8 }}>
                 <div style={{
                   border: '2px dashed #eee',
@@ -395,35 +389,7 @@ const SettingsPage: React.FC = () => {
                 </div>
               </Form.Item>
 
-              <Form.Item label={<Text strong style={{ fontSize: 13 }}>Tanda Tangan & STEMPEL</Text>} style={{ marginTop: 8 }}>
-                <div style={{
-                  border: '2px dashed #eee',
-                  borderRadius: 16,
-                  padding: signaturePreview ? 20 : 32,
-                  textAlign: 'center',
-                  background: '#fcfcfc',
-                  transition: 'all 0.3s ease'
-                }}>
-                  {signaturePreview ? (
-                    <div>
-                      <img src={signaturePreview} alt="Signature" style={{ maxHeight: 72, maxWidth: '100%', objectFit: 'contain', marginBottom: 16 }} />
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-                        <Upload showUploadList={false} beforeUpload={handleSignatureUpload as any} accept="image/*">
-                          <Button size="small" style={{ borderRadius: 8, fontSize: 12, fontWeight: 600 }}>Ganti</Button>
-                        </Upload>
-                        <Button size="small" danger onClick={handleRemoveSignature} style={{ borderRadius: 8, fontSize: 12, fontWeight: 600 }}>Hapus</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <Upload showUploadList={false} beforeUpload={handleSignatureUpload as any} accept="image/*">
-                      <div style={{ cursor: 'pointer' }}>
-                        <PictureOutlined style={{ fontSize: 32, color: '#ccc', marginBottom: 8 }} />
-                        <div style={{ color: '#aaa', fontSize: 12, fontWeight: 600 }}>Klik untuk upload TTD / Stempel</div>
-                      </div>
-                    </Upload>
-                  )}
-                </div>
-              </Form.Item>
+
             </Card>
           </Col>
 
@@ -468,18 +434,7 @@ const SettingsPage: React.FC = () => {
 
               <Divider style={{ margin: '8px 0 24px' }} />
 
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item name="invoice_prefix" label={<Text strong style={{ fontSize: 13 }}>Prefix Invoice</Text>}>
-                    <Input style={{ borderRadius: 12, height: 44, background: '#fcfcfc' }} />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="invoice_next_number" label={<Text strong style={{ fontSize: 13 }}>Nomor Berikutnya</Text>}>
-                    <InputNumber min={1} style={{ width: '100%', borderRadius: 12, height: 44, background: '#fcfcfc', display: 'flex', alignItems: 'center' }} />
-                  </Form.Item>
-                </Col>
-              </Row>
+
 
               <Form.Item name="footer_note" label={<Text strong style={{ fontSize: 13 }}>Catatan Footer</Text>}>
                 <TextArea rows={2} style={{ borderRadius: 12, background: '#fcfcfc' }} />

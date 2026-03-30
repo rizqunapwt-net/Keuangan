@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Accounting\Account;
+use App\Support\ApiResponse;
+use App\Traits\Auditable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AccountController extends Controller
 {
+    use ApiResponse, Auditable;
     /**
      * Category mapping — maps the DB enum type to the frontend's expected format.
      */
@@ -159,23 +163,19 @@ class AccountController extends Controller
     /**
      * DELETE /finance/accounts/{id}
      */
-    public function destroy(int $id)
+    public function destroy(int $id): JsonResponse
     {
         $account = Account::findOrFail($id);
 
         // Check if account has journal entries
         if ($account->entries()->count() > 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akun tidak bisa dihapus karena memiliki transaksi jurnal',
-            ], 422);
+            return $this->error('Akun tidak bisa dihapus karena memiliki transaksi jurnal', 422);
         }
+
+        $this->logDelete($account, "Menghapus akun akuntansi: {$account->name} ({$account->code})");
 
         $account->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Akun berhasil dihapus',
-        ]);
+        return $this->success(null);
     }
 }

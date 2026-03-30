@@ -57,9 +57,10 @@ const KartuNamaCalculatorPage: React.FC = () => {
         setLoading(true);
         try {
             const v = form.getFieldsValue();
-            const res = await api.post('/percetakan/calculator/calculate', {
-                product_id: settings.productId, quantity: (v.box_qty || settings.minBox) * settings.lembarPerBox,
-                lamination: v.lamination, print_sides: v.print_sides,
+            const res = await api.post('/percetakan/calculator/kartu-nama', {
+                quantity: (v.box_qty || settings.minBox) * settings.lembarPerBox,
+                lamination: v.lamination,
+                print_sides: v.print_sides,
                 finishing: v.finishings,
             });
             if (res.data?.success) setResult(res.data.data);

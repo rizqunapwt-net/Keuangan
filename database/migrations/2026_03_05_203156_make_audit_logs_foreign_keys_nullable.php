@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Make auditable_type and auditable_id nullable to support
      * security event logging without foreign key constraint violations.
      */

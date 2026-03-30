@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Audit Logs untuk mencatat setiap aktivitas sensitif:
      * - Delete transaksi
      * - Void transaksi

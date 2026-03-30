@@ -15,15 +15,15 @@ class DocumentationController extends Controller
     public function __invoke(): JsonResponse
     {
         $routes = collect(Route::getRoutes()->getRoutes())
-            ->filter(fn($route) => str_starts_with($route->uri, 'api/'))
-            ->map(fn($route) => [
-                'method' => collect($route->methods)->filter(fn($m) => $m !== 'HEAD')->first(),
+            ->filter(fn ($route) => str_starts_with($route->uri, 'api/'))
+            ->map(fn ($route) => [
+                'method' => collect($route->methods)->filter(fn ($m) => $m !== 'HEAD')->first(),
                 'uri' => str_replace('api/', '', $route->uri),
                 'name' => $route->getName(),
                 'middleware' => $route->middleware(),
             ])
             ->groupBy('uri')
-            ->map(fn($endpoints) => $endpoints->first());
+            ->map(fn ($endpoints) => $endpoints->first());
 
         $groupedRoutes = [
             'authentication' => [
@@ -56,9 +56,9 @@ class DocumentationController extends Controller
         ];
 
         return response()->json([
-            'api_name' => config('app.name') . ' API',
+            'api_name' => config('app.name').' API',
             'version' => '1.0.0',
-            'base_url' => config('app.url') . '/api/v1',
+            'base_url' => config('app.url').'/api/v1',
             'authentication' => [
                 'type' => 'Bearer Token (Laravel Sanctum)',
                 'header' => 'Authorization: Bearer {token}',

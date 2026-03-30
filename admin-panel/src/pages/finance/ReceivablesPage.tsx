@@ -4,6 +4,7 @@ import { PlusOutlined, SearchOutlined, FilterOutlined, HistoryOutlined, DollarCi
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api';
 import dayjs from 'dayjs';
+import { fmtRp } from '../../utils/formatters';
 import DebtFormDrawer from './DebtFormDrawer';
 import DebtPaymentDrawer from './DebtPaymentDrawer';
 
@@ -100,14 +101,14 @@ const ReceivablesPage: React.FC = () => {
             dataIndex: 'amount',
             key: 'amount',
             align: 'right' as const,
-            render: (v: number) => `Rp ${Number(v).toLocaleString('id-ID')}`,
+            render: (v: number) => fmtRp(v),
         },
         {
             title: 'Diterima',
             dataIndex: 'paid_amount',
             key: 'paid_amount',
             align: 'right' as const,
-            render: (v: number) => <Text type="success">Rp {Number(v).toLocaleString('id-ID')}</Text>,
+            render: (v: number) => <Text type="success">{fmtRp(v)}</Text>,
         },
         {
             title: 'Sisa',
@@ -115,7 +116,7 @@ const ReceivablesPage: React.FC = () => {
             align: 'right' as const,
             render: (_: any, record: any) => {
                 const sisa = Number(record.amount) - Number(record.paid_amount);
-                return <Text strong type={sisa > 0 ? 'danger' : 'secondary'}>Rp {sisa.toLocaleString('id-ID')}</Text>;
+                return <Text strong type={sisa > 0 ? 'danger' : 'secondary'}>{fmtRp(sisa)}</Text>;
             }
         },
         {
@@ -188,7 +189,7 @@ const ReceivablesPage: React.FC = () => {
                         <Statistic
                             title={<Text type="secondary" style={{ fontSize: 12 }}>Total Piutang</Text>}
                             value={totalAmount}
-                            prefix="Rp"
+                            formatter={(v: any) => fmtRp(v)}
                             valueStyle={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}
                         />
                     </Card>
@@ -198,7 +199,7 @@ const ReceivablesPage: React.FC = () => {
                         <Statistic
                             title={<Text type="secondary" style={{ fontSize: 12 }}>Total Diterima</Text>}
                             value={totalReceived}
-                            prefix="Rp"
+                            formatter={(v: any) => fmtRp(v)}
                             valueStyle={{ fontSize: 18, fontWeight: 700, color: '#16a34a' }}
                         />
                     </Card>
@@ -208,7 +209,7 @@ const ReceivablesPage: React.FC = () => {
                         <Statistic
                             title={<Text type="secondary" style={{ fontSize: 12 }}>Sisa Piutang</Text>}
                             value={remainingAmount}
-                            prefix="Rp"
+                            formatter={(v: any) => fmtRp(v)}
                             valueStyle={{ fontSize: 18, fontWeight: 700, color: '#dc2626' }}
                         />
                     </Card>

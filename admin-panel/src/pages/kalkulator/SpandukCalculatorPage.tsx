@@ -48,9 +48,18 @@ const SpandukCalculatorPage: React.FC = () => {
         setLoading(true);
         try {
             const v = form.getFieldsValue();
-            const res = await api.post('/percetakan/calculator/calculate', {
-                product_id: selectedId, quantity: v.quantity || 1,
-                width_cm: v.width_cm, height_cm: v.height_cm,
+            const materialByProductId: Record<number, string> = {
+                1: 'frontlite',
+                2: 'backdrop_portable',
+                3: 'roll_up_banner',
+                4: 'x_banner',
+                5: 'kain',
+            };
+            const res = await api.post('/percetakan/calculator/spanduk', {
+                quantity: v.quantity || 1,
+                width: v.width_cm,
+                height: v.height_cm,
+                material: materialByProductId[selectedId] || 'vinyl',
             });
             if (res.data?.success) setResult(res.data.data);
         } catch (err: any) {

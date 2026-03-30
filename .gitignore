@@ -23,8 +23,13 @@
 /public/admin
 /admin-panel/node_modules
 /admin-panel/dist
+/mcp-server/node_modules
 
 # Misc
 npm-debug.log
 yarn-error.log
 nre_deploy.zip
+invoice_rizquna_dump.sql
+.tmp-invoice/
+*.pdf
+*.log

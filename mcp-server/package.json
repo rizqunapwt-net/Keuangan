@@ -1,0 +1,14 @@
+{
+  "name": "rizquna-unified-mcp",
+  "version": "1.0.0",
+  "description": "MCP Server for Rizquna ERP (Kasir) — provides project context, DB queries, artisan commands, and dev tools",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "pg": "^8.13.0"
+  }
+}

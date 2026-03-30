@@ -2,14 +2,15 @@
 
 namespace Tests\Feature;
 
-use App\Models\AuditLog;
 use App\Models\Accounting\Account;
+use App\Models\AuditLog;
 use App\Models\Bank;
 use App\Models\CashTransaction;
 use App\Models\Contact;
 use App\Models\Debt;
 use App\Models\Expense;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -19,7 +20,9 @@ class FinanceAuditIntegrityTest extends TestCase
 
     public function test_deleting_cash_transaction_reverses_balance_and_writes_audit_logs(): void
     {
+        $this->seed(RolePermissionSeeder::class);
         $user = User::factory()->create();
+        $this->actingAsWithRole($user, 'Admin');
         $bank = $this->createBank(1_000_000);
 
         $transaction = CashTransaction::create([
@@ -59,7 +62,9 @@ class FinanceAuditIntegrityTest extends TestCase
 
     public function test_bank_with_financial_history_cannot_be_deleted(): void
     {
+        $this->seed(RolePermissionSeeder::class);
         $user = User::factory()->create();
+        $this->actingAsWithRole($user, 'Admin');
         $bank = $this->createBank(500_000);
 
         CashTransaction::create([
@@ -87,7 +92,9 @@ class FinanceAuditIntegrityTest extends TestCase
 
     public function test_deleting_expense_writes_audit_log(): void
     {
+        $this->seed(RolePermissionSeeder::class);
         $user = User::factory()->create();
+        $this->actingAsWithRole($user, 'Admin');
 
         $expense = Expense::create([
             'user_id' => $user->id,
@@ -114,7 +121,9 @@ class FinanceAuditIntegrityTest extends TestCase
 
     public function test_deleting_account_without_journal_entries_writes_audit_log(): void
     {
+        $this->seed(RolePermissionSeeder::class);
         $user = User::factory()->create();
+        $this->actingAsWithRole($user, 'Admin');
 
         $account = Account::create([
             'code' => '9999',
@@ -139,7 +148,9 @@ class FinanceAuditIntegrityTest extends TestCase
 
     public function test_debt_index_contact_filter_maps_to_client_name_safely(): void
     {
+        $this->seed(RolePermissionSeeder::class);
         $user = User::factory()->create();
+        $this->actingAsWithRole($user, 'Admin');
 
         $contact = Contact::create([
             'name' => 'PT Klien A',

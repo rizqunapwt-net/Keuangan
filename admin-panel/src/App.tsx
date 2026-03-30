@@ -18,15 +18,18 @@ import {
   MenuFoldOutlined,
   DollarOutlined,
   SettingOutlined,
-  AuditOutlined,
-  FileSearchOutlined,
   BankOutlined,
   ContactsOutlined,
-  DollarCircleOutlined,
   WalletOutlined,
-  BarChartOutlined,
-  ShoppingOutlined,
   CalculatorOutlined,
+  FileTextOutlined,
+  ScheduleOutlined,
+  PieChartOutlined,
+
+  TransactionOutlined,
+  AuditOutlined,
+  GlobalOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -50,13 +53,12 @@ const DashboardPage = React.lazy(() => import('./pages/DashboardPage'));
 // Finance
 const InvoicesPage = React.lazy(() => import('./pages/finance/InvoicesPage'));
 const ExpensesPage = React.lazy(() => import('./pages/finance/ExpensesPage'));
-const JournalEntriesPage = React.lazy(() => import('./pages/finance/JournalEntriesPage'));
-const ChartOfAccountsPage = React.lazy(() => import('./pages/finance/ChartOfAccountsPage'));
+
+
 const BanksPage = React.lazy(() => import('./pages/finance/BanksPage'));
 const ContactsPage = React.lazy(() => import('./pages/finance/ContactsPage'));
 
 // Reports
-const ReportsPage = React.lazy(() => import('./pages/finance/ReportsIndexPage'));
 const ProfitLossPage = React.lazy(() => import('./pages/finance/ProfitLossPage'));
 const BalanceSheetPage = React.lazy(() => import('./pages/finance/BalanceSheetPage'));
 const CashFlowPage = React.lazy(() => import('./pages/finance/CashFlowPage'));
@@ -67,8 +69,12 @@ const ReceivablesPage = React.lazy(() => import('./pages/finance/ReceivablesPage
 const CashBookPage = React.lazy(() => import('./pages/finance/CashBookPage'));
 const FinanceReportsPage = React.lazy(() => import('./pages/finance/FinanceReportsPage'));
 
+// Security & Sessions
+const AuditLogsPage = React.lazy(() => import('./pages/AuditLogsPage'));
+const SecuritySessionsPage = React.lazy(() => import('./pages/auth/SecuritySessionsPage'));
+
 // Percetakan
-const OrdersPage = React.lazy(() => import('./pages/percetakan/OrdersPage'));
+// Removing Orders and Materials as per user request (finance only)
 
 // Kalkulator
 const CalculatorIndexPage = React.lazy(() => import('./pages/kalkulator/CalculatorIndexPage'));
@@ -82,6 +88,10 @@ const BeratCalculatorPage = React.lazy(() => import('./pages/kalkulator/BeratCal
 
 // Settings
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
+
+// Admin
+const UserManagementPage = React.lazy(() => import('./pages/admin/UserManagementPage'));
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f8fafc' }}>
@@ -124,15 +134,14 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
     {
       label: 'KEUANGAN', type: 'group', children: [
-        { key: '/finance/invoices', icon: <AuditOutlined style={{ color: '#0fb9b1' }} />, label: 'Invoice' },
+        { key: '/finance/invoices', icon: <FileTextOutlined style={{ color: '#0fb9b1' }} />, label: 'Invoice' },
         { key: '/finance/expenses', icon: <DollarOutlined style={{ color: '#ef4444' }} />, label: 'Biaya' },
-        { key: '/finance/debts', icon: <FileSearchOutlined style={{ color: '#f59e0b' }} />, label: 'Utang' },
-        { key: '/finance/receivables', icon: <DollarCircleOutlined style={{ color: '#10b981' }} />, label: 'Piutang' },
+        { key: '/finance/debts', icon: <ScheduleOutlined style={{ color: '#f59e0b' }} />, label: 'Utang' },
+        { key: '/finance/receivables', icon: <TransactionOutlined style={{ color: '#10b981' }} />, label: 'Piutang' },
         { key: '/finance/cash-book', icon: <WalletOutlined style={{ color: '#6366f1' }} />, label: 'Buku Kas' },
-        { key: '/finance/reports', icon: <BarChartOutlined style={{ color: '#f97316' }} />, label: 'Laporan Kas' },
-        { key: '/finance/reports-index', icon: <BarChartOutlined style={{ color: '#8b5cf6' }} />, label: 'Laporan Akuntansi' },
-        { key: '/finance/journals', icon: <FileSearchOutlined style={{ color: '#64748b' }} />, label: 'Jurnal' },
-        { key: '/finance/accounts', icon: <AuditOutlined style={{ color: '#a855f7' }} />, label: 'Akun' },
+        { key: '/finance/reports', icon: <PieChartOutlined style={{ color: '#f97316' }} />, label: 'Laporan Kas' },
+
+
         { key: '/finance/banks', icon: <BankOutlined style={{ color: '#0ea5e9' }} />, label: 'Bank' },
         { key: '/finance/contacts', icon: <ContactsOutlined style={{ color: '#ec4899' }} />, label: 'Kontak' },
       ]
@@ -140,8 +149,15 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
     {
       label: 'PERCETAKAN', type: 'group', children: [
-        { key: '/percetakan/orders', icon: <ShoppingOutlined style={{ color: '#06b6d4' }} />, label: 'Pesanan Cetak' },
         { key: '/kalkulator', icon: <CalculatorOutlined style={{ color: '#10b981' }} />, label: 'Kalkulator Cetak' },
+      ]
+    },
+
+    {
+      label: 'ADMIN', type: 'group', children: [
+        { key: '/admin/users', icon: <TeamOutlined style={{ color: '#8b5cf6' }} />, label: 'Pengguna' },
+        { key: '/audit/logs', icon: <AuditOutlined style={{ color: '#6366f1' }} />, label: 'Log Aktivitas' },
+        { key: '/user/sessions', icon: <GlobalOutlined style={{ color: '#14b8a6' }} />, label: 'Sesi Aktif' },
       ]
     },
 
@@ -163,7 +179,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     },
     { key: '/profile', label: 'Profil Saya', icon: <UserOutlined /> },
     { type: 'divider' as const },
-    { key: 'logout', label: 'Keluar', danger: true, onClick: logout },
+    { key: 'logout', label: 'Keluar', danger: true, onClick: () => { clearPinSession(); logout(); } },
   ];
 
   return (
@@ -352,9 +368,8 @@ const App: React.FC = () => {
                           <Route path="/finance/receivables" element={<ReceivablesPage />} />
                           <Route path="/finance/cash-book" element={<CashBookPage />} />
                           <Route path="/finance/reports" element={<FinanceReportsPage />} />
-                          <Route path="/finance/reports-index" element={<ReportsPage />} />
-                          <Route path="/finance/journals" element={<JournalEntriesPage />} />
-                          <Route path="/finance/accounts" element={<ChartOfAccountsPage />} />
+
+
                           {/* Bank page — protected by PIN guard (sensitive account data) */}
                           <Route path="/finance/banks" element={<FinancePinGuard><BanksPage /></FinancePinGuard>} />
                           <Route path="/finance/contacts" element={<ContactsPage />} />
@@ -365,7 +380,10 @@ const App: React.FC = () => {
                           <Route path="/reports/trial-balance" element={<TrialBalancePage />} />
                           <Route path="/reports/general-ledger" element={<GeneralLedgerPage />} />
 
-                          <Route path="/percetakan/orders" element={<OrdersPage />} />
+
+
+                          <Route path="/audit/logs" element={<AuditLogsPage />} />
+                          <Route path="/user/sessions" element={<SecuritySessionsPage />} />
 
                           <Route path="/kalkulator" element={<CalculatorIndexPage />} />
                           <Route path="/kalkulator/spanduk" element={<SpandukCalculatorPage />} />
@@ -376,10 +394,12 @@ const App: React.FC = () => {
                           <Route path="/kalkulator/spine" element={<SpineCalculatorPage />} />
                           <Route path="/kalkulator/berat" element={<BeratCalculatorPage />} />
 
+                          <Route path="/admin/users" element={<UserManagementPage />} />
+
                           <Route path="/settings" element={<SettingsPage />} />
                           <Route path="/profile" element={<ProfilePage />} />
 
-                          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                          <Route path="*" element={<NotFoundPage />} />
                         </Routes>
                       </MainLayout>
                     </AuthGuard>

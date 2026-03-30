@@ -3,18 +3,17 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\CashTransaction;
 use App\Models\Bank;
-use App\Models\AuditLog;
+use App\Models\CashTransaction;
 use App\Traits\Auditable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Carbon\Carbon;
 
 class CashTransactionController extends Controller
 {
     use Auditable;
+
     public function index(Request $request)
     {
         $query = CashTransaction::with('bank');
@@ -33,9 +32,9 @@ class CashTransactionController extends Controller
 
         if ($request->has('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('category', 'like', "%{$search}%");
+                    ->orWhere('category', 'like', "%{$search}%");
             });
         }
 
@@ -62,7 +61,7 @@ class CashTransactionController extends Controller
                 $newBalance = (float) $bank->balance - (float) $validated['amount'];
                 if ($newBalance < 0) {
                     throw ValidationException::withMessages([
-                        'amount' => ['Saldo bank tidak cukup. Saldo saat ini: Rp ' . number_format($bank->balance, 0, ',', '.') . ', Anda mencoba mengurangi Rp ' . number_format($validated['amount'], 0, ',', '.')],
+                        'amount' => ['Saldo bank tidak cukup. Saldo saat ini: Rp '.number_format($bank->balance, 0, ',', '.').', Anda mencoba mengurangi Rp '.number_format($validated['amount'], 0, ',', '.')],
                     ]);
                 }
                 $bank->balance = $newBalance;
@@ -73,6 +72,8 @@ class CashTransactionController extends Controller
 
             $validated['running_balance'] = $bank->balance;
             $transaction = CashTransaction::create($validated);
+
+            $this->logModification($transaction, [], $transaction->toArray(), 'Mencatat transaksi kas: '.($validated['type'] === 'income' ? 'Pemasukan' : 'Pengeluaran').' Rp'.number_format($validated['amount'], 0, ',', '.').' - '.($validated['description'] ?? $validated['category'] ?? ''));
 
             return response()->json($transaction, 201);
         });
@@ -117,10 +118,11 @@ class CashTransactionController extends Controller
             // Log audit untuk delete transaksi
             $this->logDelete(
                 $cashTransaction,
-                "Transaksi kas #{$cashTransaction->id} ({$cashTransaction->type}) sebesar Rp " . number_format($cashTransaction->amount, 0, ',', '.') . " telah dihapus"
+                "Transaksi kas #{$cashTransaction->id} ({$cashTransaction->type}) sebesar Rp ".number_format($cashTransaction->amount, 0, ',', '.').' telah dihapus'
             );
 
             $cashTransaction->delete();
+
             return response()->json(null, 204);
         });
     }

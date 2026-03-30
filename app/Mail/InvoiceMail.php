@@ -30,7 +30,7 @@ class InvoiceMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Invoice Tagihan #' . 'INV-' . $this->debt->id . ' - Rizquna.ID',
+            subject: 'Invoice Tagihan #'.'INV-'.$this->debt->id.' - Rizquna.ID',
         );
     }
 
@@ -44,7 +44,7 @@ class InvoiceMail extends Mailable implements ShouldQueue
             with: [
                 'debt' => $this->debt,
                 'contactName' => $this->debt->contact?->name ?? $this->debt->client_name,
-                'invoiceNumber' => 'INV-' . $this->debt->id,
+                'invoiceNumber' => 'INV-'.$this->debt->id,
                 'amount' => $this->debt->amount,
                 'dueDate' => $this->debt->due_date ? $this->debt->due_date->format('d/m/Y') : '-',
             ]

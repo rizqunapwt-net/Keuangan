@@ -43,6 +43,7 @@ class Expense extends Model
         'void_reason',
         'attachment_path',
         'metadata',
+        'bank_id',
     ];
 
     protected function casts(): array
@@ -71,6 +72,57 @@ class Expense extends Model
             }
             if ($expense->status === null) {
                 $expense->status = ExpenseStatus::PENDING;
+            }
+        });
+        static::created(function (self $expense) {
+            // 1. Update Bank Balance
+            if ($expense->bank_id) {
+                $bank = \App\Models\Bank::find($expense->bank_id);
+                if ($bank) {
+                    $bank->balance -= $expense->amount;
+                    $bank->save();
+
+                    // 2. Create Cash Transaction (Buku Kas)
+                    \App\Models\CashTransaction::create([
+                        'type' => 'expense',
+                        'bank_id' => $expense->bank_id,
+                        'date' => $expense->expense_date ?? now(),
+                        'amount' => $expense->amount,
+                        'category' => $expense->category ?? 'Biaya Operasional',
+                        'description' => 'Biaya: ' . ($expense->description ?? ($expense->expense_code ?? '#'.$expense->id)),
+                        'running_balance' => $bank->balance,
+                    ]);
+
+                    // 3. Record Accounting Journal
+                    // Debit: Expense Account (account_id), Credit: Bank Utama (from bank relationship/default)
+                    $expenseAccount = $expense->account_id ? \App\Models\Accounting\Account::find($expense->account_id) : null;
+                    $bankAccount = $bank->account_id ? \App\Models\Accounting\Account::find($bank->account_id) : \App\Models\Accounting\Account::where('code', '1102')->first();
+                    
+                    if ($expenseAccount && $bankAccount) {
+                        try {
+                            $accounting = app(\App\Domain\Finance\Services\AccountingService::class);
+                            $accounting->recordJournal([
+                                'date' => $expense->expense_date ?? now(),
+                                'description' => 'Biaya - ' . ($expense->description ?? ($expense->expense_code ?? '#'.$expense->id)),
+                                'reference' => $expense->reference_number ?? ($expense->expense_code ?? '#'.$expense->id),
+                                'items' => [
+                                    [
+                                        'account_id' => $expenseAccount->id,
+                                        'type' => 'debit',
+                                        'amount' => $expense->amount,
+                                    ],
+                                    [
+                                        'account_id' => $bankAccount->id,
+                                        'type' => 'credit',
+                                        'amount' => $expense->amount,
+                                    ],
+                                ],
+                            ], auth()->id() ?? 1);
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Log::error("Failed to record journal for expense: " . $e->getMessage());
+                        }
+                    }
+                }
             }
         });
     }
@@ -108,6 +160,11 @@ class Expense extends Model
     public function voidedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'voided_by');
+    }
+
+    public function bank(): BelongsTo
+    {
+        return $this->belongsTo(Bank::class);
     }
 
     /* ======== Scopes ======== */

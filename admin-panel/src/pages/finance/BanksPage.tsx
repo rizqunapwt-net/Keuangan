@@ -4,6 +4,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, BankOutlined, WalletOutline
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import api from '../../api';
+import { fmtRp } from '../../utils/formatters';
 
 const { Title, Text } = Typography;
 
@@ -149,7 +150,7 @@ const BanksPage: React.FC = () => {
             <Card bordered={false} style={{ borderRadius: 14, marginBottom: 24, background: 'linear-gradient(135deg, #0fb9b1, #20bf6b)', color: '#fff' }} bodyStyle={{ padding: 24 }}>
                 <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, textTransform: 'uppercase', fontWeight: 700 }}>TOTAL SALDO SEMUA AKUN</Text>
                 <div style={{ fontSize: 32, fontWeight: 800, color: '#fff' }}>
-                    Rp {totalBalance.toLocaleString('id-ID')}
+                    {fmtRp(totalBalance)}
                 </div>
                 <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>{accounts.length} akun terdaftar</Text>
             </Card>
@@ -193,7 +194,7 @@ const BanksPage: React.FC = () => {
                                     <div style={{ marginTop: 16, padding: '12px 16px', background: group.bg, borderRadius: 10 }}>
                                         <Text type="secondary" style={{ fontSize: 11 }}>SALDO</Text>
                                         <div style={{ fontSize: 22, fontWeight: 700, color: group.color }}>
-                                            Rp {Number(account.balance).toLocaleString('id-ID')}
+                                            {fmtRp(account.balance)}
                                         </div>
                                     </div>
                                 </Card>

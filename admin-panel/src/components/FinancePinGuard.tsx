@@ -72,14 +72,11 @@ const FinancePinGuard: React.FC<FinancePinGuardProps> = ({ children }) => {
     const [lockTimer, setLockTimer] = useState(0);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    // If no PIN configured, skip guard entirely
-    if (!isPinConfigured()) {
-        return <>{children}</>;
-    }
+    const pinConfigured = isPinConfigured();
 
     // Check session expiry periodically
     useEffect(() => {
-        if (!verified) return;
+        if (!verified || !pinConfigured) return;
         const interval = setInterval(() => {
             if (!hasValidPinSession()) {
                 setVerified(false);
@@ -87,11 +84,11 @@ const FinancePinGuard: React.FC<FinancePinGuardProps> = ({ children }) => {
             }
         }, 10_000); // Check every 10 seconds
         return () => clearInterval(interval);
-    }, [verified]);
+    }, [verified, pinConfigured]);
 
     // Lock timer countdown
     useEffect(() => {
-        if (!locked) return;
+        if (!locked || !pinConfigured) return;
         const interval = setInterval(() => {
             setLockTimer(prev => {
                 if (prev <= 1) {
@@ -103,16 +100,17 @@ const FinancePinGuard: React.FC<FinancePinGuardProps> = ({ children }) => {
             });
         }, 1000);
         return () => clearInterval(interval);
-    }, [locked]);
+    }, [locked, pinConfigured]);
 
     // Auto-focus first input on mount
     useEffect(() => {
-        if (!verified && !locked) {
+        if (!verified && !locked && pinConfigured) {
             setTimeout(() => inputRefs.current[0]?.focus(), 300);
         }
-    }, [verified, locked]);
+    }, [verified, locked, pinConfigured]);
 
     const handleSubmit = useCallback((currentPin: string[]) => {
+        if (!pinConfigured) return;
         const pinStr = currentPin.join('');
         if (pinStr.length !== PIN_LENGTH) return;
 
@@ -143,7 +141,12 @@ const FinancePinGuard: React.FC<FinancePinGuardProps> = ({ children }) => {
                 inputRefs.current[0]?.focus();
             }, 600);
         }
-    }, [attempts]);
+    }, [attempts, pinConfigured]);
+
+    // If no PIN configured, skip guard entirely
+    if (!pinConfigured) {
+        return <>{children}</>;
+    }
 
     const handleChange = (index: number, value: string) => {
         if (locked) return;

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * Trait Auditable
- * 
+ *
  * Trait untuk menambahkan audit logging pada controller.
  * Digunakan untuk mencatat setiap aktivitas sensitif seperti:
  * - Delete transaksi
@@ -24,8 +24,8 @@ trait Auditable
      */
     protected function logDelete(
         Model $model,
-        string $description = null,
-        array $oldValues = null
+        ?string $description = null,
+        ?array $oldValues = null
     ): AuditLog {
         return $this->logAudit(
             eventType: AuditLog::EVENT_DELETED,
@@ -40,8 +40,8 @@ trait Auditable
      */
     protected function logVoid(
         Model $model,
-        string $reason = null,
-        array $oldValues = null
+        ?string $reason = null,
+        ?array $oldValues = null
     ): AuditLog {
         return $this->logAudit(
             eventType: AuditLog::EVENT_VOIDED,
@@ -116,8 +116,8 @@ trait Auditable
         string $eventType,
         Model $model,
         string $description,
-        array $oldValues = null,
-        array $newValues = null
+        ?array $oldValues = null,
+        ?array $newValues = null
     ): AuditLog {
         return AuditLog::create([
             'user_id' => Auth::id(),

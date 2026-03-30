@@ -3,13 +3,13 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class BalanceSheetExport implements FromCollection, WithHeadings, WithTitle, WithStyles, WithColumnWidths
+class BalanceSheetExport implements FromCollection, WithColumnWidths, WithHeadings, WithStyles, WithTitle
 {
     public function __construct(
         private array $data,
@@ -23,7 +23,7 @@ class BalanceSheetExport implements FromCollection, WithHeadings, WithTitle, Wit
         // 1. Assets
         $rows->push(['ASET', '', '', '']);
         foreach ($this->data['assets']['items'] as $item) {
-            $rows->push(['', $item['code'] . ' - ' . $item['name'], $item['balance'], '']);
+            $rows->push(['', $item['code'].' - '.$item['name'], $item['balance'], '']);
         }
         $rows->push(['Total Aset', '', $this->data['assets']['total'], '']);
         $rows->push(['', '', '', '']);
@@ -31,7 +31,7 @@ class BalanceSheetExport implements FromCollection, WithHeadings, WithTitle, Wit
         // 2. Liabilities
         $rows->push(['KEWAJIBAN', '', '', '']);
         foreach ($this->data['liabilities']['items'] as $item) {
-            $rows->push(['', $item['code'] . ' - ' . $item['name'], '', $item['balance']]);
+            $rows->push(['', $item['code'].' - '.$item['name'], '', $item['balance']]);
         }
         $rows->push(['Total Kewajiban', '', '', $this->data['liabilities']['total']]);
         $rows->push(['', '', '', '']);
@@ -39,7 +39,7 @@ class BalanceSheetExport implements FromCollection, WithHeadings, WithTitle, Wit
         // 3. Equity
         $rows->push(['MODAL', '', '', '']);
         foreach ($this->data['equity']['items'] as $item) {
-            $rows->push(['', $item['code'] . ' - ' . $item['name'], '', $item['balance']]);
+            $rows->push(['', $item['code'].' - '.$item['name'], '', $item['balance']]);
         }
         $rows->push(['', 'Laba Berjalan', '', $this->data['equity']['current_earnings']]);
         $rows->push(['Total Modal', '', '', $this->data['equity']['total']]);
@@ -55,9 +55,9 @@ class BalanceSheetExport implements FromCollection, WithHeadings, WithTitle, Wit
     {
         return [
             ['LAPORAN POSISI KEUANGAN (NERACA)'],
-            ['Per Tanggal: ' . $this->asOf],
+            ['Per Tanggal: '.$this->asOf],
             [''],
-            ['Kategori', 'Keterangan', 'Debit (Rp)', 'Kredit (Rp)']
+            ['Kategori', 'Keterangan', 'Debit (Rp)', 'Kredit (Rp)'],
         ];
     }
 

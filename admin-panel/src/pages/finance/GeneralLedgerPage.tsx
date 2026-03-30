@@ -4,6 +4,7 @@ import { BookOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api';
 import dayjs from 'dayjs';
+import { fmtRp } from '../../utils/formatters';
 
 const { RangePicker } = DatePicker;
 
@@ -36,9 +37,9 @@ const GeneralLedgerPage: React.FC = () => {
         { title: 'No. Ref', dataIndex: 'refNumber', key: 'ref', width: 120 },
         { title: 'Keterangan', dataIndex: 'memo', key: 'memo', ellipsis: true },
         { title: 'Kontak', dataIndex: 'contact', key: 'contact', render: (v: string) => v || '-', width: 120 },
-        { title: 'Debit', dataIndex: 'debit', key: 'debit', render: (v: number) => v > 0 ? `Rp ${v.toLocaleString('id-ID')}` : '-', align: 'right' as const },
-        { title: 'Kredit', dataIndex: 'credit', key: 'credit', render: (v: number) => v > 0 ? `Rp ${v.toLocaleString('id-ID')}` : '-', align: 'right' as const },
-        { title: 'Saldo', dataIndex: 'balance', key: 'balance', render: (v: number) => `Rp ${v.toLocaleString('id-ID')}`, align: 'right' as const },
+        { title: 'Debit', dataIndex: 'debit', key: 'debit', render: (v: number) => v > 0 ? fmtRp(v) : '-', align: 'right' as const },
+        { title: 'Kredit', dataIndex: 'credit', key: 'credit', render: (v: number) => v > 0 ? fmtRp(v) : '-', align: 'right' as const },
+        { title: 'Saldo', dataIndex: 'balance', key: 'balance', render: (v: number) => fmtRp(v), align: 'right' as const },
     ];
 
     return (
@@ -62,8 +63,8 @@ const GeneralLedgerPage: React.FC = () => {
                 <Card>
                     <Row gutter={24} style={{ marginBottom: 16 }}>
                         <Col span={8}><Statistic title="Akun" value={`${data.account.code} - ${data.account.name}`} /></Col>
-                        <Col span={8}><Statistic title="Saldo Awal" value={data.openingBalance} precision={0} prefix="Rp" /></Col>
-                        <Col span={8}><Statistic title="Saldo Akhir" value={data.closingBalance} precision={0} prefix="Rp" valueStyle={{ fontWeight: 'bold' }} /></Col>
+                        <Col span={8}><Statistic title="Saldo Awal" value={data.openingBalance} formatter={(v: any) => fmtRp(v)} /></Col>
+                        <Col span={8}><Statistic title="Saldo Akhir" value={data.closingBalance} formatter={(v: any) => fmtRp(v)} valueStyle={{ fontWeight: 'bold' }} /></Col>
                     </Row>
                     <Divider />
                     <Table columns={columns} dataSource={data.items} rowKey={(_, i) => String(i)} pagination={false} size="small" />

@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Accounting\Journal;
 use App\Models\Accounting\Account;
+use App\Models\Accounting\Journal;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

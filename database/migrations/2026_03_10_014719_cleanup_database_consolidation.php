@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -23,15 +23,19 @@ return new class extends Migration
             'authors',
             'marketplaces',
         ];
+
+        $isPostgres = DB::getDriverName() === 'pgsql';
+        $cascade = $isPostgres ? ' CASCADE' : '';
+
         foreach ($tablesToDrop as $table) {
-            DB::statement("DROP TABLE IF EXISTS \"{$table}\" CASCADE");
+            DB::statement("DROP TABLE IF EXISTS \"{$table}\"{$cascade}");
         }
 
         // =====================================================
         // 2. DROP DUPLICATE accounting_expenses TABLE
         //    Keep 'expenses' (26 cols, more complete)
         // =====================================================
-        DB::statement('DROP TABLE IF EXISTS "accounting_expenses" CASCADE');
+        DB::statement("DROP TABLE IF EXISTS \"accounting_expenses\"{$cascade}");
 
         // =====================================================
         // 3. FIX PRICE TIERS — Buku Softcover
@@ -129,16 +133,17 @@ return new class extends Migration
         //    4001 "Pendapatan Penjualan Buku (Publishing)"
         //    5101 "Beban Royalti Penulis"
         //    2101 "Hutang Royalti Penulis"
+        //    1200 "Piutang Marketplace"
         // =====================================================
         // Only remove if no journal entries reference them
-        $unusedPublishingAccounts = ['4001', '5101', '2101'];
+        $unusedPublishingAccounts = ['4001', '5101', '2101', '1200'];
         foreach ($unusedPublishingAccounts as $code) {
             $accountId = DB::table('accounting_accounts')->where('code', $code)->value('id');
             if ($accountId) {
                 $hasEntries = DB::table('accounting_journal_entries')
                     ->where('account_id', $accountId)
                     ->exists();
-                if (!$hasEntries) {
+                if (! $hasEntries) {
                     DB::table('accounting_accounts')->where('id', $accountId)->delete();
                 }
             }

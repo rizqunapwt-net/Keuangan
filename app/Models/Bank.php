@@ -92,6 +92,11 @@ class Bank extends Model
         return $this->belongsTo(User::class, 'manager_id');
     }
 
+    public function cashTransactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CashTransaction::class);
+    }
+
     /* ======== Scopes ======== */
 
     public function scopeActive($query)

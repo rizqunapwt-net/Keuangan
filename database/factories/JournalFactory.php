@@ -15,7 +15,7 @@ class JournalFactory extends Factory
     public function definition(): array
     {
         return [
-            'journal_number' => 'JNL-' . fake()->unique()->numerify('########'),
+            'journal_number' => 'JNL-'.fake()->unique()->numerify('########'),
             'date' => fake()->date(),
             'reference' => fake()->optional()->numerify('REF-#####'),
             'description' => fake()->sentence(),

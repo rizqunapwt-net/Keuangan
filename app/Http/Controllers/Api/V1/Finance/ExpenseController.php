@@ -17,11 +17,12 @@ class ExpenseController extends Controller
 {
     use ApiResponse, Auditable;
 
+    /**
+     * List expenses — returns the format expected by the frontend.
+     */
     public function index(Request $request): JsonResponse
     {
-        Gate::authorize('viewAny', Expense::class);
-        
-        $query = Expense::query();
+        $query = Expense::latest('expense_date');
 
         if ($request->has('status')) {
             $query->where('status', $request->get('status'));
@@ -35,24 +36,57 @@ class ExpenseController extends Controller
             $query->byDateRange($request->get('start_date'), $request->get('end_date'));
         }
 
-        $expenses = $query->paginate(15);
+        $data = $query->get()->map(fn ($e) => [
+            'id' => $e->id,
+            'refNumber' => $e->reference_number ?? $e->expense_code,
+            'transDate' => $e->expense_date?->format('Y-m-d'),
+            'status' => $e->isVoided() ? 'void' : 'recorded',
+            'amount' => (float) $e->amount,
+            'description' => $e->description,
+            'category' => $e->category,
+        ]);
 
-        return $this->success($expenses);
+        return response()->json(['success' => true, 'data' => $data]);
     }
 
-    public function store(StoreExpenseRequest $request): JsonResponse
+    /**
+     * Store a new expense — handles the frontend form format.
+     */
+    public function store(Request $request): JsonResponse
     {
-        Gate::authorize('create', Expense::class);
-        
-        $data = $request->validated();
+        $validated = $request->validate([
+            'refNumber' => 'required|string',
+            'transDate' => 'required|date',
+            'accountId' => 'required|exists:accounting_accounts,id',
+            'payFromAccountId' => 'required|exists:accounting_accounts,id',
+            'amount' => 'required|numeric|min:0.01',
+            'description' => 'nullable|string|max:500',
+        ]);
 
-        if ($request->hasFile('attachment_path')) {
-            $data['attachment_path'] = $request->file('attachment_path')->store('expenses', 'public');
+        try {
+            // Find the bank that is linked to the payFromAccountId
+            $bank = \App\Models\Bank::where('account_id', $validated['payFromAccountId'])->first();
+
+            $expense = Expense::create([
+                'expense_date' => $validated['transDate'],
+                'reference_number' => $validated['refNumber'],
+                'account_id' => $validated['accountId'],
+                'bank_id' => $bank?->id,
+                'amount' => $validated['amount'],
+                'description' => $validated['description'],
+                'payment_method' => $bank ? $bank->bank_name : 'Cash',
+                'category' => 'Operasional',
+                'status' => \App\Enums\ExpenseStatus::APPROVED,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Biaya berhasil dicatat.',
+                'data' => $expense,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
-
-        $expense = Expense::create($data);
-
-        return $this->success($expense->load('account', 'creator'), 201);
     }
 
     public function show(Expense $expense): JsonResponse

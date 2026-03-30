@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Row, Col, Card, Typography, Button, Badge, Spin } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import {
     ArrowUpOutlined,
     ArrowDownOutlined,
@@ -23,12 +24,14 @@ import {
 import api from '../api';
 import dayjs from 'dayjs';
 import { motion } from 'framer-motion';
+import { fmtRpCompact } from '../utils/formatters';
 
 const { Title, Text } = Typography;
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
 const DashboardPage: React.FC = () => {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState({
         invoices: [],
@@ -172,19 +175,6 @@ const DashboardPage: React.FC = () => {
                                 Pantau kesehatan finansial Rizquna Kasir Anda dalam satu tampilan cerdas. Semua data diperbarui secara real-time.
                             </Text>
                             <div style={{ marginTop: 24 }}>
-                                <Button 
-                                    size="large" 
-                                    style={{ borderRadius: 14, fontWeight: 700, height: 48, padding: '0 32px', color: '#0fb9b1', border: 'none' }}
-                                    onClick={() => {
-                                        const params = new URLSearchParams({
-                                            start_date: dayjs().startOf('month').format('YYYY-MM-DD'),
-                                            end_date: dayjs().endOf('month').format('YYYY-MM-DD'),
-                                        });
-                                        window.open(`${import.meta.env.VITE_API_URL}/finance/reports/profit-loss/excel?${params.toString()}`, '_blank');
-                                    }}
-                                >
-                                    Export Laporan Excel
-                                </Button>
                             </div>
                         </Col>
                     </Row>
@@ -199,6 +189,13 @@ const DashboardPage: React.FC = () => {
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 + (idx * 0.1) }}
+                            onClick={() => {
+                                if (stat.title === 'LABA BERSIH') navigate('/reports/profit-loss');
+                                if (stat.title === 'TOTAL PENJUALAN') navigate('/finance/invoices');
+                                if (stat.title === 'TOTAL PEMBELIAN') navigate('/finance/debts');
+                                if (stat.title === 'TOTAL BIAYA') navigate('/finance/expenses');
+                            }}
+                            style={{ cursor: 'pointer' }}
                         >
                             <Card className="premium-card" style={{ borderRadius: 20 }} bodyStyle={{ padding: '30px 24px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
@@ -221,7 +218,7 @@ const DashboardPage: React.FC = () => {
                                             {stat.title}
                                         </Text>
                                         <Title level={3} style={{ margin: 0, fontWeight: 800, fontSize: 22, color: '#333', marginTop: 2 }}>
-                                            Rp{(stat.value > 1000000 ? (stat.value / 1000000).toFixed(1) + ' jt' : stat.value.toLocaleString('id-ID'))}
+                                            Rp{(stat.value > 1000000 ? (stat.value / 1000000).toFixed(1) + ' jt' : fmtRpCompact(stat.value).slice(2))}
                                         </Title>
                                     </div>
                                 </div>
@@ -282,7 +279,7 @@ const DashboardPage: React.FC = () => {
                                     <YAxis axisLine={false} tickLine={false} tick={{ fill: '#bbb', fontSize: 11 }} tickFormatter={(v) => `${v / 1000000}jt`} dx={-10} />
                                     <Tooltip
                                         contentStyle={{ borderRadius: 16, border: 'none', boxShadow: '0 15px 35px rgba(0,0,0,0.1)', padding: 12, fontFamily: "'Poppins', sans-serif" }}
-                                        formatter={(v: any) => `Rp${Number(v).toLocaleString('id-ID')}`}
+                                        formatter={(v: any) => fmtRpCompact(v)}
                                     />
                                     <Area
                                         type="monotone"
@@ -360,7 +357,7 @@ const DashboardPage: React.FC = () => {
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
                                             <Text strong style={{ color: tx.type === 'SALE' ? '#10b981' : '#333', fontSize: 14 }}>
-                                                {tx.type === 'SALE' ? '+' : '-'}Rp{(tx.total || tx.amount || 0).toLocaleString('id-ID')}
+                                                {tx.type === 'SALE' ? '+' : '-'}{fmtRpCompact(tx.total || tx.amount || 0)}
                                             </Text>
                                         </div>
                                     </div>

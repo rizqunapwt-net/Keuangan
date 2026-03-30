@@ -3,13 +3,13 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ProfitLossExport implements FromCollection, WithHeadings, WithTitle, WithStyles, WithColumnWidths
+class ProfitLossExport implements FromCollection, WithColumnWidths, WithHeadings, WithStyles, WithTitle
 {
     public function __construct(
         private array $data,
@@ -24,7 +24,7 @@ class ProfitLossExport implements FromCollection, WithHeadings, WithTitle, WithS
         // Section: Revenues
         $rows->push(['Pendapatan', '', '', '']);
         foreach ($this->data['revenues']['items'] as $item) {
-            $rows->push(['', $item['code'] . ' - ' . $item['name'], $item['balance'], '']);
+            $rows->push(['', $item['code'].' - '.$item['name'], $item['balance'], '']);
         }
         $rows->push(['Total Pendapatan', '', $this->data['revenues']['total'], '']);
         $rows->push(['', '', '', '']); // Empty row
@@ -32,7 +32,7 @@ class ProfitLossExport implements FromCollection, WithHeadings, WithTitle, WithS
         // Section: Expenses
         $rows->push(['Beban', '', '', '']);
         foreach ($this->data['expenses']['items'] as $item) {
-            $rows->push(['', $item['code'] . ' - ' . $item['name'], '', $item['balance']]);
+            $rows->push(['', $item['code'].' - '.$item['name'], '', $item['balance']]);
         }
         $rows->push(['Total Beban', '', '', $this->data['expenses']['total']]);
         $rows->push(['', '', '', '']); // Empty row
@@ -47,9 +47,9 @@ class ProfitLossExport implements FromCollection, WithHeadings, WithTitle, WithS
     {
         return [
             ['LAPORAN LABA RUGI'],
-            ['Periode: ' . $this->start . ' s/d ' . $this->end],
+            ['Periode: '.$this->start.' s/d '.$this->end],
             [''],
-            ['Kategori', 'Keterangan', 'Kredit (Rp)', 'Debit (Rp)']
+            ['Kategori', 'Keterangan', 'Kredit (Rp)', 'Debit (Rp)'],
         ];
     }
 

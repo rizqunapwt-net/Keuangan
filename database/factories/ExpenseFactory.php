@@ -3,8 +3,8 @@
 namespace Database\Factories;
 
 use App\Enums\ExpenseStatus;
-use App\Models\User;
 use App\Models\Accounting\Account;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -15,7 +15,7 @@ class ExpenseFactory extends Factory
     public function definition(): array
     {
         return [
-            'expense_code' => 'EXP-' . date('YmdHis') . '-' . fake()->numerify('####'),
+            'expense_code' => 'EXP-'.date('YmdHis').'-'.fake()->numerify('####'),
             'account_id' => Account::whereType('expense')->inRandomOrder()->first()?->id ?? Account::factory(),
             'user_id' => User::inRandomOrder()->first()?->id ?? User::factory(),
             'description' => fake()->sentence(),

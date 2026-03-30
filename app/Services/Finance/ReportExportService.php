@@ -3,7 +3,6 @@
 namespace App\Services\Finance;
 
 use App\Domain\Finance\Services\ReportService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ReportExportService
@@ -33,6 +32,7 @@ class ReportExportService
     {
         $report = $this->reportService->getProfitAndLoss($startDate, $endDate);
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.profit_loss_pdf', ['data' => $report]);
+
         return $pdf->download("laporan-laba-rugi-{$startDate}-{$endDate}.pdf");
     }
 
@@ -42,6 +42,7 @@ class ReportExportService
     public function exportProfitLossExcel(string $startDate, string $endDate)
     {
         $report = $this->reportService->getProfitAndLoss($startDate, $endDate);
+
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\ProfitLossExport($report, $startDate, $endDate),
             "laba-rugi-{$startDate}-{$endDate}.xlsx"
@@ -58,6 +59,7 @@ class ReportExportService
             'data' => $report,
             'asOf' => $asOfDate,
         ]);
+
         return $pdf->download("neraca-{$asOfDate}.pdf");
     }
 
@@ -67,6 +69,7 @@ class ReportExportService
     public function exportBalanceSheetExcel(string $asOfDate)
     {
         $report = $this->reportService->getBalanceSheet($asOfDate);
+
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\BalanceSheetExport($report, $asOfDate),
             "neraca-{$asOfDate}.xlsx"
@@ -84,6 +87,7 @@ class ReportExportService
             'start' => $startDate,
             'end' => $endDate,
         ]);
+
         return $pdf->download("laporan-arus-kas-{$startDate}-{$endDate}.pdf");
     }
 
@@ -93,6 +97,7 @@ class ReportExportService
     public function exportCashFlowExcel(string $startDate, string $endDate)
     {
         $report = $this->reportService->getCashFlow($startDate, $endDate);
+
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\CashFlowExport($report, $startDate, $endDate),
             "arus-kas-{$startDate}-{$endDate}.xlsx"

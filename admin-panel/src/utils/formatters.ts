@@ -1,60 +1,35 @@
 /**
- * Number and Currency Formatters
+ * Format angka ke format Rupiah Indonesia
+ * @example fmtRp(1250000) → "Rp 1.250.000"
  */
-
-export const formatCurrency = (value: number, locale = 'id-ID'): string => {
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(value);
-};
-
-export const formatNumber = (value: number, decimals = 2): string => {
-  return new Intl.NumberFormat('id-ID', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(value);
-};
-
-export const parseNumber = (value: string): number => {
-  return parseFloat(value.replace(/,/g, '.'));
+export const fmtRp = (n: number | string | null | undefined): string => {
+    if (n === null || n === undefined || isNaN(Number(n))) return 'Rp 0';
+    return `Rp ${Number(n).toLocaleString('id-ID')}`;
 };
 
 /**
- * Date Formatters
+ * Format angka ke format Rupiah tanpa spasi (untuk tabel yang padat)
+ * @example fmtRpCompact(1250000) → "Rp1.250.000"
  */
-
-export const formatDate = (date: Date | string, format = 'dd/MM/yyyy'): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-
-  return format
-    .replace('yyyy', String(year))
-    .replace('MM', month)
-    .replace('dd', day);
-};
-
-export const formatDateTime = (date: Date | string): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return `${formatDate(d)} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+export const fmtRpCompact = (n: number | string | null | undefined): string => {
+    if (n === null || n === undefined || isNaN(Number(n))) return 'Rp0';
+    return `Rp${Number(n).toLocaleString('id-ID')}`;
 };
 
 /**
- * Text Formatters
+ * Format tanggal ke format Indonesia
+ * @example fmtDate('2026-03-05') → "5 Maret 2026"
  */
-
-export const truncate = (text: string, length: number, suffix = '...'): string => {
-  if (text.length <= length) return text;
-  return text.substring(0, length) + suffix;
+export const fmtDate = (d: string | Date): string => {
+    if (!d) return '-';
+    return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
-export const capitalize = (text: string): string => {
-  return text.charAt(0).toUpperCase() + text.slice(1);
-};
-
-export const toTitleCase = (text: string): string => {
-  return text.replace(/\w\S*/g, (txt) => capitalize(txt));
+/**
+ * Format tanggal ringkas
+ * @example fmtDateShort('2026-03-05') → "5 Mar 2026"
+ */
+export const fmtDateShort = (d: string | Date): string => {
+    if (!d) return '-';
+    return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 };
