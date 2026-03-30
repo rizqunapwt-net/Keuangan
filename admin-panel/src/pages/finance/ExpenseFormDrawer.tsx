@@ -90,7 +90,7 @@ const ExpenseFormDrawer: React.FC<ExpenseFormDrawerProps> = ({ open, onClose }) 
                         showSearch
                         optionFilterProp="children"
                         placeholder="Pilih Akun Kas/Bank"
-                        options={accounts.filter((a: any) => ['Kas', 'Bank'].includes(a.type)).map((a: any) => ({
+                        options={accounts.filter((a: any) => ['1101', '1102'].includes(a.code) || a.type === 'asset' && (a.name?.toLowerCase().includes('kas') || a.name?.toLowerCase().includes('bank'))).map((a: any) => ({
                             value: a.id,
                             label: `${a.code} - ${a.name}`
                         }))}
@@ -102,7 +102,7 @@ const ExpenseFormDrawer: React.FC<ExpenseFormDrawerProps> = ({ open, onClose }) 
                         showSearch
                         optionFilterProp="children"
                         placeholder="Contoh: Biaya Listrik, Iklan, dll"
-                        options={accounts.map((a: any) => ({
+                        options={accounts.filter((a: any) => a.type === 'expense').map((a: any) => ({
                             value: a.id,
                             label: `${a.code} - ${a.name}`
                         }))}
