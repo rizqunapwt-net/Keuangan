@@ -22,7 +22,13 @@ class UserController extends Controller
     {
         Gate::authorize('viewAny', User::class);
 
-        $users = User::with('roles')->get();
+        $users = User::with('roles')->get()->map(function ($user) {
+            // For the API response, we simplify roles to unique names to avoid guard duplicates in UI
+            $user->role_list = $user->roles->pluck('name')->unique()->values();
+            unset($user->roles); // Optional: remove the full collection to save bandwidth
+            return $user;
+        });
+
         return $this->success($users);
     }
 
@@ -47,12 +53,17 @@ class UserController extends Controller
         ]);
 
         if (!empty($validated['roles'])) {
-            $user->syncRoles($validated['roles']);
+            // Sync roles for both guards to ensure consistency between API and Web
+            foreach (['web', 'sanctum'] as $guard) {
+                $user->syncRoles($validated['roles'], $guard);
+            }
         } else {
-            $user->assignRole('User'); // Default role
+            $user->assignRole('User', 'web');
+            $user->assignRole('User', 'sanctum');
         }
 
-        return $this->success($user->load('roles'), 201);
+        $user->role_list = $user->roles()->pluck('name')->unique()->values();
+        return $this->success($user, 201);
     }
 
     /**
@@ -100,10 +111,13 @@ class UserController extends Controller
         $user->update($validated);
 
         if (isset($validated['roles'])) {
-            $user->syncRoles($validated['roles']);
+            foreach (['web', 'sanctum'] as $guard) {
+                $user->syncRoles($validated['roles'], $guard);
+            }
         }
 
-        return $this->success($user->load('roles'));
+        $user->role_list = $user->roles()->pluck('name')->unique()->values();
+        return $this->success($user);
     }
 
     /**
