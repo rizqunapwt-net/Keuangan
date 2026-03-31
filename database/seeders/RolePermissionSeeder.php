@@ -44,6 +44,11 @@ class RolePermissionSeeder extends Seeder
             $kasirRole->syncPermissions([
                 'pos_access',
                 'sales_read',
+                'debt.view',
+                'debt.create',
+                'debt.edit',
+                'debt.delete',
+                'debt.record_payment',
             ]);
         }
     }
