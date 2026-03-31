@@ -16,7 +16,14 @@ class RoleController extends Controller
     {
         Gate::authorize('admin.access');
 
-        $roles = Role::all();
+        $roles = Role::all()->unique('name')->values()->map(function ($role) {
+            return [
+                'id' => $role->name, // Using name as ID for easier sync across guards in frontend
+                'name' => $role->name,
+                'guard_name' => $role->guard_name
+            ];
+        });
+
         return $this->success($roles);
     }
 }
