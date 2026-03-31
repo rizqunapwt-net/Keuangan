@@ -1,7 +1,7 @@
 import React from 'react';
-import { Table, Button, Tag, Card, Typography, Row, Col, Space, Input, Popconfirm, message } from 'antd';
+import { Table, Button, Tag, Card, Typography, Row, Col, Space, Input, Popconfirm, message, Tooltip } from 'antd';
 import { fmtRp } from '../../utils/formatters';
-import { PlusOutlined, SearchOutlined, PrinterOutlined, ExportOutlined, StopOutlined, DollarOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, PrinterOutlined, ExportOutlined, WarningOutlined, DollarOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api';
 import AccessControl from '../../components/AccessControl';
@@ -10,7 +10,7 @@ import ExpenseFormDrawer from './ExpenseFormDrawer';
 import PageHeader from '../../components/PageHeader';
 import { motion } from 'framer-motion';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const statusConfig: Record<string, { color: string; bgColor: string; label: string }> = {
     recorded: { color: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)', label: 'TERCATAT' },
@@ -21,6 +21,7 @@ const statusConfig: Record<string, { color: string; bgColor: string; label: stri
 const ExpensesPage: React.FC = () => {
     const queryClient = useQueryClient();
     const [drawerOpen, setDrawerOpen] = React.useState(false);
+    const [editData, setEditData] = React.useState<any>(null);
     const { data: rawData = [], isLoading } = useQuery({
         queryKey: ['expenses'],
         queryFn: async () => {
@@ -31,14 +32,25 @@ const ExpensesPage: React.FC = () => {
     });
     const data = rawData;
 
-    const handleVoid = async (id: number) => {
+
+    const handleDelete = async (id: number) => {
         try {
-            await api.put(`/finance/expenses/${id}/void`);
-            message.success('Biaya berhasil dibatalkan (void)');
+            await api.delete(`/finance/expenses/${id}`);
+            message.success('Biaya berhasil dihapus');
             queryClient.invalidateQueries({ queryKey: ['expenses'] });
-        } catch {
-            message.error('Gagal membatalkan biaya');
+        } catch (err: any) {
+            message.error(err.response?.data?.message || 'Gagal menghapus biaya');
         }
+    };
+
+    const handleEdit = (record: any) => {
+        setEditData(record);
+        setDrawerOpen(true);
+    };
+
+    const handleCreate = () => {
+        setEditData(null);
+        setDrawerOpen(true);
     };
 
     // Summary metrics
@@ -101,19 +113,26 @@ const ExpensesPage: React.FC = () => {
         {
             title: '',
             key: 'action',
-            width: 80,
+            width: 120,
             align: 'right' as const,
-            render: (_: unknown, record: any) => record.status !== 'void' ? (
-                <Popconfirm
-                    title="Batalkan biaya ini?"
-                    onConfirm={() => handleVoid(record.id)}
-                    okText="Ya, Void"
-                    cancelText="Batal"
-                    okButtonProps={{ danger: true }}
-                >
-                    <Button type="text" danger icon={<StopOutlined />} size="small" style={{ color: '#aaa' }} />
-                </Popconfirm>
-            ) : null,
+            render: (_: unknown, record: any) => (
+                <Space size={4}>
+                    <Tooltip title="Edit">
+                        <Button type="text" icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} />
+                    </Tooltip>
+                    <Popconfirm
+                        title="Hapus biaya permanen?"
+                        onConfirm={() => handleDelete(record.id)}
+                        okText="Hapus"
+                        cancelText="Batal"
+                        okButtonProps={{ danger: true }}
+                    >
+                        <Tooltip title="Hapus">
+                            <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+                        </Tooltip>
+                    </Popconfirm>
+                </Space>
+            ),
         },
     ];
 
@@ -121,7 +140,7 @@ const ExpensesPage: React.FC = () => {
         { title: 'BULAN INI', value: totalThisMonth, color: '#0fb9b1', icon: <DollarOutlined style={{ fontSize: 20 }} /> },
         { title: '30 HARI TERAKHIR', value: totalLast30, color: '#3b82f6', icon: <ExportOutlined style={{ fontSize: 20 }} /> },
         { title: 'BELUM DIBAYAR', value: 0, color: '#f59e0b', icon: <DollarOutlined style={{ fontSize: 20 }} /> },
-        { title: 'JATUH TEMPO', value: 0, color: '#ef4444', icon: <StopOutlined style={{ fontSize: 20 }} /> },
+        { title: 'JATUH TEMPO', value: 0, color: '#ef4444', icon: <WarningOutlined style={{ fontSize: 20 }} /> },
     ];
 
     return (
@@ -137,7 +156,7 @@ const ExpensesPage: React.FC = () => {
                             <Button
                                 type="primary"
                                 icon={<PlusOutlined />}
-                                onClick={() => setDrawerOpen(true)}
+                                onClick={handleCreate}
                                 style={{ borderRadius: 12, height: 40, fontWeight: 700, boxShadow: '0 4px 12px rgba(15, 185, 177, 0.2)' }}
                             >
                                 Catat Biaya
@@ -161,9 +180,9 @@ const ExpensesPage: React.FC = () => {
                                 </div>
                                 <div style={{ flex: 1 }}>
                                     <Text style={{ fontSize: 10, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'block' }}>{stat.title}</Text>
-                                    <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#333', marginTop: 2 }}>
+                                    <div style={{ fontSize: 22, fontWeight: 800, color: '#333', marginTop: 2 }}>
                                         {fmtRp(stat.value)}
-                                    </Title>
+                                    </div>
                                 </div>
                             </div>
                         </Card>
@@ -173,7 +192,7 @@ const ExpensesPage: React.FC = () => {
 
             <Card className="premium-card" style={{ borderRadius: 20 }} bodyStyle={{ padding: 0 }}>
                 <div style={{ padding: '20px 32px', borderBottom: '1px solid #f8f8f8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-                    <Title level={5} style={{ margin: 0, fontWeight: 700, color: '#333' }}>RIWAYAT TRANSAKSI</Title>
+                    <Text strong style={{ fontSize: 15, color: '#333', textTransform: 'uppercase', letterSpacing: '0.5px' }}>RIWAYAT TRANSAKSI</Text>
                     <Input
                         prefix={<SearchOutlined style={{ color: '#ccc' }} />}
                         placeholder="Cari biaya..."
@@ -196,7 +215,11 @@ const ExpensesPage: React.FC = () => {
                 </div>
             </Card>
 
-            <ExpenseFormDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+            <ExpenseFormDrawer 
+                open={drawerOpen} 
+                onClose={() => { setDrawerOpen(false); setEditData(null); }} 
+                editData={editData}
+            />
         </motion.div>
     );
 };

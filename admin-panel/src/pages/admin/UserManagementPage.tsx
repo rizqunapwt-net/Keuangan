@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, Button, Modal, Form, Input, Switch, Space, Tag, message, Popconfirm, Card } from 'antd';
+import { Table, Button, Modal, Form, Input, Switch, Space, Tag, message, Popconfirm, Card, Row, Col, Select } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../api';
@@ -24,6 +24,14 @@ const UserManagementPage: React.FC = () => {
     queryKey: ['users'],
     queryFn: async () => {
       const res = await api.get('/users');
+      return res.data?.data || [];
+    },
+  });
+
+  const { data: roles = [] } = useQuery({
+    queryKey: ['roles'],
+    queryFn: async () => {
+      const res = await api.get('/roles');
       return res.data?.data || [];
     },
   });
@@ -62,7 +70,7 @@ const UserManagementPage: React.FC = () => {
 
   const handleSubmit = (values: any) => {
     if (editingUser) {
-      const payload: any = { id: editingUser.id, name: values.name, email: values.email };
+      const payload: any = { id: editingUser.id, name: values.name, email: values.email, roles: values.roles };
       if (values.password) payload.password = values.password;
       if (values.is_active !== undefined) payload.is_active = values.is_active;
       updateMutation.mutate(payload);
@@ -71,9 +79,14 @@ const UserManagementPage: React.FC = () => {
     }
   };
 
-  const openEditModal = (user: User) => {
+  const openEditModal = (user: any) => {
     setEditingUser(user);
-    form.setFieldsValue({ name: user.name, email: user.email, is_active: user.is_active });
+    form.setFieldsValue({ 
+      name: user.name, 
+      email: user.email, 
+      is_active: user.is_active,
+      roles: user.roles?.map((r: any) => r.name) || []
+    });
     setIsModalOpen(true);
   };
 
@@ -93,6 +106,18 @@ const UserManagementPage: React.FC = () => {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
+    },
+    {
+      title: 'Peran (Role)',
+      dataIndex: 'roles',
+      key: 'roles',
+      render: (roleList: any[]) => (
+        <Space wrap>
+          {roleList?.map((r: any) => (
+            <Tag color={r.name === 'Admin' ? 'purple' : 'blue'} key={r.name}>{r.name}</Tag>
+          )) || <Tag>User</Tag>}
+        </Space>
+      ),
     },
     {
       title: 'Status',
@@ -129,7 +154,7 @@ const UserManagementPage: React.FC = () => {
     <div>
       <PageHeader
         title="Manajemen Pengguna"
-        subtitle="Kelola akun pengguna sistem"
+        subtitle="Kelola akun pengguna dan hak akses sistem (RBAC/REBAC)"
       />
 
       <Card
@@ -165,30 +190,57 @@ const UserManagementPage: React.FC = () => {
         confirmLoading={createMutation.isPending || updateMutation.isPending}
         okText={editingUser ? 'Simpan' : 'Buat'}
         cancelText="Batal"
+        width={600}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="name" label="Nama" rules={[{ required: true, message: 'Nama wajib diisi' }]}>
-            <Input placeholder="Nama lengkap" />
-          </Form.Item>
-          <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Email tidak valid' }]}>
-            <Input placeholder="email@example.com" />
-          </Form.Item>
-          <Form.Item
-            name="password"
-            label="Password"
-            rules={editingUser ? [] : [{ required: true, message: 'Password wajib diisi' }, { min: 8, message: 'Minimal 8 karakter' }]}
-          >
-            <Input.Password placeholder={editingUser ? 'Kosongkan jika tidak diubah' : 'Minimal 8 karakter'} />
-          </Form.Item>
-          {!editingUser && (
-            <Form.Item
-              name="password_confirmation"
-              label="Konfirmasi Password"
-              rules={[{ required: true, message: 'Konfirmasi password wajib' }]}
-            >
-              <Input.Password placeholder="Ulangi password" />
-            </Form.Item>
-          )}
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="name" label="Nama" rules={[{ required: true, message: 'Nama wajib diisi' }]}>
+                <Input placeholder="Nama lengkap" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Email tidak valid' }]}>
+                <Input placeholder="email@example.com" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+             <Col span={24}>
+                <Form.Item name="roles" label="Hak Akses (Roles)" rules={[{ required: true, message: 'Minimal pilih satu role' }]}>
+                   <Select mode="multiple" placeholder="Pilih Role" style={{ width: '100%' }}>
+                      {roles.map((r: any) => (
+                        <Select.Option key={r.name} value={r.name}>{r.name}</Select.Option>
+                      ))}
+                   </Select>
+                </Form.Item>
+             </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="password"
+                label="Password"
+                rules={editingUser ? [] : [{ required: true, message: 'Password wajib diisi' }, { min: 8, message: 'Minimal 8 karakter' }]}
+              >
+                <Input.Password placeholder={editingUser ? 'Kosongkan jika tidak diubah' : 'Minimal 8 karakter'} />
+              </Form.Item>
+            </Col>
+            {!editingUser && (
+              <Col span={12}>
+                <Form.Item
+                  name="password_confirmation"
+                  label="Konfirmasi Password"
+                  rules={[{ required: true, message: 'Konfirmasi password wajib' }]}
+                >
+                  <Input.Password placeholder="Ulangi password" />
+                </Form.Item>
+              </Col>
+            )}
+          </Row>
+          
           {editingUser && (
             <Form.Item name="is_active" label="Status Aktif" valuePropName="checked">
               <Switch checkedChildren="Aktif" unCheckedChildren="Nonaktif" />

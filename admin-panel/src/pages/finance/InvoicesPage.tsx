@@ -6,44 +6,43 @@ import {
     Typography,
     Button,
     Space,
-    Tabs,
     Popconfirm,
     message,
     Input,
     Select,
-    Breadcrumb,
+    Radio,
+    Tooltip,
 } from 'antd';
 import {
     EditOutlined,
     CheckCircleOutlined,
     PlusOutlined,
     CloseOutlined,
+    SearchOutlined,
+    PrinterOutlined,
 } from '@ant-design/icons';
 import api from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
 import InvoiceFormDrawer from './InvoiceFormDrawer';
 import InvoicePrintModal from './InvoicePrintModal';
+import PageHeader from '../../components/PageHeader';
 import { motion } from 'framer-motion';
 
-const { Title } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
 
-// Exactly match PHP formatting: Rp.17,500 (dot after Rp, comma separator)
 const fmtPhpRp = (n: number | string | null | undefined): string => {
     if (n === null || n === undefined || isNaN(Number(n))) return 'Rp.0';
     return `Rp.${Number(n).toLocaleString('en-US')}`; 
 };
 
-// Format tanggal: DD/MM/YYYY (tanpa jam jika date-only)
 const fmtPhpDate = (d: string | Date): string => {
     if (!d) return '-';
     const str = typeof d === 'string' ? d : d.toISOString();
-    // Jika date-only format YYYY-MM-DD, tampilkan tanggal saja tanpa jam
     const dateOnlyMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (dateOnlyMatch) {
         return `${dateOnlyMatch[3]}/${dateOnlyMatch[2]}/${dateOnlyMatch[1]}`;
     }
-    // Jika ada timestamp lengkap
     const date = new Date(str);
     if (isNaN(date.getTime())) return '-';
     const pad = (n: number) => n.toString().padStart(2, '0');
@@ -67,18 +66,6 @@ const InvoicesPage: React.FC = () => {
         return saved ? JSON.parse(saved) : null;
     });
 
-    const fetchSettings = async () => {
-        try {
-            const res = await api.get('/settings');
-            if (res.data?.data) {
-                setSettings(res.data.data);
-                localStorage.setItem('app_settings', JSON.stringify(res.data.data));
-            }
-        } catch (err) {
-            console.error('Failed to fetch settings:', err);
-        }
-    };
-
     const fetchInvoices = async () => {
         setLoading(true);
         try {
@@ -92,11 +79,12 @@ const InvoicesPage: React.FC = () => {
                 total_amount: Number(inv.total_amount ?? inv.total ?? 0),
                 paid_amount: Number(inv.paid_amount ?? inv.paidAmount ?? 0),
                 remaining_balance: Number(inv.remaining_balance ?? ((inv.total_amount ?? inv.total ?? 0) - (inv.paid_amount ?? inv.paidAmount ?? 0))),
-                date: inv.date || inv.transDate,
+                date: inv.date || inv.transDate || inv.trans_date || inv.created_at,
             }));
             setData(normalized);
         } catch (error) {
             console.error('Error fetching invoices:', error);
+            message.error('Gagal mengambil data invoice');
         } finally {
             setLoading(false);
         }
@@ -104,7 +92,12 @@ const InvoicesPage: React.FC = () => {
 
     useEffect(() => {
         fetchInvoices();
-        fetchSettings();
+        api.get('/settings').then(res => {
+            if (res.data?.data) {
+                setSettings(res.data.data);
+                localStorage.setItem('app_settings', JSON.stringify(res.data.data));
+            }
+        }).catch(() => {});
     }, [activeTab]);
 
     const handlePrint = (record: any) => {
@@ -142,7 +135,7 @@ const InvoicesPage: React.FC = () => {
         }
     };
 
-    const flattenedData = useMemo(() => {
+    const filteredData = useMemo(() => {
         const rows: any[] = [];
         data.forEach((inv) => {
             const items = inv.items || [];
@@ -150,9 +143,6 @@ const InvoicesPage: React.FC = () => {
                 rows.push({
                     ...inv,
                     _item_name: inv.description || '-',
-                    _item_price: inv.total_amount,
-                    _item_qty: 1,
-                    _item_discount: 0,
                     _item_total: inv.total_amount,
                 });
             } else {
@@ -160,21 +150,23 @@ const InvoicesPage: React.FC = () => {
                     rows.push({
                         ...inv,
                         _item_name: item.nama_produk,
-                        _item_price: Number(item.harga || 0),
-                        _item_qty: Number(item.jumlah || 0),
-                        _item_discount: Number(item.diskon || 0),
                         _item_total: (Number(item.harga || 0) * Number(item.jumlah || 0)) - Number(item.diskon || 0),
                     });
                 });
             }
         });
-        return rows;
-    }, [data]);
 
-    const filteredData = useMemo(() => {
-        if (!searchText) return flattenedData;
+        let result = rows;
+        if (activeTab !== 'all') {
+            result = result.filter(row => {
+                const isPaid = row.status === 'paid' || row.status === 'lunas';
+                return activeTab === 'paid' ? isPaid : !isPaid;
+            });
+        }
+
+        if (!searchText) return result;
         const low = searchText.toLowerCase();
-        return flattenedData.filter(row => {
+        return result.filter(row => {
             if (searchCategory === 'nama') return (row.client_name || row.contact?.name)?.toLowerCase().includes(low);
             if (searchCategory === 'kodeinvoice') return row.invoice_number?.toLowerCase().includes(low);
             if (searchCategory === 'tanggal') return String(row.date).toLowerCase().includes(low);
@@ -182,109 +174,87 @@ const InvoicesPage: React.FC = () => {
             if (searchCategory === 'nama_produk') return row._item_name?.toLowerCase().includes(low);
             return true;
         });
-    }, [flattenedData, searchText, searchCategory]);
+    }, [data, searchText, searchCategory, activeTab]);
 
     const columns = [
         {
-            title: <span style={{ fontSize: 10, color: '#666' }}>No</span>,
-            key: 'no',
-            width: 35,
-            render: (_: any, __: any, index: number) => <span style={{ fontSize: 11 }}>{index + 1}</span>,
-        },
-        {
-            title: <span style={{ fontSize: 10, color: '#666' }}>Kode tagihan</span>,
+            title: 'KODE',
             dataIndex: 'invoice_number',
             key: 'invoice_number',
+            width: 140,
             render: (text: string, record: any) => {
                 const isPaid = record.status === 'paid' || record.status === 'lunas';
                 return (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                        <Button 
-                            size="small" 
-                            style={{ 
-                                fontSize: 9, 
-                                fontWeight: 700, 
-                                borderRadius: 4,
-                                background: isPaid ? '#28a745' : '#dc3545',
-                                color: '#fff',
-                                border: 'none',
-                                minWidth: 80,
-                                padding: '4px 10px',
-                                height: 'auto',
-                                lineHeight: 'normal',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                            }}
-                            onClick={() => handlePrint(record)}
-                        >
-                            {text}
-                        </Button>
-                        <a href="#" style={{ fontSize: 9, color: '#007bff', fontWeight: 500, opacity: 0.8 }}>tambah item?</a>
-                    </div>
+                    <Button 
+                        size="small" 
+                        style={{ 
+                            fontSize: 11, 
+                            fontWeight: 700, 
+                            borderRadius: 6,
+                            background: isPaid ? '#10b981' : '#ef4444',
+                            color: '#fff',
+                            border: 'none',
+                        }}
+                        onClick={() => handlePrint(record)}
+                    >
+                        #{text}
+                    </Button>
                 );
             }
         },
         {
-            title: <span style={{ fontSize: 10, color: '#666' }}>Nama user</span>,
-            key: 'client_name',
-            render: (record: any) => <span style={{ fontSize: 11, color: '#333' }}>{record.contact?.name || record.client_name || 'Umum'}</span>,
-        },
-        {
-            title: <span style={{ fontSize: 10, color: '#666' }}>Tanggal order</span>,
-            dataIndex: 'created_at',
+            title: 'TANGGAL',
+            dataIndex: 'date',
             key: 'date',
-            render: (date: string) => <span style={{ color: '#555', fontSize: 10, whiteSpace: 'nowrap' }}>{fmtPhpDate(date)}</span>,
+            width: 110,
+            render: (v: any) => <Text style={{ fontSize: 13, color: '#475569' }}>{fmtPhpDate(v)}</Text>
         },
         {
-            title: <span style={{ fontSize: 10, color: '#666' }}>Produk</span>,
+            title: 'PELANGGAN',
+            key: 'client_name',
+            render: (record: any) => (
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <Text strong style={{ fontSize: 13, color: '#333' }}>{record.contact?.name || record.client_name || 'Umum'}</Text>
+                    <Text type="secondary" style={{ fontSize: 11 }}>{record.contact?.phone || '-'}</Text>
+                </div>
+            ),
+        },
+        {
+            title: 'PRODUK',
             dataIndex: '_item_name',
             key: 'produk',
-            render: (text: string) => <span style={{ fontSize: 11, color: '#333' }}>{text}</span>
+            width: 180, // Narrowed
+            render: (text: string) => <Text style={{ fontSize: 13, color: '#333' }}>{text}</Text>
         },
         {
-            title: <span style={{ fontSize: 10, color: '#666' }}>harga @</span>,
-            dataIndex: '_item_price',
-            key: 'price',
-            align: 'right' as const,
-            render: (v: number) => <span style={{ fontSize: 11, color: '#333' }}>{fmtPhpRp(v)}</span>,
-        },
-        {
-            title: <span style={{ fontSize: 10, color: '#666' }}>disc</span>,
-            dataIndex: '_item_discount',
-            key: 'discount',
-            align: 'right' as const,
-            render: (v: number) => <span style={{ fontSize: 11, color: '#333' }}>{fmtPhpRp(v)}</span>,
-        },
-        {
-            title: <span style={{ fontSize: 10, color: '#666' }}>Total</span>,
+            title: 'TOTAL',
             dataIndex: '_item_total',
             key: 'total',
+            width: 160, // Widened
             align: 'right' as const,
-            render: (v: number) => <span style={{ fontWeight: 700, fontSize: 11, color: '#000' }}>{fmtPhpRp(v)}</span>,
+            render: (v: number) => <Text strong style={{ fontSize: 13, color: '#333', whiteSpace: 'nowrap' }}>{fmtPhpRp(v)}</Text>,
         },
         {
-            title: <span style={{ fontSize: 10, color: '#666' }}>Status bayar</span>,
-            dataIndex: 'status',
-            key: 'status_text',
-            render: (status: string) => {
-                const label = status === 'paid' ? 'lunas' : (status === 'unpaid' ? 'belum' : status);
-                return <span style={{ fontSize: 10, color: '#555' }}>{label}</span>;
-            }
-        },
-        {
-            title: <span style={{ fontSize: 10, color: '#666' }}>status pembayaran</span>,
+            title: 'STATUS',
             key: 'status_label',
+            width: 120,
             render: (record: any) => {
                 const isPaid = record.status === 'paid' || record.status === 'lunas';
                 return (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Tag 
-                            color={isPaid ? '#28a745' : '#dc3545'}
-                            style={{ borderRadius: 3, fontWeight: 700, fontSize: 9, margin: 0, padding: '0 3px', lineHeight: '14px', border: 'none' }}
+                            bordered={false}
+                            style={{ 
+                                backgroundColor: isPaid ? '#10b98115' : '#ef444415', 
+                                color: isPaid ? '#10b981' : '#ef4444',
+                                fontWeight: 700, 
+                                fontSize: 10, 
+                                margin: 0, 
+                                borderRadius: 6,
+                                textTransform: 'uppercase'
+                            }}
                         >
-                            {isPaid ? 'lunas' : 'belum'}
+                            {isPaid ? 'Lunas' : 'Belum'}
                         </Tag>
                         <Popconfirm
                             title={isPaid ? 'Batal tandai lunas?' : 'Tandai sebagai LUNAS?'}
@@ -292,179 +262,103 @@ const InvoicesPage: React.FC = () => {
                             okText="Ya"
                             cancelText="Batal"
                         >
-                            <Button 
-                                size="small" 
-                                style={{ 
-                                    padding: '0 2px', 
-                                    height: 16, 
-                                    background: '#28a745', 
-                                    color: '#fff',
-                                    border: 'none',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    fontSize: 10,
-                                    borderRadius: 3
-                                }}
-                            >
-                                <CheckCircleOutlined style={{ fontSize: 10 }} />
-                            </Button>
+                            <Tooltip title={isPaid ? "Batal Lunas" : "Tandai Lunas"}>
+                                <Button 
+                                    size="small" 
+                                    shape="circle"
+                                    icon={<CheckCircleOutlined />}
+                                    style={{ 
+                                        background: isPaid ? '#f5f5f5' : '#10b981', 
+                                        color: isPaid ? '#ccc' : '#fff',
+                                        border: 'none',
+                                        fontSize: 12
+                                    }}
+                                />
+                            </Tooltip>
                         </Popconfirm>
                     </div>
                 );
             }
         },
         {
-            title: <span style={{ fontSize: 10, color: '#666' }}>aksi</span>,
+            title: '',
             key: 'actions',
             align: 'right' as const,
-            width: 70,
+            width: 100,
             render: (_: any, record: any) => (
-                <Space size={2}>
-                    <Button
-                        size="small"
-                        style={{ background: '#ffc107', border: 'none', color: '#000', padding: '0 4px', height: 20, width: 22, borderRadius: 3 }}
-                        icon={<EditOutlined style={{ fontSize: 10 }} />}
-                        onClick={() => handleEdit(record)}
-                    />
+                <Space size={4}>
+                    <Tooltip title="Cetak">
+                        <Button size="small" icon={<PrinterOutlined />} onClick={() => handlePrint(record)} style={{ borderRadius: 8 }} />
+                    </Tooltip>
+                    <Tooltip title="Edit">
+                        <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} style={{ borderRadius: 8 }} />
+                    </Tooltip>
                     <Popconfirm
-                        title="Yakin hapus data?"
+                        title="Hapus invoice?"
                         onConfirm={() => handleDelete(record.id)}
                         okText="Hapus"
                         cancelText="Batal"
+                        okButtonProps={{ danger: true }}
                     >
-                        <Button
-                            size="small"
-                            type="primary"
-                            danger
-                            icon={<CloseOutlined style={{ fontSize: 10 }} />}
-                            style={{ background: '#dc3545', border: 'none', padding: '0 4px', height: 20, width: 22, borderRadius: 3 }}
-                        />
+                        <Button size="small" danger icon={<CloseOutlined />} style={{ borderRadius: 8 }} />
                     </Popconfirm>
                 </Space>
             ),
         },
     ];
 
-
     return (
-        <motion.div 
-            initial={{ opacity: 0, y: 15 }} 
-            animate={{ opacity: 1, y: 0 }}
-            style={{ fontSize: 12 }} // Global smaller font
-        >
-            <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
-                <Space direction="vertical" size={0}>
-                    <Breadcrumb 
-                        items={[{ title: 'Home' }, { title: 'tagihan' }]} 
-                        style={{ marginBottom: 2, fontSize: 11 }} 
-                    />
-                    <Title level={5} style={{ margin: 0, fontWeight: 700, fontSize: 16 }}>Data Orderan</Title>
-                </Space>
-            </div>
-
-
-            <Card bordered={false} style={{ borderRadius: 6 }} bodyStyle={{ padding: 0 }}>
-                <div style={{ padding: '6px 12px', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start', alignItems: 'center', gap: 8, borderBottom: '1px solid #f0f0f0' }}>
-                    <Button 
-                        type="primary" 
-                        icon={<PlusOutlined style={{ fontSize: 12 }} />} 
-                        onClick={handleCreate} 
-                        size="small"
-                        style={{ background: '#28a745', border: 'none', borderRadius: 3, fontWeight: 600, height: 26, fontSize: 11, marginRight: 8 }}
-                    >
-                        tambah order
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <PageHeader
+                title="Data Penjualan"
+                description="Kelola invoice, pembayaran, dan riwayat pesanan pelanggan."
+                breadcrumb={[{ label: 'KEUANGAN' }, { label: 'INVOICE' }]}
+                extra={
+                    <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate} style={{ borderRadius: 12, height: 40, fontWeight: 700, boxShadow: '0 4px 12px rgba(15, 185, 177, 0.2)' }}>
+                        Tambah Order
                     </Button>
+                }
+            />
 
-                    <div style={{ display: 'flex', border: '1px solid #d9d9d9', borderRadius: 3, overflow: 'hidden' }}>
-                        <Input 
-                            placeholder="kata kunci pencarian" 
-                            style={{ width: 160, fontSize: 11 }} 
-                            value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
-                            onPressEnter={fetchInvoices}
-                            bordered={false}
-                            size="small"
-                        />
-                        <Select 
-                            value={searchCategory}
-                            onChange={setSearchCategory}
-                            style={{ width: 130, fontSize: 11, borderLeft: '1px solid #d9d9d9' }}
-                            bordered={false}
-                            size="small"
-                            dropdownStyle={{ minWidth: 180 }}
-                        >
-                            <Option value="nama"><span style={{ fontSize: 11 }}>nama customer</span></Option>
-                            <Option value="kodeinvoice"><span style={{ fontSize: 11 }}>kode invoice</span></Option>
-                            <Option value="tanggal"><span style={{ fontSize: 11 }}>tanggal order</span></Option>
-                            <Option value="statusbayar"><span style={{ fontSize: 11 }}>status bayar</span></Option>
-                            <Option value="nama_produk"><span style={{ fontSize: 11 }}>nama produk</span></Option>
+            <Card className="premium-card" style={{ borderRadius: 24 }} bodyStyle={{ padding: 0 }}>
+                <div style={{ padding: '20px 24px', borderBottom: '1px solid #f8f8f8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                    <Space size={12} wrap>
+                        <Select value={searchCategory} onChange={setSearchCategory} style={{ width: 160, height: 40 }}>
+                            <Option value="nama">Nama Customer</Option>
+                            <Option value="kodeinvoice">Kode Invoice</Option>
+                            <Option value="tanggal">Tanggal</Option>
+                            <Option value="statusbayar">Status Bayar</Option>
+                            <Option value="nama_produk">Nama Produk</Option>
                         </Select>
-                        <Button style={{ border: 'none', background: '#f5f5f5', fontSize: 11, height: 24, borderLeft: '1px solid #d9d9d9' }} size="small" onClick={fetchInvoices}>search</Button>
-                    </div>
-                    
-                    <Tabs
-                        activeKey={activeTab}
-                        onChange={setActiveTab}
-                        size="small"
-                        className="small-tabs"
-                        items={[
-                            { key: 'all', label: <span style={{ fontSize: 11 }}>SEMUA</span> },
-                            { key: 'unpaid', label: <span style={{ fontSize: 11 }}>BELUM BAYAR</span> },
-                            { key: 'paid', label: <span style={{ fontSize: 11 }}>LUNAS</span> },
-                        ]}
-                        style={{ marginBottom: -10 }}
-                    />
+                        <Input 
+                            placeholder="Cari data..." 
+                            prefix={<SearchOutlined style={{ color: '#ccc' }} />}
+                            value={searchText}
+                            onChange={e => setSearchText(e.target.value)}
+                            style={{ width: 240, borderRadius: 12, height: 40, background: '#fcfcfc', border: '1px solid #eee' }}
+                            allowClear
+                        />
+                    </Space>
+
+                    <Radio.Group value={activeTab} onChange={e => setActiveTab(e.target.value)} size="middle" buttonStyle="solid">
+                        <Radio.Button value="all" style={{ borderRadius: '10px 0 0 10px' }}>SEMUA</Radio.Button>
+                        <Radio.Button value="unpaid">BELUM BAYAR</Radio.Button>
+                        <Radio.Button value="paid" style={{ borderRadius: '0 10px 10px 0' }}>LUNAS</Radio.Button>
+                    </Radio.Group>
                 </div>
 
-                <div className="table-responsive">
-                    <Table
-                        columns={columns}
-                        dataSource={filteredData}
-                        rowKey={(r, i) => `${r.id}-${i}`}
-                        loading={loading}
-                        size="small"
-                        pagination={{ 
-                            pageSize: 50, 
-                            showSizeChanger: true,
-                            showTotal: (total) => <span style={{ fontSize: 10 }}>Total {total} data</span>,
-                            size: 'small'
-                        }}
-                        className="compact-table"
-                        bordered
-                        style={{ fontSize: 11 }}
-                    />
-                </div>
+                <Table
+                    columns={columns}
+                    dataSource={filteredData}
+                    rowKey={(r, i) => `${r.id}-${i}`}
+                    loading={loading}
+                    pagination={{ pageSize: 15, showSizeChanger: true, showTotal: (t) => <span style={{ fontSize: 12, color: '#aaa' }}>Total {t} data</span> }}
+                    size="middle"
+                />
             </Card>
 
-            <InvoiceFormDrawer
-                open={drawerOpen}
-                onClose={() => { setDrawerOpen(false); setEditInvoice(null); }}
-                onSuccess={() => { setDrawerOpen(false); setEditInvoice(null); fetchInvoices(); }}
-                editData={editInvoice}
-            />
-
-            <InvoicePrintModal
-                open={printModalOpen}
-                onClose={() => setPrintModalOpen(false)}
-                invoice={selectedInvoice}
-                settings={settings}
-            />
-            
-            <style>{`
-                .compact-table .ant-table-thead > tr > th {
-                    padding: 4px 8px !important;
-                    background: #fafafa !important;
-                }
-                .compact-table .ant-table-tbody > tr > td {
-                    padding: 3px 8px !important;
-                }
-                .compact-table .ant-table-pagination.ant-pagination {
-                    margin: 8px 0 !important;
-                }
-                .small-tabs .ant-tabs-tab {
-                    padding: 4px 8px !important;
-                }
-            `}</style>
+            <InvoiceFormDrawer open={drawerOpen} onClose={() => { setDrawerOpen(false); setEditInvoice(null); }} onSuccess={() => { setDrawerOpen(false); setEditInvoice(null); fetchInvoices(); }} editData={editInvoice} />
+            <InvoicePrintModal open={printModalOpen} onClose={() => setPrintModalOpen(false)} invoice={selectedInvoice} settings={settings} />
         </motion.div>
     );
 };

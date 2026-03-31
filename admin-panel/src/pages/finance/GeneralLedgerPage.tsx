@@ -1,20 +1,26 @@
 import React, { useState } from 'react';
-import { Card, DatePicker, Table, Select, Spin, Statistic, Divider, Row, Col } from 'antd';
-import { BookOutlined } from '@ant-design/icons';
+import { Card, DatePicker, Table, Select, Spin, Row, Col, Typography, Empty, Button, message } from 'antd';
+import { BookOutlined, AuditOutlined, RiseOutlined, FallOutlined, WalletOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api';
 import dayjs from 'dayjs';
 import { fmtRp } from '../../utils/formatters';
+import PageHeader from '../../components/PageHeader';
+import { motion } from 'framer-motion';
 
+const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
 const GeneralLedgerPage: React.FC = () => {
     const [accountId, setAccountId] = useState<number | null>(null);
     const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([dayjs().startOf('year'), dayjs()]);
 
-    const { data: banks = [] } = useQuery({
+    const { data: banksData = [] } = useQuery({
         queryKey: ['banks'],
-        queryFn: async () => (await api.get('/finance/banks')).data,
+        queryFn: async () => {
+            const res = await api.get('/finance/banks');
+            return res.data?.data || res.data || [];
+        },
     });
 
     const { data, isLoading } = useQuery({
@@ -27,50 +33,165 @@ const GeneralLedgerPage: React.FC = () => {
                     endDate: dateRange[1].format('YYYY-MM-DD'),
                 },
             });
-            return res.data;
+            return res.data?.data || res.data;
         },
         enabled: !!accountId,
     });
 
     const columns = [
-        { title: 'Tanggal', dataIndex: 'date', key: 'date', render: (v: string) => dayjs(v).format('DD/MM/YYYY'), width: 110 },
-        { title: 'No. Ref', dataIndex: 'refNumber', key: 'ref', width: 120 },
-        { title: 'Keterangan', dataIndex: 'memo', key: 'memo', ellipsis: true },
-        { title: 'Kontak', dataIndex: 'contact', key: 'contact', render: (v: string) => v || '-', width: 120 },
-        { title: 'Debit', dataIndex: 'debit', key: 'debit', render: (v: number) => v > 0 ? fmtRp(v) : '-', align: 'right' as const },
-        { title: 'Kredit', dataIndex: 'credit', key: 'credit', render: (v: number) => v > 0 ? fmtRp(v) : '-', align: 'right' as const },
-        { title: 'Saldo', dataIndex: 'balance', key: 'balance', render: (v: number) => fmtRp(v), align: 'right' as const },
+        { 
+            title: 'TANGGAL', 
+            dataIndex: 'date', 
+            key: 'date', 
+            render: (v: string) => <Text style={{ fontSize: 12, color: '#64748b' }}>{dayjs(v).format('DD/MM/YYYY')}</Text>, 
+            width: 110 
+        },
+        { 
+            title: 'NO. REF', 
+            dataIndex: 'refNumber', 
+            key: 'ref', 
+            width: 140,
+            render: (v: string) => <Text strong style={{ fontSize: 13, color: '#333' }}>{v || '-'}</Text>
+        },
+        { 
+            title: 'KETERANGAN', 
+            dataIndex: 'memo', 
+            key: 'memo', 
+            ellipsis: true,
+            render: (v: string) => <Text style={{ fontSize: 13, color: '#475569' }}>{v || '-'}</Text>
+        },
+        { 
+            title: 'KONTAK', 
+            dataIndex: 'contact', 
+            key: 'contact', 
+            width: 140,
+            render: (v: string) => <Text style={{ fontSize: 12, color: '#64748b' }}>{v || '-'}</Text>
+        },
+        { 
+            title: 'DEBIT', 
+            dataIndex: 'debit', 
+            key: 'debit', 
+            render: (v: number) => v > 0 ? <Text strong style={{ fontSize: 13, color: '#10b981' }}>{fmtRp(v)}</Text> : '-', 
+            align: 'right' as const 
+        },
+        { 
+            title: 'KREDIT', 
+            dataIndex: 'credit', 
+            key: 'credit', 
+            render: (v: number) => v > 0 ? <Text strong style={{ fontSize: 13, color: '#ef4444' }}>{fmtRp(v)}</Text> : '-', 
+            align: 'right' as const 
+        },
+        { 
+            title: 'SALDO', 
+            dataIndex: 'balance', 
+            key: 'balance', 
+            render: (v: number) => <Text strong style={{ fontSize: 13, color: '#333' }}>{fmtRp(v)}</Text>, 
+            align: 'right' as const 
+        },
     ];
 
     return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <h1 style={{ margin: 0 }}><BookOutlined /> Buku Besar (General Ledger)</h1>
-            </div>
-            <Card style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                    <Select
-                        placeholder="Pilih Akun"
-                        style={{ width: 300 }}
-                        options={banks.map((b: { id: number; code: string; name: string }) => ({ value: b.id, label: `${b.code} - ${b.name}` }))}
-                        onChange={(v: number) => setAccountId(v)}
-                    />
-                    <RangePicker value={dateRange} onChange={(d) => d && setDateRange(d as [dayjs.Dayjs, dayjs.Dayjs])} format="DD/MM/YYYY" />
-                </div>
+        <motion.div 
+            initial={{ opacity: 0, y: 15 }} 
+            animate={{ opacity: 1, y: 0 }}
+            style={{ fontFamily: "'Poppins', sans-serif" }}
+        >
+            <PageHeader
+                title="Buku Besar"
+                description="Tinjauan mendalam pergerakan saldo untuk setiap akun keuangan."
+                breadcrumb={[{ label: 'LAPORAN' }, { label: 'BUKU BESAR' }]}
+            />
+
+            <Card className="premium-card" style={{ borderRadius: 20, marginBottom: 32 }} bodyStyle={{ padding: '24px 32px' }}>
+                <Row gutter={24} align="middle">
+                    <Col xs={24} md={10}>
+                        <Text strong style={{ fontSize: 12, color: '#aaa', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>PILIH AKUN KEUANGAN</Text>
+                        <Select
+                            placeholder="Pilih Akun Buku Besar..."
+                            style={{ width: '100%', height: 44 }}
+                            className="premium-select"
+                            options={banksData.map((b: any) => ({ value: b.id, label: `${b.bank_name || b.name} (${b.account_number || 'KAS'})` }))}
+                            onChange={(v: number) => setAccountId(v)}
+                            showSearch
+                            optionFilterProp="label"
+                        />
+                    </Col>
+                    <Col xs={24} md={10}>
+                        <Text strong style={{ fontSize: 12, color: '#aaa', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>PERIODE WAKTU</Text>
+                        <RangePicker 
+                            value={dateRange} 
+                            onChange={(d) => d && setDateRange(d as [dayjs.Dayjs, dayjs.Dayjs])} 
+                            format="DD/MM/YYYY" 
+                            style={{ width: '100%', height: 44, borderRadius: 12 }}
+                        />
+                    </Col>
+                    <Col xs={24} md={4}>
+                        <Button 
+                            block 
+                            type="primary" 
+                            icon={<AuditOutlined />} 
+                            style={{ height: 44, borderRadius: 12, marginTop: 22, fontWeight: 700 }}
+                            onClick={() => accountId ? null : message.warning('Pilih akun terlebih dahulu')}
+                        >
+                            TULIS LAPORAN
+                        </Button>
+                    </Col>
+                </Row>
             </Card>
 
-            {isLoading ? <Spin size="large" /> : data && (
-                <Card>
-                    <Row gutter={24} style={{ marginBottom: 16 }}>
-                        <Col span={8}><Statistic title="Akun" value={`${data.account.code} - ${data.account.name}`} /></Col>
-                        <Col span={8}><Statistic title="Saldo Awal" value={data.openingBalance} formatter={(v: any) => fmtRp(v)} /></Col>
-                        <Col span={8}><Statistic title="Saldo Akhir" value={data.closingBalance} formatter={(v: any) => fmtRp(v)} valueStyle={{ fontWeight: 'bold' }} /></Col>
-                    </Row>
-                    <Divider />
-                    <Table columns={columns} dataSource={data.items} rowKey={(_, i) => String(i)} pagination={false} size="small" />
+            {!accountId ? (
+                <Card className="premium-card" style={{ borderRadius: 24, padding: '60px 0', textAlign: 'center' }}>
+                    <Empty 
+                        image={<BookOutlined style={{ fontSize: 64, color: '#f1f5f9' }} />} 
+                        description={<Text type="secondary">Silakan pilih akun buku besar dan periode untuk melihat data transaksi.</Text>} 
+                    />
+                </Card>
+            ) : isLoading ? (
+                <div style={{ padding: 100, textAlign: 'center' }}><Spin size="large" tip="Menyusun Jurnal Akun..." /></div>
+            ) : data && (
+                <Card className="premium-card" style={{ borderRadius: 24 }} bodyStyle={{ padding: 0 }}>
+                    <div style={{ padding: '32px', borderBottom: '1px solid #f8f8f8' }}>
+                        <Row gutter={24}>
+                            <Col span={8}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <div style={{ width: 44, height: 44, borderRadius: 12, background: '#f8fafc', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                                        <WalletOutlined />
+                                    </div>
+                                    <div>
+                                        <Text type="secondary" style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>AKUN TERPILIH</Text>
+                                        <div style={{ fontSize: 15, fontWeight: 800, color: '#333' }}>{data.account.name}</div>
+                                    </div>
+                                </div>
+                            </Col>
+                            <Col span={8}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <div style={{ width: 44, height: 44, borderRadius: 12, background: '#f8fafc', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                                        <FallOutlined />
+                                    </div>
+                                    <div>
+                                        <Text type="secondary" style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>SALDO AWAL</Text>
+                                        <div style={{ fontSize: 18, fontWeight: 800, color: '#333' }}>{fmtRp(data.openingBalance)}</div>
+                                    </div>
+                                </div>
+                            </Col>
+                            <Col span={8}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <div style={{ width: 44, height: 44, borderRadius: 12, background: '#f0fdf4', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                                        <RiseOutlined />
+                                    </div>
+                                    <div>
+                                        <Text type="secondary" style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>SALDO AKHIR</Text>
+                                        <div style={{ fontSize: 22, fontWeight: 800, color: '#10b981' }}>{fmtRp(data.closingBalance)}</div>
+                                    </div>
+                                </div>
+                            </Col>
+                        </Row>
+                    </div>
+
+                    <Table columns={columns} dataSource={data.items} rowKey={(_, i) => String(i)} pagination={false} size="middle" />
                 </Card>
             )}
-        </div>
+        </motion.div>
     );
 };
 

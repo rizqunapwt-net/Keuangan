@@ -29,21 +29,31 @@ class RolePermissionSeeder extends Seeder
             'books.read', 'authors.read',
         ];
 
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+        $guards = ['web', 'sanctum'];
+
+        foreach ($guards as $guard) {
+            foreach ($permissions as $permission) {
+                Permission::findOrCreate($permission, $guard);
+            }
+
+            // 2. Create Roles
+            $adminRole = Role::findOrCreate('Admin', $guard);
+            $adminRole->syncPermissions($permissions);
+
+            $userRole = Role::findOrCreate('User', $guard);
+            $userRole->syncPermissions([
+                'products_read',
+                'sales_read',
+                'pos_access',
+                'finance.view_reports',
+                'debt.view',
+            ]);
+            
+            $kasirRole = Role::findOrCreate('Kasir', $guard);
+            $kasirRole->syncPermissions([
+                'pos_access',
+                'sales_read',
+            ]);
         }
-
-        // 2. Create Roles
-        $adminRole = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
-        $adminRole->syncPermissions(Permission::all());
-
-        $userRole = Role::firstOrCreate(['name' => 'User', 'guard_name' => 'web']);
-        $userRole->syncPermissions([
-            'products_read',
-            'sales_read',
-            'pos_access',
-            'finance.view_reports',
-            'debt.view',
-        ]);
     }
 }

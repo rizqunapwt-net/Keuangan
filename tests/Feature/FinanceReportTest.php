@@ -6,6 +6,7 @@ use App\Models\Bank;
 use App\Models\CashTransaction;
 use App\Models\User;
 use Carbon\Carbon;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,8 +21,9 @@ class FinanceReportTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(RolePermissionSeeder::class);
         $this->user = User::factory()->create();
-        $this->actingAs($this->user);
+        $this->actingAsWithRole($this->user, 'Admin');
         $this->bank = Bank::factory()->create();
     }
 

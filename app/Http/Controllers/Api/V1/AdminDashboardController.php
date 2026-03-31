@@ -7,6 +7,7 @@ use App\Models\Debt;
 use App\Models\Expense;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
 
 class AdminDashboardController extends Controller
 {
@@ -17,6 +18,8 @@ class AdminDashboardController extends Controller
      */
     public function salesStats(): JsonResponse
     {
+        Gate::authorize('admin.access');
+
         $currentMonth = now()->month;
         $currentYear = now()->year;
 

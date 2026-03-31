@@ -16,10 +16,9 @@ class RoleAccessMatrixApiTest extends TestCase
     {
         $this->seed(RolePermissionSeeder::class);
 
-        /** @var User $user */
         $user = User::factory()->create();
         $user->assignRole('User'); // User role doesn't have finance permissions by default in our seeder
-        Sanctum::actingAs($user);
+        $this->actingAs($user); // Use actingAs which defaults to web/sanctum as configured
 
         $response = $this->getJson('/api/v1/finance/summary');
 
@@ -30,10 +29,8 @@ class RoleAccessMatrixApiTest extends TestCase
     {
         $this->seed(RolePermissionSeeder::class);
 
-        /** @var User $admin */
         $admin = User::factory()->create();
-        $admin->assignRole('Admin');
-        Sanctum::actingAs($admin);
+        $this->actingAsWithRole($admin, 'Admin');
 
         $response = $this->getJson('/api/v1/finance/summary');
 
@@ -45,10 +42,11 @@ class RoleAccessMatrixApiTest extends TestCase
     {
         $this->seed(RolePermissionSeeder::class);
 
-        /** @var User $user */
         $user = User::factory()->create();
-        $user->givePermissionTo('finance.view_reports');
-        Sanctum::actingAs($user);
+        foreach (['web', 'sanctum'] as $guard) {
+            $user->givePermissionTo(\Spatie\Permission\Models\Permission::findByName('finance.view_reports', $guard));
+        }
+        $this->actingAs($user);
 
         $response = $this->getJson('/api/v1/finance/summary');
 

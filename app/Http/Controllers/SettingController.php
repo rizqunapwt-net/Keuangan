@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class SettingController extends Controller
 {
     public function index()
     {
+        Gate::authorize('admin.access');
+
         $settings = Setting::first();
 
         return response()->json([
@@ -19,6 +22,8 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
+        Gate::authorize('admin.access');
+
         $settings = Setting::first();
         if (! $settings) {
             $settings = new Setting;

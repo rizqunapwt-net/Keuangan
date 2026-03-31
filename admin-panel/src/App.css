@@ -42,6 +42,43 @@ body {
   min-height: 100vh;
 }
 
+/* ======= Ant Design Core Fixes (Horizontal Layouts) ======= */
+/* Force Breadcrumb orientation */
+.ant-breadcrumb ol, 
+.ant-breadcrumb ol li {
+    display: inline-flex !important;
+    align-items: center !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.ant-breadcrumb-separator {
+    display: inline-block !important;
+    margin: 0 4px !important;
+}
+
+/* Force Tabs orientation */
+.ant-tabs-nav-list {
+    display: flex !important;
+    flex-direction: row !important;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.ant-tabs-tab {
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+/* Remove default browser bullets/numbers globally in Layout to prevent '1. Home' issues */
+.ant-layout ul, .ant-layout ol {
+    list-style: none !important;
+    padding: 0;
+    margin: 0;
+}
+
 /* ======= Sidebar ======= */
 .ant-layout-sider {
   background: var(--rq-card-bg) !important;
@@ -370,4 +407,104 @@ body {
   color: var(--rq-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* ======= Invoice Page Toolbar ======= */
+.inv-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-end !important;
+  margin-bottom: 16px !important;
+}
+
+.inv-header-left {
+  display: block !important;
+}
+
+.inv-header-title {
+  margin: 0 !important;
+  font-weight: 700 !important;
+}
+
+.inv-toolbar {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  padding: 10px 16px !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+}
+
+.inv-search-group {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.inv-search-group .ant-select {
+  min-width: 130px !important;
+}
+
+.inv-search-group .ant-input-affix-wrapper,
+.inv-search-group .ant-input {
+  width: 180px !important;
+}
+
+/* Force Ant Design Space to be horizontal */
+.ant-space {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.ant-space-item {
+  display: inline-block !important;
+}
+
+/* Force Radio Group horizontal */
+.ant-radio-group {
+  display: inline-flex !important;
+  flex-direction: row !important;
+}
+
+.ant-radio-button-wrapper {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* Primary teal button */
+.rq-btn-primary {
+  background: var(--rq-primary) !important;
+  border-color: var(--rq-primary) !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+}
+
+.rq-btn-primary:hover {
+  background: #0da8a1 !important;
+  border-color: #0da8a1 !important;
+}
+
+/* Radio Button active state — teal */
+.ant-radio-button-wrapper-checked {
+  background: var(--rq-primary) !important;
+  border-color: var(--rq-primary) !important;
+}
+
+.ant-radio-button-wrapper-checked:hover {
+  background: #0da8a1 !important;
+  border-color: #0da8a1 !important;
+}
+
+/* Premium Inactive/Reference Row */
+.premium-inactive-row {
+  background: #fafafa !important;
+  color: #999 !important;
+}
+
+.premium-inactive-row:hover > td {
+  background: #f5f5f5 !important;
 }

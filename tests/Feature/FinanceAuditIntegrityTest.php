@@ -35,7 +35,7 @@ class FinanceAuditIntegrityTest extends TestCase
             'running_balance' => 1_000_000,
         ]);
 
-        $response = $this->actingAs($user)->deleteJson("/api/v1/finance/cash-transactions/{$transaction->id}");
+        $response = $this->deleteJson("/api/v1/finance/cash-transactions/{$transaction->id}");
 
         $response->assertNoContent();
 
@@ -77,7 +77,7 @@ class FinanceAuditIntegrityTest extends TestCase
             'running_balance' => 500_000,
         ]);
 
-        $response = $this->actingAs($user)->deleteJson("/api/v1/finance/banks/{$bank->id}");
+        $response = $this->deleteJson("/api/v1/finance/banks/{$bank->id}");
 
         $response
             ->assertStatus(422)
@@ -106,7 +106,7 @@ class FinanceAuditIntegrityTest extends TestCase
             'payment_method' => 'cash',
         ]);
 
-        $response = $this->actingAs($user)->deleteJson("/api/v1/finance/expenses/{$expense->id}");
+        $response = $this->deleteJson("/api/v1/finance/expenses/{$expense->id}");
 
         $response->assertStatus(204);
         $this->assertSoftDeleted('expenses', ['id' => $expense->id]);
@@ -133,7 +133,7 @@ class FinanceAuditIntegrityTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->actingAs($user)->deleteJson("/api/v1/finance/accounts/{$account->id}");
+        $response = $this->deleteJson("/api/v1/finance/accounts/{$account->id}");
 
         $response->assertOk()->assertJsonPath('success', true);
         $this->assertDatabaseMissing('accounting_accounts', ['id' => $account->id]);
@@ -177,7 +177,7 @@ class FinanceAuditIntegrityTest extends TestCase
             'paid_amount' => 0,
         ]);
 
-        $response = $this->actingAs($user)->getJson("/api/v1/finance/debts?contact_id={$contact->id}");
+        $response = $this->getJson("/api/v1/finance/debts?contact_id={$contact->id}");
 
         $response->assertOk();
         $this->assertCount(1, $response->json('data'));

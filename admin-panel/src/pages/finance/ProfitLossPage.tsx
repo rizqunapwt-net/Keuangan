@@ -1,8 +1,11 @@
-import { Card, Typography, Space, DatePicker, Row, Col, Statistic, Table, Breadcrumb, message, Button } from 'antd';
-import { ExportOutlined, FileExcelOutlined, LoadingOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Card, Typography, Space, DatePicker, Row, Col, Table, message, Button } from 'antd';
+import { ExportOutlined, FileExcelOutlined, LoadingOutlined, RiseOutlined, FallOutlined, WalletOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import api from '../../api';
-import { useState, useEffect } from 'react';
+import PageHeader from '../../components/PageHeader';
+import { motion } from 'framer-motion';
+import { fmtRp } from '../../utils/formatters';
 
 interface ProfitLossData {
     totalRevenue: number;
@@ -18,8 +21,10 @@ const ProfitLossPage: React.FC = () => {
     const [dates, setDates] = useState<[Dayjs, Dayjs]>([dayjs().startOf('month'), dayjs()]);
     const [exportingExcel, setExportingExcel] = useState(false);
     const [exportingPdf, setExportingPdf] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const fetchReport = async () => {
+        setLoading(true);
         try {
             const response = await api.get('/finance/reports/profit-loss', {
                 params: {
@@ -31,13 +36,13 @@ const ProfitLossPage: React.FC = () => {
         } catch {
             message.error('Gagal mengambil laporan Laba Rugi');
         } finally {
-            // Done
+            setLoading(false);
         }
     };
 
     const handleExport = async (type: 'excel' | 'pdf') => {
-        const setLoading = type === 'excel' ? setExportingExcel : setExportingPdf;
-        setLoading(true);
+        const setLoadingState = type === 'excel' ? setExportingExcel : setExportingPdf;
+        setLoadingState(true);
         try {
             const response = await api.get(`/finance/reports/profit-loss/${type}`, {
                 params: {
@@ -63,7 +68,7 @@ const ProfitLossPage: React.FC = () => {
         } catch {
             message.error(`Gagal mengunduh laporan ${type.toUpperCase()}`);
         } finally {
-            setLoading(false);
+            setLoadingState(false);
         }
     };
 
@@ -73,101 +78,149 @@ const ProfitLossPage: React.FC = () => {
     }, [dates]);
 
     const reportItems = [
-        { key: '1', title: 'Pendapatan Penjualan', amount: data?.totalRevenue || 0, type: 'revenue' },
-        { key: '2', title: 'Beban Operasional', amount: data?.totalExpense || 0, type: 'expense' },
+        { key: '1', title: 'Pendapatan Penjualan', amount: data?.totalRevenue || 0, type: 'revenue', icon: <RiseOutlined style={{ color: '#10b981' }} /> },
+        { key: '2', title: 'Beban Operasional', amount: data?.totalExpense || 0, type: 'expense', icon: <FallOutlined style={{ color: '#ef4444' }} /> },
+    ];
+
+    const stats = [
+        { 
+            title: 'TOTAL PENDAPATAN', 
+            value: data?.totalRevenue || 0, 
+            icon: <RiseOutlined />, 
+            color: '#10b981', 
+            bg: 'rgba(16, 185, 129, 0.1)' 
+        },
+        { 
+            title: 'TOTAL BEBAN', 
+            value: data?.totalExpense || 0, 
+            icon: <FallOutlined />, 
+            color: '#ef4444', 
+            bg: 'rgba(239, 68, 68, 0.1)' 
+        },
+        { 
+            title: 'LABA BERSIH', 
+            value: data?.netProfit || 0, 
+            icon: <WalletOutlined />, 
+            color: '#3b82f6', 
+            bg: 'rgba(59, 130, 246, 0.1)' 
+        },
     ];
 
     return (
-        <div>
-            <Breadcrumb className="mb-4" items={[{ title: 'Beranda' }, { title: 'Laporan' }, { title: 'Laba Rugi' }]} />
+        <motion.div 
+            initial={{ opacity: 0, y: 15 }} 
+            animate={{ opacity: 1, y: 0 }}
+            style={{ fontFamily: "'Poppins', sans-serif" }}
+        >
+            <PageHeader
+                title="Laporan Laba Rugi"
+                description="Analisis performa keuangan Rizquna berdasarkan pendapatan dan beban."
+                breadcrumb={[{ label: 'LAPORAN' }, { label: 'LABA RUGI' }]}
+                extra={
+                    <Space size={12}>
+                        <RangePicker
+                            value={dates}
+                            onChange={(val) => val && setDates(val as [Dayjs, Dayjs])}
+                            style={{ borderRadius: 12, height: 40 }}
+                        />
+                        <Button
+                            icon={exportingExcel ? <LoadingOutlined /> : <FileExcelOutlined />}
+                            onClick={() => handleExport('excel')}
+                            loading={exportingExcel}
+                            style={{ borderRadius: 10, height: 40, fontWeight: 600, color: '#10b981', borderColor: '#10b981' }}
+                        >
+                            Excel
+                        </Button>
+                        <Button
+                            type="primary"
+                            icon={exportingPdf ? <LoadingOutlined /> : <ExportOutlined />}
+                            onClick={() => handleExport('pdf')}
+                            loading={exportingPdf}
+                            style={{ borderRadius: 12, height: 40, fontWeight: 700 }}
+                        >
+                            PDF
+                        </Button>
+                    </Space>
+                }
+            />
 
-            <div className="flex justify-between items-center mb-6">
-                <Title level={3} className="!m-0">Laba Rugi</Title>
-                <Space>
-                    <RangePicker
-                        value={dates}
-                        onChange={(val) => val && setDates(val as [Dayjs, Dayjs])}
-                        className="rounded-lg"
-                    />
-                    <Button
-                        icon={exportingExcel ? <LoadingOutlined /> : <FileExcelOutlined />}
-                        className="text-green-600 border-green-600 hover:bg-green-50"
-                        loading={exportingExcel}
-                        onClick={() => handleExport('excel')}
-                    >
-                        Export Excel
-                    </Button>
-                    <Button
-                        type="primary"
-                        icon={exportingPdf ? <LoadingOutlined /> : <ExportOutlined />}
-                        loading={exportingPdf}
-                        onClick={() => handleExport('pdf')}
-                    >
-                        Export PDF
-                    </Button>
-                </Space>
-            </div>
-
-            <Row gutter={[16, 16]} className="mb-6">
-                <Col span={8}>
-                    <Card className="shadow-sm border-gray-100 rounded-xl">
-                        <Statistic
-                            title="Total Pendapatan"
-                            value={data?.totalRevenue || 0}
-                            prefix="Rp"
-                            valueStyle={{ color: '#3f8600' }}
-                        />
-                    </Card>
-                </Col>
-                <Col span={8}>
-                    <Card className="shadow-sm border-gray-100 rounded-xl">
-                        <Statistic
-                            title="Total Beban"
-                            value={data?.totalExpense || 0}
-                            prefix="Rp"
-                            valueStyle={{ color: '#cf1322' }}
-                        />
-                    </Card>
-                </Col>
-                <Col span={8}>
-                    <Card className={`shadow-sm border-gray-100 rounded-xl ${(data?.netProfit ?? 0) >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                        <Statistic
-                            title="Laba Bersih"
-                            value={data?.netProfit || 0}
-                            prefix="Rp"
-                            valueStyle={{ color: (data?.netProfit ?? 0) >= 0 ? '#3f8600' : '#cf1322' }}
-                        />
-                    </Card>
-                </Col>
+            <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
+                {stats.map((stat, i) => (
+                    <Col xs={24} sm={8} key={i}>
+                        <Card className="premium-card" style={{ borderRadius: 20 }} bodyStyle={{ padding: '24px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <div style={{ 
+                                    width: 48, height: 48, borderRadius: 14, 
+                                    background: stat.bg, color: stat.color, 
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: 20
+                                }}>
+                                    {stat.icon}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 10, fontWeight: 700, color: '#aaa', letterSpacing: '0.8px', display: 'block', textTransform: 'uppercase' }}>
+                                        {stat.title}
+                                    </Text>
+                                    <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#333', marginTop: 2 }}>
+                                        {fmtRp(stat.value)}
+                                    </Title>
+                                </div>
+                            </div>
+                        </Card>
+                    </Col>
+                ))}
             </Row>
 
-            <Card className="shadow-sm border-gray-100 rounded-xl" title="Rincian Laporan">
+            <Card className="premium-card" style={{ borderRadius: 24 }} bodyStyle={{ padding: 0 }} title={
+                <div style={{ padding: '16px 24px' }}>
+                    <Text strong style={{ fontSize: 16, color: '#333' }}>Rincian Laba Rugi</Text>
+                    <div style={{ fontSize: 12, color: '#aaa', fontWeight: 500 }}>Periode: {dates[0].format('DD MMM')} - {dates[1].format('DD MMM YYYY')}</div>
+                </div>
+            }>
                 <Table
                     pagination={false}
+                    loading={loading}
                     columns={[
-                        { title: 'Keterangan', dataIndex: 'title', key: 'title' },
+                        { 
+                            title: 'KETERANGAN', 
+                            dataIndex: 'title', 
+                            key: 'title',
+                            render: (text, record) => (
+                                <Space size={12}>
+                                    {record.icon}
+                                    <Text strong style={{ color: '#475569' }}>{text}</Text>
+                                </Space>
+                            )
+                        },
                         {
-                            title: 'Total',
+                            title: 'TOTAL NOMINAL',
                             dataIndex: 'amount',
                             key: 'amount',
-                            align: 'right',
-                            render: (val) => <Text strong>Rp {Number(val).toLocaleString('id-ID')}</Text>
+                            align: 'right' as const,
+                            render: (val) => <Text strong style={{ fontSize: 14 }}>{fmtRp(val)}</Text>
                         }
                     ]}
                     dataSource={reportItems}
                     summary={() => (
                         <Table.Summary fixed>
-                            <Table.Summary.Row className="bg-gray-50 font-bold">
-                                <Table.Summary.Cell index={0}>LABA BERSIH</Table.Summary.Cell>
+                            <Table.Summary.Row style={{ background: '#f8fafc' }}>
+                                <Table.Summary.Cell index={0}>
+                                    <Text strong style={{ fontSize: 15, paddingLeft: 38 }}>LABA BERSIH</Text>
+                                </Table.Summary.Cell>
                                 <Table.Summary.Cell index={1} align="right">
-                                    Rp {Number(data?.netProfit || 0).toLocaleString('id-ID')}
+                                    <Text strong style={{ 
+                                        fontSize: 18, 
+                                        color: (data?.netProfit || 0) >= 0 ? '#10b981' : '#ef4444' 
+                                    }}>
+                                        {fmtRp(data?.netProfit || 0)}
+                                    </Text>
                                 </Table.Summary.Cell>
                             </Table.Summary.Row>
                         </Table.Summary>
                     )}
                 />
             </Card>
-        </div>
+        </motion.div>
     );
 };
 

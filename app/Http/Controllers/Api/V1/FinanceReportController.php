@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\CashTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class FinanceReportController extends Controller
 {
     public function daily(Request $request)
     {
+        Gate::authorize('finance.view_reports');
+
         $month = $request->get('month', date('m'));
         $year = $request->get('year', date('Y'));
 
@@ -30,6 +33,8 @@ class FinanceReportController extends Controller
 
     public function monthly(Request $request)
     {
+        Gate::authorize('finance.view_reports');
+
         $year = $request->get('year', date('Y'));
         $isSqlite = DB::getDriverName() === 'sqlite';
         $monthExpr = $isSqlite ? "strftime('%m', date)" : "EXTRACT(MONTH FROM date)";
@@ -49,6 +54,8 @@ class FinanceReportController extends Controller
 
     public function yearly()
     {
+        Gate::authorize('finance.view_reports');
+
         $isSqlite = DB::getDriverName() === 'sqlite';
         $yearExpr = $isSqlite ? "strftime('%Y', date)" : "EXTRACT(YEAR FROM date)";
 

@@ -115,6 +115,8 @@ class PercetakanCalculatorController extends Controller
             'color_mode' => 'nullable|string',
             'binding_type' => 'nullable|string',
             'lamination' => 'nullable|string',
+            'finishing' => 'nullable|array',
+            'finishing.*' => 'string',
         ]);
 
         return $this->respondSafely(function () use ($validated): array {
@@ -127,6 +129,7 @@ class PercetakanCalculatorController extends Controller
                 colorMode: (string) ($validated['color_mode'] ?? 'bw'),
                 bindingType: (string) ($validated['binding_type'] ?? 'perfect'),
                 lamination: (string) ($validated['lamination'] ?? 'matte'),
+                finishingOptions: (array) ($validated['finishing'] ?? []),
             );
         });
     }

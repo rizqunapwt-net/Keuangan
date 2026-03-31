@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -14,6 +15,7 @@ class AuthenticationApiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(RolePermissionSeeder::class);
         $this->withoutMiddleware();
     }
 
@@ -34,7 +36,7 @@ class AuthenticationApiTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertNotNull($response->json('data.access_token'));
-        $this->assertEquals('ADMIN', $response->json('data.user.role'));
+        $this->assertEquals('Admin', $response->json('data.user.role'));
     }
 
     public function test_user_cannot_login_with_invalid_credentials(): void
@@ -65,13 +67,14 @@ class AuthenticationApiTest extends TestCase
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+        $user->assignRole('Admin');
 
         $response = $this->actingAs($user)
             ->getJson('/api/v1/auth/me');
 
         $response->assertStatus(200);
         $response->assertJsonPath('data.user.email', 'test@example.com');
-        $response->assertJsonPath('data.user.role', 'ADMIN');
+        $response->assertJsonPath('data.user.role', 'Admin');
     }
 
     public function test_unauthenticated_user_cannot_get_profile(): void

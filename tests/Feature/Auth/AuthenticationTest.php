@@ -3,8 +3,8 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -21,7 +21,7 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_authenticate_via_api(): void
     {
-        Role::query()->firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $this->seed(RolePermissionSeeder::class);
 
         $user = User::factory()->create([
             'is_active' => true,
@@ -36,7 +36,7 @@ class AuthenticationTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.user.role', 'ADMIN')
+            ->assertJsonPath('data.user.role', 'Admin')
             ->assertJsonStructure(['data' => ['access_token', 'user']]);
     }
 
@@ -57,7 +57,7 @@ class AuthenticationTest extends TestCase
 
     public function test_non_admin_users_are_rejected_even_with_valid_credentials(): void
     {
-        Role::query()->firstOrCreate(['name' => 'User', 'guard_name' => 'web']);
+        $this->seed(RolePermissionSeeder::class);
 
         $user = User::factory()->create([
             'username' => 'regularuser',
@@ -77,7 +77,7 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_logout_via_api(): void
     {
-        Role::query()->firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $this->seed(RolePermissionSeeder::class);
 
         $user = User::factory()->create([
             'username' => 'logoutuser',

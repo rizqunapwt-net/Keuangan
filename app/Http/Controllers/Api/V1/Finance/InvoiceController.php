@@ -9,6 +9,7 @@ use App\Support\ApiResponse;
 use App\Traits\LogsActivity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class InvoiceController extends Controller
 {
@@ -16,6 +17,8 @@ class InvoiceController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        Gate::authorize('sales_read');
+
         $query = Debt::where('type', 'receivable')
             ->latest('date');
 
@@ -68,6 +71,8 @@ class InvoiceController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        Gate::authorize('sales_write');
+
         $validated = $request->validate([
             'contactId' => 'nullable|exists:contacts,id',
             'client_name' => 'nullable|string|max:255',
@@ -124,6 +129,8 @@ class InvoiceController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
+        Gate::authorize('sales_write');
+
         $debt = Debt::where('type', 'receivable')->findOrFail($id);
 
         $validated = $request->validate([
@@ -180,6 +187,8 @@ class InvoiceController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
+        Gate::authorize('sales_write');
+
         $debt = Debt::where('type', 'receivable')->findOrFail($id);
 
         if ($debt->status === 'paid') {
@@ -205,6 +214,8 @@ class InvoiceController extends Controller
 
     public function togglePaid(int $id): JsonResponse
     {
+        Gate::authorize('sales_write');
+
         $debt = Debt::where('type', 'receivable')->findOrFail($id);
 
         if ($debt->status === 'paid' || $debt->status === 'lunas') {

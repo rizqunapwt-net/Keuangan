@@ -8,6 +8,7 @@ use App\Models\CashTransaction;
 use App\Traits\Auditable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 class CashTransactionController extends Controller
@@ -16,6 +17,8 @@ class CashTransactionController extends Controller
 
     public function index(Request $request)
     {
+        Gate::authorize('finance.manage_accounts');
+
         $query = CashTransaction::with('bank');
 
         if ($request->has('type')) {
@@ -43,6 +46,8 @@ class CashTransactionController extends Controller
 
     public function store(Request $request)
     {
+        Gate::authorize('finance.manage_accounts');
+
         $validated = $request->validate([
             'type' => 'required|in:income,expense',
             'bank_id' => 'required|exists:banks,id',
@@ -81,6 +86,8 @@ class CashTransactionController extends Controller
 
     public function summary()
     {
+        Gate::authorize('finance.manage_accounts');
+
         $totalIncome = CashTransaction::where('type', 'income')->sum('amount');
         $totalExpense = CashTransaction::where('type', 'expense')->sum('amount');
         $netBalance = Bank::sum('balance');
@@ -94,6 +101,8 @@ class CashTransactionController extends Controller
 
     public function destroy(CashTransaction $cashTransaction)
     {
+        Gate::authorize('finance.manage_accounts');
+
         return DB::transaction(function () use ($cashTransaction) {
             $bank = Bank::lockForUpdate()->find($cashTransaction->bank_id);
             $oldBalance = $bank->balance;

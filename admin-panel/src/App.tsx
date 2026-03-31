@@ -130,38 +130,38 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const menuItems: MenuProps['items'] = [
     { key: '/dashboard', icon: <HomeOutlined style={{ color: '#3b82f6', filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2))' }} />, label: 'Dashboard' },
-    { type: 'divider' },
+    { type: 'divider' as const },
 
     {
-      label: 'KEUANGAN', type: 'group', children: [
+      label: 'KEUANGAN', type: 'group' as const, children: [
         { key: '/finance/invoices', icon: <FileTextOutlined style={{ color: '#0fb9b1' }} />, label: 'Invoice' },
-        { key: '/finance/expenses', icon: <DollarOutlined style={{ color: '#ef4444' }} />, label: 'Biaya' },
-        { key: '/finance/debts', icon: <ScheduleOutlined style={{ color: '#f59e0b' }} />, label: 'Utang' },
-        { key: '/finance/receivables', icon: <TransactionOutlined style={{ color: '#10b981' }} />, label: 'Piutang' },
-        { key: '/finance/cash-book', icon: <WalletOutlined style={{ color: '#6366f1' }} />, label: 'Buku Kas' },
-        { key: '/finance/reports', icon: <PieChartOutlined style={{ color: '#f97316' }} />, label: 'Laporan Kas' },
-
-
-        { key: '/finance/banks', icon: <BankOutlined style={{ color: '#0ea5e9' }} />, label: 'Bank' },
-        { key: '/finance/contacts', icon: <ContactsOutlined style={{ color: '#ec4899' }} />, label: 'Kontak' },
+        ...(user?.role === 'Admin' ? [
+          { key: '/finance/expenses', icon: <DollarOutlined style={{ color: '#ef4444' }} />, label: 'Biaya' },
+          { key: '/finance/debts', icon: <ScheduleOutlined style={{ color: '#f59e0b' }} />, label: 'Utang' },
+          { key: '/finance/receivables', icon: <TransactionOutlined style={{ color: '#10b981' }} />, label: 'Piutang' },
+          { key: '/finance/cash-book', icon: <WalletOutlined style={{ color: '#6366f1' }} />, label: 'Buku Kas' },
+          { key: '/finance/reports', icon: <PieChartOutlined style={{ color: '#f97316' }} />, label: 'Laporan Kas' },
+          { key: '/finance/banks', icon: <BankOutlined style={{ color: '#0ea5e9' }} />, label: 'Bank' },
+          { key: '/finance/contacts', icon: <ContactsOutlined style={{ color: '#ec4899' }} />, label: 'Kontak' },
+        ] : [])
       ]
     },
 
     {
-      label: 'PERCETAKAN', type: 'group', children: [
+      label: 'PERCETAKAN', type: 'group' as const, children: [
         { key: '/kalkulator', icon: <CalculatorOutlined style={{ color: '#10b981' }} />, label: 'Kalkulator Cetak' },
       ]
     },
 
-    {
-      label: 'ADMIN', type: 'group', children: [
+    ...(user?.role === 'Admin' ? [{
+      label: 'ADMIN', type: 'group' as const, children: [
         { key: '/admin/users', icon: <TeamOutlined style={{ color: '#8b5cf6' }} />, label: 'Pengguna' },
         { key: '/audit/logs', icon: <AuditOutlined style={{ color: '#6366f1' }} />, label: 'Log Aktivitas' },
         { key: '/user/sessions', icon: <GlobalOutlined style={{ color: '#14b8a6' }} />, label: 'Sesi Aktif' },
       ]
-    },
+    }] : []),
 
-    { type: 'divider' },
+    { type: 'divider' as const },
     { key: '/settings', icon: <SettingOutlined style={{ color: '#94a3b8' }} />, label: 'Pengaturan' },
     { key: 'logout', icon: <LogoutOutlined />, label: 'Keluar', danger: true, onClick: () => { clearPinSession(); logout(); } },
   ];

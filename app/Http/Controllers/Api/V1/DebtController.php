@@ -127,8 +127,11 @@ class DebtController extends Controller
         Gate::authorize('delete', $debt);
 
         return DB::transaction(function () use ($debt) {
-            // Delete associated payments first
-            $debt->payments()->delete();
+            // Delete associated payments first and log them
+            foreach ($debt->payments as $payment) {
+                $this->logDelete($payment, "Menghapus pembayaran terkait untuk {$debt->client_name} sebesar {$payment->amount}");
+                $payment->delete();
+            }
 
             // Log before delete
             $this->logDelete($debt, "Menghapus data ".($debt->type === 'payable' ? 'Hutang' : 'Piutang')." dari {$debt->client_name} sebesar {$debt->amount}");
@@ -187,7 +190,7 @@ class DebtController extends Controller
     public function destroyPayment(DebtPayment $payment): JsonResponse
     {
         // For simplicity, only admin can delete payments
-        Gate::authorize('delete', Debt::class);
+        Gate::authorize('delete', $payment->debt);
 
         return DB::transaction(function () use ($payment) {
             $debt = $payment->debt;
@@ -195,19 +198,24 @@ class DebtController extends Controller
 
             $isIncome = $debt->type === 'receivable';
 
-            // Reverse balance
-            if ($isIncome) {
-                $bank->balance -= $payment->amount;
-            } else {
-                $bank->balance += $payment->amount;
+            // Reverse balance if bank exists
+            if ($bank) {
+                if ($isIncome) {
+                    $bank->balance -= $payment->amount;
+                } else {
+                    $bank->balance += $payment->amount;
+                }
+                $bank->save();
             }
-            $bank->save();
 
             // Revert debt status if it was paid
             if ($debt->status === 'paid') {
                 $debt->status = 'partial';
                 $debt->save();
             }
+
+            // Log deletion
+            $this->logDelete($payment, "Menghapus pembayaran {$debt->client_name} sebesar {$payment->amount}");
 
             $payment->delete();
 

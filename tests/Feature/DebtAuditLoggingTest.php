@@ -37,7 +37,7 @@ class DebtAuditLoggingTest extends TestCase
             'bank_id' => null,
         ]);
 
-        $response = $this->actingAs($user)->deleteJson("/api/v1/finance/debts/{$debt->id}");
+        $response = $this->deleteJson("/api/v1/finance/debts/{$debt->id}");
 
         $response->assertNoContent();
 
@@ -83,7 +83,7 @@ class DebtAuditLoggingTest extends TestCase
             'bank_id' => null,
         ]);
 
-        $response = $this->actingAs($user)->deleteJson("/api/v1/finance/debts/payments/{$payment->id}");
+        $response = $this->deleteJson("/api/v1/finance/debts/payments/{$payment->id}");
 
         $response->assertNoContent();
 

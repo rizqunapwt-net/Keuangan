@@ -222,14 +222,18 @@ class UnifiedLoginController extends Controller
      */
     private function formatUser(User $user): array
     {
+        $roles = $user->getRoleNames();
+        $permissions = $user->getAllPermissions()->pluck('name');
+
         return [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'username' => $user->username,
-            'role' => 'ADMIN',
-            'permissions' => [],
-            'role_label' => 'Administrator',
+            'role' => $roles->first() ?? 'USER',
+            'roles' => $roles,
+            'permissions' => $permissions,
+            'role_label' => $roles->first() === 'Admin' ? 'Administrator' : 'Staf Operasional',
             'must_change_password' => (bool) $user->must_change_password,
             'tenant' => [
                 'id' => 1,

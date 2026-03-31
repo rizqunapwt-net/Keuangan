@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { Typography, Row, Col, Form, InputNumber, Select, Button, Tag, Space, Collapse, Input, message, Popconfirm } from 'antd';
-import { ScissorOutlined, ArrowLeftOutlined, SettingOutlined, PlusOutlined, DeleteOutlined, UndoOutlined, CalculatorOutlined, InfoCircleOutlined, LayoutOutlined } from '@ant-design/icons';
+import { ScissorOutlined, ArrowLeftOutlined, SettingOutlined, PlusOutlined, DeleteOutlined, UndoOutlined, CalculatorOutlined, LayoutOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../api';
@@ -113,12 +113,22 @@ const StikerCalculatorPage: React.FC = () => {
                 <Col xs={24} lg={15}>
                     <div className="premium-card" style={{ borderRadius: 28, background: '#fff', padding: '32px', marginBottom: 24, border: 'none' }}>
                         <div style={{ marginBottom: 24 }}>
-                            <Text strong style={{ fontSize: 11, color: '#aaa', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>PILIH BAHAN STIKER</Text>
-                            <Select size="large" value={selectedIdx} onChange={v => { setSelectedIdx(v); setResult(null); }} style={{ width: '100%', borderRadius: 14 }}>
+                             <Select size="large" value={selectedIdx} onChange={v => { setSelectedIdx(v); setResult(null); }} style={{ width: '100%', borderRadius: 14 }}>
                                 {settings.products.map((p, i) => <Option key={i} value={i}>{p.name} — {fmt(p.price)}/lbr</Option>)}
                             </Select>
                         </div>
 
+                        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 20 }} className="hide-scrollbar">
+                            <Button size="small" shape="round" onClick={() => { 
+                                setSelectedIdx(0);
+                                form.setFieldsValue({ stiker_w: 5, stiker_h: 5, sheet_qty: 10, cut_type: 'die_cut' });
+                            }} style={{ fontSize: 11, fontWeight: 600 }}>🏷️ Presets: Chromo 5cm Diecut</Button>
+                            <Button size="small" shape="round" onClick={() => { 
+                                setSelectedIdx(1);
+                                form.setFieldsValue({ stiker_w: 3, stiker_h: 3, sheet_qty: 20, cut_type: 'kiss_cut' });
+                            }} style={{ fontSize: 11, fontWeight: 600 }}>💧 Presets: Vinyl 3cm Kisscut</Button>
+                        </div>
+                        
                         <Form form={form} layout="vertical" initialValues={{ stiker_w: 5, stiker_h: 5, sheet_qty: 10, cut_type: 'die_cut' }} requiredMark={false}>
                             <Row gutter={16}>
                                 <Col span={6}>
@@ -242,26 +252,31 @@ const StikerCalculatorPage: React.FC = () => {
                                             </div>
                                         </div>
                                         <div style={{ padding: '32px' }}>
-                                             <Row gutter={[16, 24]}>
+                                              <Row gutter={[16, 24]} style={{ marginBottom: 24 }}>
                                                 {[
                                                     { label: 'Total Output', value: `${layout.total.toLocaleString()} Stiker`, icon: <ScissorOutlined /> },
                                                     { label: 'Jumlah Lembar', value: `${sheetQty} lbr`, icon: <LayoutOutlined /> },
-                                                    { label: 'Harga Satuan', value: layout.perSheet > 0 ? `${fmt(result.unit_price / layout.perSheet)} /pcs` : '—', icon: <InfoCircleOutlined /> },
+                                                    { label: 'Estimasi Berat', value: result.weight_kg ? `${result.weight_kg} kg` : '-', icon: null },
                                                 ].map((item, i) => (
-                                                    <Col span={24} key={i}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                                            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0fb9b1' }}>{item.icon}</div>
-                                                            <div>
-                                                                <Text style={{ fontSize: 10, color: '#aaa', display: 'block', fontWeight: 700 }}>{item.label.toUpperCase()}</Text>
-                                                                <Text strong style={{ fontSize: 15, color: '#333' }}>{item.value}</Text>
-                                                            </div>
-                                                        </div>
+                                                    <Col span={item.label === 'Estimasi Berat' ? 24 : 12} key={i}>
+                                                        <Text style={{ fontSize: 10, color: '#aaa', display: 'block', fontWeight: 700, marginBottom: 2 }}>{item.label.toUpperCase()}</Text>
+                                                        <Text strong style={{ fontSize: 14, color: '#333' }}>{item.value}</Text>
                                                     </Col>
                                                 ))}
                                              </Row>
+
+                                             {(result as any).pricing != null && (
+                                                <div style={{ borderTop: '1px dashed #eee', paddingTop: 20, marginBottom: 20 }}>
+                                                    <Text strong style={{ fontSize: 11, color: '#aaa', display: 'block', marginBottom: 12 }}>RINCIAN BIAYA PER LEMBAR</Text>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><Text style={{ fontSize: 12, color: '#64748b' }}>Bahan Stiker</Text><Text strong style={{ fontSize: 12 }}>{fmt((result as any).pricing.base_price_per_unit)}</Text></div>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><Text style={{ fontSize: 12, color: '#64748b' }}>Biaya Potong</Text><Text strong style={{ fontSize: 12 }}>{fmt((result as any).pricing.finishing_cost_per_unit)}</Text></div>
+                                                    </div>
+                                                </div>
+                                             )}
                                              
                                              {result.estimated_days && (
-                                                <div style={{ marginTop: 32 }}>
+                                                <div style={{ marginTop: 24 }}>
                                                     <Tag color="green" style={{ borderRadius: 8, padding: '4px 12px', fontWeight: 600 }}>± {result.estimated_days} HARI KERJA</Tag>
                                                 </div>
                                              )}

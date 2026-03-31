@@ -8,6 +8,7 @@ use App\Support\ApiResponse;
 use App\Traits\LogsActivity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ContactController extends Controller
 {
@@ -15,6 +16,8 @@ class ContactController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        Gate::authorize('sales_read');
+
         $query = Contact::latest();
 
         if ($request->filled('type')) {
@@ -37,6 +40,8 @@ class ContactController extends Controller
 
     public function show(int $contactId): JsonResponse
     {
+        Gate::authorize('sales_read');
+
         $contact = Contact::find($contactId);
 
         if (! $contact) {
@@ -54,6 +59,8 @@ class ContactController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        Gate::authorize('sales_write');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'company_name' => 'nullable|string|max:255',
@@ -80,6 +87,8 @@ class ContactController extends Controller
 
     public function destroy(int $contactId): JsonResponse
     {
+        Gate::authorize('sales_write');
+
         $contact = Contact::find($contactId);
 
         if (! $contact) {

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Domain\Percetakan\Services\PrintingCalculator;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,7 +16,15 @@ class PrintingCalculatorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(RolePermissionSeeder::class);
         $this->calculator = new PrintingCalculator;
+    }
+
+    private function createAdminUser(): \App\Models\User
+    {
+        $user = \App\Models\User::factory()->create();
+        $this->actingAsWithRole($user, 'Admin');
+        return $user;
     }
 
     public function test_calculate_brosur_with_default_options(): void
@@ -207,9 +216,9 @@ class PrintingCalculatorTest extends TestCase
 
     public function test_calculate_brosur_api(): void
     {
-        $user = \App\Models\User::factory()->create();
+        $user = $this->createAdminUser();
 
-        $response = $this->actingAs($user)->postJson('/api/v1/percetakan/calculator/brosur', [
+        $response = $this->postJson('/api/v1/percetakan/calculator/brosur', [
             'quantity' => 100,
             'size' => 'A4',
             'paper_type' => 'art_paper_150gsm',
@@ -244,9 +253,9 @@ class PrintingCalculatorTest extends TestCase
 
     public function test_calculate_spanduk_api(): void
     {
-        $user = \App\Models\User::factory()->create();
+        $user = $this->createAdminUser();
 
-        $response = $this->actingAs($user)->postJson('/api/v1/percetakan/calculator/spanduk', [
+        $response = $this->postJson('/api/v1/percetakan/calculator/spanduk', [
             'width' => 150,
             'height' => 200,
             'quantity' => 5,
@@ -278,9 +287,9 @@ class PrintingCalculatorTest extends TestCase
 
     public function test_calculate_buku_api(): void
     {
-        $user = \App\Models\User::factory()->create();
+        $user = $this->createAdminUser();
 
-        $response = $this->actingAs($user)->postJson('/api/v1/percetakan/calculator/buku', [
+        $response = $this->postJson('/api/v1/percetakan/calculator/buku', [
             'quantity' => 50,
             'pages' => 120,
             'size' => 'A5',
@@ -311,9 +320,9 @@ class PrintingCalculatorTest extends TestCase
 
     public function test_calculate_kartu_nama_api(): void
     {
-        $user = \App\Models\User::factory()->create();
+        $user = $this->createAdminUser();
 
-        $response = $this->actingAs($user)->postJson('/api/v1/percetakan/calculator/kartu-nama', [
+        $response = $this->postJson('/api/v1/percetakan/calculator/kartu-nama', [
             'quantity' => 200,
             'print_sides' => '2_sides',
             'lamination' => 'matte',
@@ -342,9 +351,9 @@ class PrintingCalculatorTest extends TestCase
 
     public function test_calculate_stiker_api(): void
     {
-        $user = \App\Models\User::factory()->create();
+        $user = $this->createAdminUser();
 
-        $response = $this->actingAs($user)->postJson('/api/v1/percetakan/calculator/stiker', [
+        $response = $this->postJson('/api/v1/percetakan/calculator/stiker', [
             'width_cm' => 5,
             'height_cm' => 5,
             'sheet_count' => 10,
@@ -375,9 +384,9 @@ class PrintingCalculatorTest extends TestCase
 
     public function test_get_options_api(): void
     {
-        $user = \App\Models\User::factory()->create();
+        $user = $this->createAdminUser();
 
-        $response = $this->actingAs($user)->getJson('/api/v1/percetakan/calculator/options');
+        $response = $this->getJson('/api/v1/percetakan/calculator/options');
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -396,9 +405,9 @@ class PrintingCalculatorTest extends TestCase
 
     public function test_quick_calculate_api(): void
     {
-        $user = \App\Models\User::factory()->create();
+        $user = $this->createAdminUser();
 
-        $response = $this->actingAs($user)->postJson('/api/v1/percetakan/calculator/quick', [
+        $response = $this->postJson('/api/v1/percetakan/calculator/quick', [
             'product_type' => 'brosur',
             'quantity' => 100,
             'custom_params' => [

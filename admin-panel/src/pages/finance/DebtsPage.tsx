@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, Button, Tag, Card, Typography, Row, Col, Breadcrumb, Space, Input, message, Tooltip } from 'antd';
+import { Table, Button, Tag, Card, Typography, Row, Col, Space, Input, message, Tooltip } from 'antd';
 import { PlusOutlined, SearchOutlined, FilterOutlined, HistoryOutlined, DollarCircleOutlined, FileSearchOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -7,8 +7,9 @@ import api from '../../api';
 import dayjs from 'dayjs';
 import DebtFormDrawer from './DebtFormDrawer';
 import DebtPaymentDrawer from './DebtPaymentDrawer';
+import PageHeader from '../../components/PageHeader';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const statusColors: Record<string, string> = {
     unpaid: '#ef4444',
@@ -243,62 +244,32 @@ const DebtsPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
         >
-            <Breadcrumb 
-                className="mb-4" 
-                items={[
-                    { title: 'Beranda' }, 
-                    { title: 'Keuangan' },
-                    { title: <span style={{ color: '#0fb9b1' }}>Utang</span> }
-                ]} 
+            <PageHeader
+                title="Utang Usaha"
+                description="Kelola dan pantau kewajiban utang perusahaan Anda."
+                breadcrumb={[{ label: 'KEUANGAN' }, { label: 'UTANG' }]}
+                extra={
+                    <Space size={12}>
+                        <Button 
+                            icon={<FilterOutlined />} 
+                            style={{ borderRadius: 10, height: 40, fontWeight: 600, color: '#666' }}
+                        >
+                            Filter
+                        </Button>
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={() => {
+                                setEditData(null);
+                                setDrawerOpen(true);
+                            }}
+                            style={{ borderRadius: 12, height: 40, fontWeight: 700, boxShadow: '0 4px 12px rgba(15, 185, 177, 0.2)' }}
+                        >
+                            Utang Baru
+                        </Button>
+                    </Space>
+                }
             />
-
-            <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                marginBottom: 24,
-                flexWrap: 'wrap',
-                gap: 16
-            }}>
-                <div>
-                    <Title level={2} style={{ 
-                        margin: 0, 
-                        fontWeight: 800,
-                        letterSpacing: '-0.5px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12
-                    }}>
-                        <FileSearchOutlined style={{ color: '#f59e0b' }} />
-                        <span>Utang Usaha</span>
-                    </Title>
-                    <Text type="secondary" style={{ fontSize: 14, marginTop: 4, display: 'block' }}>
-                        Kelola dan pantau kewajiban utang perusahaan
-                    </Text>
-                </div>
-                <Space size="middle">
-                    <Button 
-                        icon={<FilterOutlined />} 
-                        size="large"
-                        className="glass-effect"
-                        style={{ borderRadius: 12 }}
-                    >
-                        Filter
-                    </Button>
-                    <Button
-                        type="primary"
-                        size="large"
-                        icon={<PlusOutlined />}
-                        onClick={() => {
-                            setEditData(null);
-                            setDrawerOpen(true);
-                        }}
-                        style={{ borderRadius: 12, height: 44 }}
-                    >
-                        Utang Baru
-                    </Button>
-                </Space>
-            </div>
 
             {/* Summary Cards */}
             <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>

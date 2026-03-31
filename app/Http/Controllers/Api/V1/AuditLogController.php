@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AuditLogController extends Controller
 {
@@ -13,6 +14,8 @@ class AuditLogController extends Controller
      */
     public function index(Request $request)
     {
+        Gate::authorize('viewAny', AuditLog::class);
+
         $query = AuditLog::with('user')->latest();
 
         if ($request->has('event_type') && $request->event_type) {
@@ -48,6 +51,8 @@ class AuditLogController extends Controller
      */
     public function show(AuditLog $auditLog)
     {
+        Gate::authorize('view', $auditLog);
+
         return response()->json($auditLog->load('user'));
     }
 
@@ -56,6 +61,8 @@ class AuditLogController extends Controller
      */
     public function stats()
     {
+        Gate::authorize('viewAny', AuditLog::class);
+
         $today = now()->startOfDay();
 
         return response()->json([

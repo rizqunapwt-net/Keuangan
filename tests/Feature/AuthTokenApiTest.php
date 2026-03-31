@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -14,7 +15,7 @@ class AuthTokenApiTest extends TestCase
 
     public function test_it_issues_token_for_active_user_with_valid_credentials(): void
     {
-        Role::query()->firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $this->seed(RolePermissionSeeder::class);
 
         $user = User::factory()->create([
             'email' => 'finance@rizquna.id',
@@ -40,7 +41,7 @@ class AuthTokenApiTest extends TestCase
 
     public function test_it_issues_token_with_username_field(): void
     {
-        Role::query()->firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $this->seed(RolePermissionSeeder::class);
 
         $user = User::factory()->create([
             'email' => 'finance@rizquna.id',
@@ -62,7 +63,7 @@ class AuthTokenApiTest extends TestCase
 
     public function test_it_returns_user_data_with_role_admin(): void
     {
-        Role::query()->firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $this->seed(RolePermissionSeeder::class);
 
         $user = User::factory()->create([
             'email' => 'finance@rizquna.id',
@@ -78,7 +79,7 @@ class AuthTokenApiTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.user.role', 'ADMIN')
+            ->assertJsonPath('data.user.role', 'Admin')
             ->assertJsonStructure(['data' => ['user' => ['id', 'name', 'email', 'username', 'role']]]);
     }
 

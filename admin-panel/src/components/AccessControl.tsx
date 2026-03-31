@@ -1,16 +1,26 @@
-import React from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface AccessControlProps {
-    permission: string;
+    permission?: string;
+    role?: string;
     children: React.ReactNode;
     fallback?: React.ReactNode;
 }
 
 /**
- * Simplified AccessControl — single admin role means all authenticated users
- * have full access. This component always renders children.
+ * AccessControl - Checks permissions or roles to conditionally render children.
  */
-const AccessControl: React.FC<AccessControlProps> = ({ children }) => {
+const AccessControl: React.FC<AccessControlProps> = ({ permission, role, children, fallback = null }) => {
+    const { hasPermission, user } = useAuth();
+
+    if (role && user?.role !== role) {
+        return <>{fallback}</>;
+    }
+
+    if (permission && !hasPermission(permission)) {
+        return <>{fallback}</>;
+    }
+
     return <>{children}</>;
 };
 

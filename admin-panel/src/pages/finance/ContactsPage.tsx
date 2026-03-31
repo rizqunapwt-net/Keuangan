@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Typography, Card, Breadcrumb, Tag, Input, message, Tabs, Row, Col, Statistic, Popconfirm } from 'antd';
-import { PlusOutlined, SearchOutlined, PrinterOutlined, ExportOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Typography, Card, Tag, Input, message, Tabs, Row, Col, Popconfirm } from 'antd';
+import { PlusOutlined, SearchOutlined, PrinterOutlined, ExportOutlined, DeleteOutlined, ContactsOutlined, TeamOutlined, ShopOutlined } from '@ant-design/icons';
 import api from '../../api';
 import AccessControl from '../../components/AccessControl';
 import ContactFormDrawer from './ContactFormDrawer';
+import PageHeader from '../../components/PageHeader';
+import { motion } from 'framer-motion';
+import { fmtRp } from '../../utils/formatters';
 
 const { Title, Text } = Typography;
 
@@ -22,6 +25,7 @@ const ContactsPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('all');
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [searchText, setSearchText] = useState('');
 
     const fetchContacts = async () => {
         setLoading(true);
@@ -50,11 +54,20 @@ const ContactsPage: React.FC = () => {
         fetchContacts();
     }, []);
 
-    const filteredContacts = activeTab === 'all' ? contacts : contacts.filter(c => c.type === activeTab);
+    const filteredContacts = (activeTab === 'all' ? contacts : contacts.filter(c => c.type === activeTab))
+        .filter(c => !searchText || c.name.toLowerCase().includes(searchText.toLowerCase()) || c.email?.toLowerCase().includes(searchText.toLowerCase()) || c.phone?.includes(searchText));
 
     // Summary calculations
     const totalOwed = contacts.filter(c => c.type === 'vendor').reduce((s, c) => s + Number(c.balance || 0), 0);
     const totalReceivable = contacts.filter(c => c.type === 'customer').reduce((s, c) => s + Number(c.balance || 0), 0);
+
+    const stats = [
+        { title: 'TOTAL KONTAK', value: contacts.length, isCount: true, icon: <ContactsOutlined style={{ fontSize: 20 }} />, color: '#3b82f6', bg: '#3b82f610' },
+        { title: 'PELANGGAN', value: contacts.filter(c => c.type === 'customer').length, isCount: true, icon: <TeamOutlined style={{ fontSize: 20 }} />, color: '#0fb9b1', bg: '#0fb9b110' },
+        { title: 'VENDOR', value: contacts.filter(c => c.type === 'vendor').length, isCount: true, icon: <ShopOutlined style={{ fontSize: 20 }} />, color: '#f59e0b', bg: '#f59e0b10' },
+        { title: 'ANDA HUTANG', value: totalOwed, isCount: false, icon: <ExportOutlined style={{ fontSize: 20 }} />, color: '#ef4444', bg: '#ef444410' },
+        { title: 'MEREKA HUTANG', value: totalReceivable, isCount: false, icon: <ExportOutlined style={{ fontSize: 20, transform: 'scaleX(-1)' }} />, color: '#10b981', bg: '#10b98110' },
+    ];
 
     const columns = [
         {
@@ -63,9 +76,7 @@ const ContactsPage: React.FC = () => {
             key: 'name',
             sorter: true,
             render: (text: string) => (
-                <span style={{ fontWeight: 600, color: '#1890ff' }}>
-                    {text}
-                </span>
+                <Text strong style={{ color: '#1e293b', fontSize: 14 }}>{text}</Text>
             ),
         },
         {
@@ -73,22 +84,54 @@ const ContactsPage: React.FC = () => {
             dataIndex: 'type',
             key: 'type',
             render: (type: string) => {
-                const colors: Record<string, string> = { customer: 'blue', vendor: 'orange', employee: 'green' };
-                const labels: Record<string, string> = { customer: 'Pelanggan', vendor: 'Vendor', employee: 'Pegawai' };
-                return <Tag color={colors[type]}>{labels[type] || type}</Tag>;
+                const config: Record<string, { color: string; bg: string; label: string }> = {
+                    customer: { color: '#3b82f6', bg: '#3b82f615', label: 'Pelanggan' },
+                    vendor: { color: '#f59e0b', bg: '#f59e0b15', label: 'Vendor' },
+                    employee: { color: '#10b981', bg: '#10b98115', label: 'Pegawai' },
+                };
+                const c = config[type] || { color: '#64748b', bg: '#64748b15', label: type };
+                return (
+                    <Tag bordered={false} style={{
+                        backgroundColor: c.bg,
+                        color: c.color,
+                        fontWeight: 600,
+                        borderRadius: 6,
+                        padding: '2px 10px',
+                        fontSize: 12
+                    }}>
+                        {c.label}
+                    </Tag>
+                );
             },
         },
-        { title: 'Perusahaan', key: 'company', render: () => '-' },
-        { title: 'Alamat', dataIndex: 'address', key: 'address', ellipsis: true, render: (v: string) => v || '-' },
-        { title: 'Email', dataIndex: 'email', key: 'email', render: (v: string) => v || '-' },
-        { title: 'Telepon', dataIndex: 'phone', key: 'phone', render: (v: string) => v || '-' },
+        {
+            title: 'Alamat',
+            dataIndex: 'address',
+            key: 'address',
+            ellipsis: true,
+            render: (v: string) => <Text type="secondary" style={{ fontSize: 12 }}>{v || '-'}</Text>
+        },
+        {
+            title: 'Email',
+            dataIndex: 'email',
+            key: 'email',
+            render: (v: string) => <Text style={{ fontSize: 13 }}>{v || '-'}</Text>
+        },
+        {
+            title: 'Telepon',
+            dataIndex: 'phone',
+            key: 'phone',
+            render: (v: string) => <Text style={{ fontSize: 13 }}>{v || '-'}</Text>
+        },
         {
             title: 'Anda Hutang',
             key: 'youOwe',
             align: 'right' as const,
             render: (_: unknown, record: Contact) => {
                 const val = record.type === 'vendor' ? Number(record.balance || 0) : 0;
-                return val > 0 ? <Text type="danger">Rp {val.toLocaleString('id-ID')}</Text> : '-';
+                return val > 0 ? (
+                    <Text style={{ color: '#ef4444', fontWeight: 600, fontSize: 13 }}>Rp {val.toLocaleString('id-ID')}</Text>
+                ) : <Text type="secondary">-</Text>;
             },
         },
         {
@@ -97,7 +140,9 @@ const ContactsPage: React.FC = () => {
             align: 'right' as const,
             render: (_: unknown, record: Contact) => {
                 const val = record.type === 'customer' ? Number(record.balance || 0) : 0;
-                return val > 0 ? <Text style={{ color: '#52c41a', fontWeight: 600 }}>Rp {val.toLocaleString('id-ID')}</Text> : '-';
+                return val > 0 ? (
+                    <Text style={{ color: '#16a34a', fontWeight: 600, fontSize: 13 }}>Rp {val.toLocaleString('id-ID')}</Text>
+                ) : <Text type="secondary">-</Text>;
             },
         },
         {
@@ -114,98 +159,84 @@ const ContactsPage: React.FC = () => {
                     cancelText="Batal"
                     okButtonProps={{ danger: true }}
                 >
-                    <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+                    <Button type="text" danger icon={<DeleteOutlined />} size="small" style={{ borderRadius: 8 }} />
                 </Popconfirm>
             ),
         },
     ];
 
     return (
-        <div>
-            <Breadcrumb className="mb-4" items={[{ title: 'Beranda' }, { title: 'Kontak' }]} />
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <Title level={4} style={{ margin: 0 }}>Kontak</Title>
-                <Space>
-                    <Button icon={<PrinterOutlined />} size="small" onClick={() => message.info('Fitur cetak segera hadir')}>Print</Button>
-                    <Button icon={<ExportOutlined />} size="small" onClick={() => message.info('Fitur export segera hadir')}>Export</Button>
-                    <AccessControl permission="contacts_create">
-                        <Button type="primary" icon={<PlusOutlined />} onClick={() => setDrawerOpen(true)}>
-                            Tambah Kontak
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ fontFamily: "'Poppins', sans-serif" }}
+        >
+            <PageHeader
+                title="Kontak"
+                description="Kelola data pelanggan, vendor, dan pegawai perusahaan Anda."
+                breadcrumb={[{ label: 'KEUANGAN' }, { label: 'KONTAK' }]}
+                extra={
+                    <Space size={12}>
+                        <Button
+                            icon={<PrinterOutlined />}
+                            onClick={() => message.info('Fitur cetak segera hadir')}
+                            style={{ borderRadius: 10, height: 40, fontWeight: 600, color: '#666' }}
+                        >
+                            Print
                         </Button>
-                    </AccessControl>
-                </Space>
-            </div>
+                        <AccessControl permission="contacts_create">
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => setDrawerOpen(true)}
+                                style={{ borderRadius: 12, height: 40, fontWeight: 700, boxShadow: '0 4px 12px rgba(15, 185, 177, 0.2)' }}
+                            >
+                                Tambah Kontak
+                            </Button>
+                        </AccessControl>
+                    </Space>
+                }
+            />
 
             {/* Summary Cards */}
-            <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-                <Col xs={12} sm={8} md={4}>
-                    <Card bordered={false} style={{ borderRadius: 8 }} bodyStyle={{ padding: 12 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 11 }}>Anda Hutang</Text>}
-                            value={totalOwed}
-                            prefix="Rp"
-                            valueStyle={{ fontSize: 14, fontWeight: 600, color: '#ff4d4f' }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={12} sm={8} md={4}>
-                    <Card bordered={false} style={{ borderRadius: 8 }} bodyStyle={{ padding: 12 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 11 }}>Mereka Hutang</Text>}
-                            value={totalReceivable}
-                            prefix="Rp"
-                            valueStyle={{ fontSize: 14, fontWeight: 600, color: '#52c41a' }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={12} sm={8} md={4}>
-                    <Card bordered={false} style={{ borderRadius: 8 }} bodyStyle={{ padding: 12 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 11 }}>Pembayaran Diterima</Text>}
-                            value={0}
-                            prefix="Rp"
-                            valueStyle={{ fontSize: 14, fontWeight: 600 }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={12} sm={8} md={4}>
-                    <Card bordered={false} style={{ borderRadius: 8 }} bodyStyle={{ padding: 12 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 11 }}>Jatuh Tempo Hutang</Text>}
-                            value={0}
-                            prefix="Rp"
-                            valueStyle={{ fontSize: 14, fontWeight: 600, color: '#ff4d4f' }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={12} sm={8} md={4}>
-                    <Card bordered={false} style={{ borderRadius: 8 }} bodyStyle={{ padding: 12 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 11 }}>Jatuh Tempo Piutang</Text>}
-                            value={0}
-                            prefix="Rp"
-                            valueStyle={{ fontSize: 14, fontWeight: 600, color: '#faad14' }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={12} sm={8} md={4}>
-                    <Card bordered={false} style={{ borderRadius: 8 }} bodyStyle={{ padding: 12 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 11 }}>Pembayaran Dikirim</Text>}
-                            value={0}
-                            prefix="Rp"
-                            valueStyle={{ fontSize: 14, fontWeight: 600 }}
-                        />
-                    </Card>
-                </Col>
+            <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
+                {stats.map((stat, i) => (
+                    <Col xs={12} sm={8} lg={Math.floor(24 / stats.length)} key={i}>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05, duration: 0.4 }}
+                        >
+                            <Card className="premium-card" style={{ borderRadius: 20 }} bodyStyle={{ padding: '20px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                                    <div style={{
+                                        width: 44, height: 44, borderRadius: 12,
+                                        background: stat.bg, color: stat.color,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                                    }}>
+                                        {stat.icon}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <Text style={{ fontSize: 10, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'block' }}>
+                                            {stat.title}
+                                        </Text>
+                                        <Title level={4} style={{ margin: 0, fontWeight: 800, color: stat.color, marginTop: 2 }}>
+                                            {stat.isCount ? stat.value : fmtRp(stat.value)}
+                                        </Title>
+                                    </div>
+                                </div>
+                            </Card>
+                        </motion.div>
+                    </Col>
+                ))}
             </Row>
 
-            <Card bordered={false} style={{ borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }} bodyStyle={{ padding: 0 }}>
+            <Card className="premium-card" style={{ borderRadius: 24 }} bodyStyle={{ padding: 0 }}>
                 <Tabs
                     activeKey={activeTab}
                     onChange={setActiveTab}
-                    style={{ padding: '0 16px' }}
+                    style={{ padding: '0 24px' }}
                     items={[
                         { key: 'all', label: 'Semua' },
                         { key: 'vendor', label: 'Vendor' },
@@ -216,8 +247,21 @@ const ContactsPage: React.FC = () => {
                     ]}
                 />
 
-                <div style={{ padding: '0 16px 12px', display: 'flex', gap: 8 }}>
-                    <Input prefix={<SearchOutlined />} placeholder="Cari kontak..." style={{ width: 250 }} size="small" />
+                <div style={{ padding: '0 24px 16px', display: 'flex', gap: 8 }}>
+                    <Input
+                        prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                        placeholder="Cari kontak..."
+                        style={{
+                            width: 320,
+                            borderRadius: 12,
+                            background: '#f8fafc',
+                            border: 'none',
+                            height: 40
+                        }}
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        allowClear
+                    />
                 </div>
 
                 <Table
@@ -226,12 +270,17 @@ const ContactsPage: React.FC = () => {
                     rowKey="id"
                     loading={loading}
                     rowSelection={{ type: 'checkbox' }}
-                    pagination={{ pageSize: 10, showSizeChanger: true }}
-                    size="small"
+                    pagination={{
+                        pageSize: 15,
+                        showSizeChanger: true,
+                        position: ['bottomRight'],
+                        style: { paddingRight: 24, paddingBottom: 24 }
+                    }}
+                    size="middle"
                 />
             </Card>
             <ContactFormDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-        </div>
+        </motion.div>
     );
 };
 

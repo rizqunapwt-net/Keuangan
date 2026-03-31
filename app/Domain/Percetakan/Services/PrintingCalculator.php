@@ -12,6 +12,9 @@ class PrintingCalculator
         'A5' => 0.031185,
         'A6' => 0.0155925,
         'DL' => 0.02079,
+        'B5' => 0.04400,
+        'UNESCO' => 0.03565,
+        'NOVEL' => 0.02470,
     ];
 
     private const SIZE_FACTORS = [
@@ -20,6 +23,9 @@ class PrintingCalculator
         'A5' => 0.60,
         'A6' => 0.35,
         'DL' => 0.40,
+        'B5' => 0.75,
+        'UNESCO' => 0.70,
+        'NOVEL' => 0.50,
     ];
 
     private const BROSUR_PROFILES = [
@@ -61,14 +67,30 @@ class PrintingCalculator
         ],
     ];
 
+    private const BUKU_SIZES = [
+        'A4' => ['label' => 'A4 (21x29.7)', 'area' => 0.06237, 'factor' => 1.0],
+        'A5' => ['label' => 'A5 (14.8x21)', 'area' => 0.03118, 'factor' => 0.6],
+        'A6' => ['label' => 'A6 (10.5x14.8)', 'area' => 0.01559, 'factor' => 0.35],
+        'B5' => ['label' => 'B5 (17.6x25)', 'area' => 0.04400, 'factor' => 0.75],
+        'UNESCO' => ['label' => 'UNESCO (15.5x23)', 'area' => 0.03565, 'factor' => 0.7],
+        'NOVEL' => ['label' => 'Novel (13x19)', 'area' => 0.02470, 'factor' => 0.5],
+    ];
+
     private const PAPER_MULTIPLIERS = [
         'hvs_70gsm' => 0.92,
         'hvs_80gsm' => 0.96,
         'hvs_100gsm' => 1.05,
+        'bookpaper_57gsm' => 0.90,
+        'bookpaper_72gsm' => 1.05,
+        'bookpaper_90gsm' => 1.25,
         'artpaper_100gsm' => 1.08,
+        'artpaper_120gsm' => 1.15,
         'artpaper_150gsm' => 1.20,
         'artpaper_260gsm' => 1.45,
         'artcarton_260gsm' => 1.40,
+        'artcarton_310gsm' => 1.65,
+        'ivory_250gsm' => 1.45,
+        'ivory_300gsm' => 1.60,
         'transparent' => 1.55,
     ];
 
@@ -76,10 +98,17 @@ class PrintingCalculator
         'hvs_70gsm' => 'HVS 70gsm',
         'hvs_80gsm' => 'HVS 80gsm',
         'hvs_100gsm' => 'HVS 100gsm',
+        'bookpaper_57gsm' => 'Bookpaper 57gsm',
+        'bookpaper_72gsm' => 'Bookpaper 72gsm (Sunda)',
+        'bookpaper_90gsm' => 'Bookpaper 90gsm',
         'artpaper_100gsm' => 'Artpaper 100gsm',
+        'artpaper_120gsm' => 'Artpaper 120gsm',
         'artpaper_150gsm' => 'Artpaper 150gsm',
         'artpaper_260gsm' => 'Artpaper 260gsm',
         'artcarton_260gsm' => 'Artcarton 260gsm',
+        'artcarton_310gsm' => 'Artcarton 310gsm',
+        'ivory_250gsm' => 'Ivory 250gsm',
+        'ivory_300gsm' => 'Ivory 300gsm',
         'transparent' => 'Transparent',
     ];
 
@@ -177,7 +206,16 @@ class PrintingCalculator
         'none' => 0.0,
         'glossy' => 900.0,
         'matte' => 1100.0,
-        'soft_touch' => 1800.0,
+        'soft_touch' => 1850.0,
+    ];
+
+    private const BUKU_FINISHING_ADDONS = [
+        'spot_uv' => 1800.0,
+        'poly_emas' => 2500.0,
+        'poly_perak' => 2500.0,
+        'emboss' => 2000.0,
+        'shrinkwrap' => 850.0,
+        'bookmark' => 1200.0,
     ];
 
     private const BUKU_DISCOUNTS = [
@@ -193,6 +231,9 @@ class PrintingCalculator
         100 => 0.11,
         150 => 0.16,
         260 => 0.28,
+        'bookpaper_57' => 0.10,
+        'bookpaper_72' => 0.13,
+        'bookpaper_90' => 0.17,
     ];
 
     private const KARTU_NAMA_LAMINATION_COSTS = [
@@ -361,40 +402,64 @@ class PrintingCalculator
         string $paperType = 'hvs_70gsm',
         string $colorMode = 'bw',
         string $bindingType = 'perfect',
-        string $lamination = 'matte'
+        string $lamination = 'matte',
+        array $finishingOptions = []
     ): array {
         $sizeKey = $this->normalizeSize($size, 'A5');
+        $sizeData = self::BUKU_SIZES[$sizeKey] ?? self::BUKU_SIZES['A5'];
         $coverKey = $this->normalizeBookCover($coverType);
         $paperKey = $this->normalizePaperType($paperType, 'hvs_70gsm');
         $colorKey = $this->normalizeColorMode($colorMode);
         $bindingKey = $coverKey === 'booklet' ? 'saddle_stitch' : $this->normalizeBinding($bindingType);
         $laminationKey = $this->normalizeLamination($lamination);
-        $pageCost = self::BUKU_PAGE_COSTS[$colorKey] * $this->sizeFactor($sizeKey) * $this->paperMultiplier($paperKey);
-        $coverCost = self::BUKU_COVER_COSTS[$coverKey] * $this->sizeFactor($sizeKey);
-        $bindingCost = self::BUKU_BINDING_COSTS[$bindingKey] * ($coverKey === 'hardcover' ? 1.35 : 1.0);
-        $laminationCost = self::BUKU_LAMINATION_COSTS[$laminationKey] * ($coverKey === 'hardcover' ? 1.4 : 1.0);
-        $priceBeforeDiscount = ($pages * $pageCost) + $coverCost + $bindingCost + $laminationCost;
+
+        $pageCost = self::BUKU_PAGE_COSTS[$colorKey] * $sizeData['factor'] * $this->paperMultiplier($paperKey);
+        $coverCost = self::BUKU_COVER_COSTS[$coverKey] * $sizeData['factor'];
+        $bindingCost = self::BUKU_BINDING_COSTS[$bindingKey] * ($coverKey === 'hardcover' ? 1.45 : 1.0);
+        $laminationCost = self::BUKU_LAMINATION_COSTS[$laminationKey] * ($coverKey === 'hardcover' ? 1.5 : 1.0);
+
+        $innerTotal = $pages * $pageCost;
+        $coverTotal = $coverCost;
+        $bindTotal = $bindingCost;
+        $lamTotal = $laminationCost;
+
+        $addonCost = 0.0;
+        $activeAddons = [];
+        foreach ($finishingOptions as $opt) {
+            $key = $this->normalizeToken((string) $opt);
+            if (isset(self::BUKU_FINISHING_ADDONS[$key])) {
+                $cost = self::BUKU_FINISHING_ADDONS[$key] * $sizeData['factor'];
+                $addonCost += $cost;
+                $activeAddons[] = ['key' => $key, 'cost' => round($cost, 2)];
+            }
+        }
+
+        $priceBeforeDiscount = $innerTotal + $coverTotal + $bindTotal + $lamTotal + $addonCost;
         $discount = $this->resolveDiscount($quantity, self::BUKU_DISCOUNTS);
         $unitPrice = $priceBeforeDiscount * (1 - ($discount / 100));
         $total = $unitPrice * $quantity;
+
         $sheetCount = (int) ceil($pages / 2);
         $paperGsm = $this->paperGsm($paperKey);
-        $sizeArea = $this->sizeArea($sizeKey);
+        $sizeArea = $sizeData['area'];
+
         $bodyWeight = ($sheetCount * $sizeArea * $paperGsm) / 1000;
         $coverWeight = $coverKey === 'hardcover'
             ? $sizeArea * 350 / 1000
             : ($coverKey === 'booklet' ? $sizeArea * 170 / 1000 : $sizeArea * 250 / 1000);
-        $weightKg = round($bodyWeight + $coverWeight, 2);
-        $thickness = self::PAPER_THICKNESS[$paperGsm] ?? 0.10;
-        $spineWidth = round(($sheetCount * $thickness) + ($coverKey === 'hardcover' ? 2.0 : 0.0), 1);
-        $productionTime = 3 + (int) ceil($pages / 100);
-        if ($coverKey === 'hardcover') {
-            $productionTime++;
-        }
-        if ($quantity >= 200) {
-            $productionTime++;
-        }
-        $method = $quantity >= 100 ? 'Offset Sheetfed' : 'Digital Book Printing';
+        $weightKg = round($bodyWeight + $coverWeight, 3);
+
+        $thickness = self::PAPER_THICKNESS[$paperGsm] ?? self::PAPER_THICKNESS[$this->normalizeToken($paperKey)] ?? 0.10;
+        if (str_contains($paperKey, 'bookpaper_57')) $thickness = 0.10;
+        if (str_contains($paperKey, 'bookpaper_72')) $thickness = 0.13;
+        if (str_contains($paperKey, 'bookpaper_90')) $thickness = 0.17;
+
+        $spineWidth = round(($sheetCount * $thickness) + ($coverKey === 'hardcover' ? 2.5 : 0.0), 1);
+        $productionTime = 3 + (int) ceil($pages / 120);
+        if ($coverKey === 'hardcover') $productionTime += 1.5;
+        if ($quantity >= 150) $productionTime++;
+
+        $method = $quantity >= 100 ? 'Offset Sheetfed' : 'Digital Book Printing (POD)';
 
         return $this->composeResult(
             'buku',
@@ -406,19 +471,22 @@ class PrintingCalculator
                 'binding_type' => $bindingKey,
                 'paper_type' => $this->paperLabel($paperKey),
                 'color_mode' => $colorKey,
+                'active_addons' => $activeAddons,
             ],
             [
-                'base_price_per_unit' => round(($pages * $pageCost) + $coverCost + $bindingCost, 2),
-                'finishing_cost_per_unit' => round($laminationCost, 2),
+                'inner_cost' => round($innerTotal, 2),
+                'cover_cost' => round($coverTotal, 2),
+                'binding_cost' => round($bindTotal, 2),
+                'lamination_cost' => round($lamTotal, 2),
+                'addons_cost' => round($addonCost, 2),
                 'price_per_unit_before_discount' => round($priceBeforeDiscount, 2),
                 'discount_percentage' => $discount,
                 'discount_amount' => round(($priceBeforeDiscount - $unitPrice) * $quantity, 2),
                 'price_per_unit_after_discount' => round($unitPrice, 2),
                 'subtotal' => round($priceBeforeDiscount * $quantity, 2),
-                'finishing_total' => round($laminationCost * $quantity, 2),
                 'total' => round($total, 2),
             ],
-            $productionTime,
+            (int) ceil($productionTime),
             [
                 'weight_kg' => $weightKg,
                 'spine_width_mm' => $spineWidth,
@@ -844,12 +912,19 @@ class PrintingCalculator
         $normalized = $this->normalizeToken($paperType);
         $mapped = match ($normalized) {
             'art_paper_100gsm', 'artpaper_100gsm' => 'artpaper_100gsm',
+            'art_paper_120gsm', 'artpaper_120gsm' => 'artpaper_120gsm',
             'art_paper_150gsm', 'artpaper_150gsm' => 'artpaper_150gsm',
             'art_paper_260gsm', 'artpaper_260gsm' => 'artpaper_260gsm',
             'hvs_70gsm' => 'hvs_70gsm',
             'hvs_80gsm' => 'hvs_80gsm',
             'hvs_100gsm' => 'hvs_100gsm',
-            'artcarton_260gsm', 'art_carton_260gsm' => 'artcarton_260gsm',
+            'bookpaper_57gsm', 'bookpaper_57' => 'bookpaper_57gsm',
+            'bookpaper_72gsm', 'bookpaper_72' => 'bookpaper_72gsm',
+            'bookpaper_90gsm', 'bookpaper_90' => 'bookpaper_90gsm',
+            'artcarton_260gsm', 'art_cartons_260gsm' => 'artcarton_260gsm',
+            'artcarton_310gsm', 'art_cartons_310gsm' => 'artcarton_310gsm',
+            'ivory_250gsm', 'ivory_250' => 'ivory_250gsm',
+            'ivory_300gsm', 'ivory_300' => 'ivory_300gsm',
             'transparent', 'stiker_transparan' => 'transparent',
             default => null,
         };

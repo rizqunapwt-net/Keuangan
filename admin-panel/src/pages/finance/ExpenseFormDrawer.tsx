@@ -7,9 +7,10 @@ import api from '../../api';
 interface ExpenseFormDrawerProps {
     open: boolean;
     onClose: () => void;
+    editData?: any;
 }
 
-const ExpenseFormDrawer: React.FC<ExpenseFormDrawerProps> = ({ open, onClose }) => {
+const ExpenseFormDrawer: React.FC<ExpenseFormDrawerProps> = ({ open, onClose, editData }) => {
     const [form] = Form.useForm();
     const queryClient = useQueryClient();
 
@@ -36,12 +37,19 @@ const ExpenseFormDrawer: React.FC<ExpenseFormDrawerProps> = ({ open, onClose }) 
     useEffect(() => {
         if (open) {
             form.resetFields();
-            form.setFieldsValue({
-                transDate: dayjs(),
-                refNumber: `EXP-${dayjs().format('YYYYMMDDHHmmss')}`,
-            });
+            if (editData) {
+                form.setFieldsValue({
+                    ...editData,
+                    transDate: dayjs(editData.transDate),
+                });
+            } else {
+                form.setFieldsValue({
+                    transDate: dayjs(),
+                    refNumber: `EXP-${dayjs().format('YYYYMMDDHHmmss')}`,
+                });
+            }
         }
-    }, [open, form]);
+    }, [open, form, editData]);
 
     const submitMutation = useMutation({
         mutationFn: async (values: any) => {
@@ -49,6 +57,9 @@ const ExpenseFormDrawer: React.FC<ExpenseFormDrawerProps> = ({ open, onClose }) 
                 ...values,
                 transDate: values.transDate.format('YYYY-MM-DD'),
             };
+            if (editData?.id) {
+                return await api.put(`/finance/expenses/${editData.id}`, payload);
+            }
             return await api.post('/finance/expenses', payload);
         },
         onSuccess: () => {
@@ -63,7 +74,7 @@ const ExpenseFormDrawer: React.FC<ExpenseFormDrawerProps> = ({ open, onClose }) 
 
     return (
         <Drawer
-            title="Catat Biaya Baru"
+            title={editData ? "Edit Biaya" : "Catat Biaya Baru"}
             width={480}
             onClose={onClose}
             open={open}
@@ -90,7 +101,7 @@ const ExpenseFormDrawer: React.FC<ExpenseFormDrawerProps> = ({ open, onClose }) 
                         showSearch
                         optionFilterProp="children"
                         placeholder="Pilih Akun Kas/Bank"
-                        options={accounts.filter((a: any) => a.categoryId === 1 && (a.code === '1101' || a.code === '1102')).map((a: any) => ({
+                        options={accounts.filter((a: any) => a.type === 'asset' && a.code.startsWith('11')).map((a: any) => ({
                             value: a.id,
                             label: `${a.code} - ${a.name}`
                         }))}
@@ -102,7 +113,7 @@ const ExpenseFormDrawer: React.FC<ExpenseFormDrawerProps> = ({ open, onClose }) 
                         showSearch
                         optionFilterProp="children"
                         placeholder="Contoh: Biaya Listrik, Iklan, dll"
-                        options={accounts.filter((a: any) => a.categoryId === 5).map((a: any) => ({
+                        options={accounts.filter((a: any) => a.type === 'expense').map((a: any) => ({
                             value: a.id,
                             label: `${a.code} - ${a.name}`
                         }))}

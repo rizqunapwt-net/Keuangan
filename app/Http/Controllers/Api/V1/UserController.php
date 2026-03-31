@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +20,9 @@ class UserController extends Controller
      */
     public function index(): JsonResponse
     {
-        $users = User::all();
+        Gate::authorize('viewAny', User::class);
+
+        $users = User::with('roles')->get();
         return $this->success($users);
     }
 
@@ -28,10 +31,13 @@ class UserController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        Gate::authorize('create', User::class);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'roles' => ['sometimes', 'array'],
         ]);
 
         $user = User::create([
@@ -40,7 +46,13 @@ class UserController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return $this->success($user, 201);
+        if (!empty($validated['roles'])) {
+            $user->syncRoles($validated['roles']);
+        } else {
+            $user->assignRole('User'); // Default role
+        }
+
+        return $this->success($user->load('roles'), 201);
     }
 
     /**
@@ -71,11 +83,14 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user): JsonResponse
     {
+        Gate::authorize('update', $user);
+
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'email' => ['sometimes', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => ['sometimes', 'string', 'min:8'],
             'is_active' => ['sometimes', 'boolean'],
+            'roles' => ['sometimes', 'array'],
         ]);
 
         if (isset($validated['password'])) {
@@ -84,7 +99,11 @@ class UserController extends Controller
 
         $user->update($validated);
 
-        return $this->success($user);
+        if (isset($validated['roles'])) {
+            $user->syncRoles($validated['roles']);
+        }
+
+        return $this->success($user->load('roles'));
     }
 
     /**
@@ -92,6 +111,8 @@ class UserController extends Controller
      */
     public function destroy(Request $request, User $user): JsonResponse
     {
+        Gate::authorize('delete', $user);
+
         if ($request->user()->id === $user->id) {
             return $this->error('Tidak dapat menghapus akun sendiri.', 422);
         }

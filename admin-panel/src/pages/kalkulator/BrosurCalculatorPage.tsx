@@ -129,10 +129,20 @@ const BrosurCalculatorPage: React.FC = () => {
                 <Col xs={24} lg={15}>
                     <div className="premium-card" style={{ borderRadius: 28, background: '#fff', padding: '32px', marginBottom: 24, border: 'none' }}>
                          <div style={{ marginBottom: 24 }}>
-                            <Text strong style={{ fontSize: 11, color: '#aaa', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>PILIH JENIS CETAKAN</Text>
-                            <Select size="large" value={selectedIdx} onChange={v => { setSelectedIdx(v); setResult(null); }} style={{ width: '100%', borderRadius: 14 }}>
+                             <Select size="large" value={selectedIdx} onChange={v => { setSelectedIdx(v); setResult(null); }} style={{ width: '100%', borderRadius: 14 }}>
                                 {settings.products.map((p, i) => <Option key={i} value={i}>{p.name} — Mulai {fmt(p.basePrice)}/pcs</Option>)}
                             </Select>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 20 }} className="hide-scrollbar">
+                            <Button size="small" shape="round" onClick={() => { 
+                                setSelectedIdx(0);
+                                form.setFieldsValue({ paper_type: 'Artpaper 150gsm', print_sides: '2_sides', lamination: 'none', fold_type: 'none', quantity: 500 });
+                            }} style={{ fontSize: 11, fontWeight: 600 }}>📄 Presets: Brosur A4 Standard</Button>
+                            <Button size="small" shape="round" onClick={() => { 
+                                setSelectedIdx(2);
+                                form.setFieldsValue({ paper_type: 'HVS 80gsm', print_sides: '1_side', lamination: 'none', fold_type: 'none', quantity: 1000 });
+                            }} style={{ fontSize: 11, fontWeight: 600 }}>✉️ Presets: Flyer A5 Promosi</Button>
                         </div>
 
                         <Form form={form} layout="vertical" initialValues={{ quantity: prod.min, paper_type: prod.papers[2] || prod.papers[0], print_sides: '2_sides', lamination: 'none', fold_type: 'none' }} requiredMark={false}>
@@ -248,22 +258,27 @@ const BrosurCalculatorPage: React.FC = () => {
                                             </div>
                                         </div>
                                         <div style={{ padding: '32px' }}>
-                                             <Row gutter={[16, 24]}>
+                                              <Row gutter={[16, 24]} style={{ marginBottom: 24 }}>
                                                 {[
                                                     { label: 'Estimasi Berat', value: `${result.weight_kg} kg`, icon: <InfoCircleOutlined /> },
                                                     { label: 'Metode Cetak', value: result.print_method, icon: <CalculatorOutlined /> },
                                                 ].map((item, i) => (
-                                                    <Col span={24} key={i}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                                            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#fff7ed', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff9f43' }}>{item.icon}</div>
-                                                            <div>
-                                                                <Text style={{ fontSize: 10, color: '#aaa', display: 'block', fontWeight: 700 }}>{item.label.toUpperCase()}</Text>
-                                                                <Text strong style={{ fontSize: 15, color: '#333' }}>{item.value || '-'}</Text>
-                                                            </div>
-                                                        </div>
+                                                    <Col span={12} key={i}>
+                                                        <Text style={{ fontSize: 10, color: '#aaa', display: 'block', fontWeight: 700, marginBottom: 2 }}>{item.label.toUpperCase()}</Text>
+                                                        <Text strong style={{ fontSize: 14, color: '#333' }}>{item.value || '-'}</Text>
                                                     </Col>
                                                 ))}
                                              </Row>
+
+                                             {(result as any).pricing != null && (
+                                                <div style={{ borderTop: '1px dashed #eee', paddingTop: 20, marginBottom: 20 }}>
+                                                    <Text strong style={{ fontSize: 11, color: '#aaa', display: 'block', marginBottom: 12 }}>RINCIAN BIAYA SATUAN</Text>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><Text style={{ fontSize: 12, color: '#64748b' }}>Cetak Dasar</Text><Text strong style={{ fontSize: 12 }}>{fmt((result as any).pricing.base_price_per_unit)}</Text></div>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><Text style={{ fontSize: 12, color: '#64748b' }}>Finishing / Lipat</Text><Text strong style={{ fontSize: 12 }}>{fmt((result as any).pricing.finishing_cost_per_unit)}</Text></div>
+                                                    </div>
+                                                </div>
+                                             )}
                                              
                                              <div style={{ marginTop: 32, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                                 {(result.discount_percent ?? 0) > 0 && <Tag color="green" style={{ borderRadius: 8, padding: '4px 12px', fontWeight: 700 }}>PROMO DISKON {result.discount_percent}%</Tag>}

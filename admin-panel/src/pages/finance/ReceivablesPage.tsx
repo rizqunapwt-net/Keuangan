@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
-import { Table, Button, Tag, Card, Typography, Row, Col, Statistic, Breadcrumb, Space, Input, message, Tooltip } from 'antd';
-import { PlusOutlined, SearchOutlined, FilterOutlined, HistoryOutlined, DollarCircleOutlined } from '@ant-design/icons';
+import { Table, Button, Tag, Card, Typography, Row, Col, Space, Input, message, Tooltip } from 'antd';
+import { PlusOutlined, SearchOutlined, FilterOutlined, HistoryOutlined, DollarCircleOutlined, FileSearchOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api';
 import dayjs from 'dayjs';
-import { fmtRp } from '../../utils/formatters';
 import DebtFormDrawer from './DebtFormDrawer';
 import DebtPaymentDrawer from './DebtPaymentDrawer';
+import PageHeader from '../../components/PageHeader';
+import { motion } from 'framer-motion';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const statusColors: Record<string, string> = {
-    unpaid: 'red',
-    partial: 'orange',
-    paid: 'green'
+    unpaid: '#ef4444',
+    partial: '#f59e0b',
+    paid: '#10b981'
 };
 
 const statusLabels: Record<string, string> = {
@@ -50,23 +51,62 @@ const ReceivablesPage: React.FC = () => {
     const totalReceived = data.reduce((s: number, e: any) => s + Number(e.paid_amount), 0);
     const remainingAmount = totalAmount - totalReceived;
 
+    const stats = [
+        {
+            title: 'Total Piutang',
+            value: totalAmount,
+            icon: <FileSearchOutlined style={{ fontSize: 20 }} />,
+            color: '#1e293b',
+            bg: '#f1f5f9'
+        },
+        {
+            title: 'Total Diterima',
+            value: totalReceived,
+            icon: <DollarCircleOutlined style={{ fontSize: 20 }} />,
+            color: '#16a34a',
+            bg: '#d1fae5'
+        },
+        {
+            title: 'Sisa Piutang',
+            value: remainingAmount,
+            icon: <ClockCircleOutlined style={{ fontSize: 20 }} />,
+            color: '#dc2626',
+            bg: '#fee2e2'
+        },
+    ];
+
     const columns = [
         {
             title: 'Tanggal',
             dataIndex: 'date',
             key: 'date',
             sorter: (a: any, b: any) => dayjs(a.date).unix() - dayjs(b.date).unix(),
-            render: (v: string) => dayjs(v).format('DD/MM/YYYY'),
+            render: (v: string) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <ClockCircleOutlined style={{ color: '#94a3b8', fontSize: 12 }} />
+                    <Text style={{ fontSize: 13 }}>{dayjs(v).format('DD/MM/YYYY')}</Text>
+                </div>
+            ),
         },
         {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            render: (s: string) => (
-                <Tag color={statusColors[s] || 'default'}>
-                    {statusLabels[s] || s}
-                </Tag>
-            ),
+            render: (s: string) => {
+                const color = statusColors[s] || '#64748b';
+                return (
+                    <Tag bordered={false} style={{
+                        backgroundColor: `${color}15`,
+                        color: color,
+                        fontWeight: 600,
+                        borderRadius: 6,
+                        padding: '2px 10px',
+                        fontSize: 12
+                    }}>
+                        {statusLabels[s] || s}
+                    </Tag>
+                );
+            },
         },
         {
             title: 'Debitur',
@@ -74,9 +114,13 @@ const ReceivablesPage: React.FC = () => {
             key: 'client_name',
             sorter: (a: any, b: any) => a.client_name.localeCompare(b.client_name),
             render: (v: string, record: any) => (
-                <div style={{ fontWeight: 600 }}>
-                    {v}
-                    {record.client_phone && <div style={{ fontSize: 11, fontWeight: 400, color: '#64748b' }}>{record.client_phone}</div>}
+                <div>
+                    <Text strong style={{ color: '#1e293b', fontSize: 14 }}>{v}</Text>
+                    {record.client_phone && (
+                        <Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 2 }}>
+                            {record.client_phone}
+                        </Text>
+                    )}
                 </div>
             )
         },
@@ -84,31 +128,53 @@ const ReceivablesPage: React.FC = () => {
             title: 'Keterangan',
             dataIndex: 'description',
             key: 'description',
-            render: (v: string) => <Text type="secondary" style={{ fontSize: 12 }}>{v || '-'}</Text>
+            render: (v: string) => (
+                <Text type="secondary" style={{ fontSize: 12, maxWidth: 200, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {v || '-'}
+                </Text>
+            )
         },
         {
             title: 'Jatuh Tempo',
             dataIndex: 'due_date',
             key: 'due_date',
-            render: (v: string) => v ? (
-                <Text type={dayjs(v).isBefore(dayjs()) ? 'danger' : 'secondary'}>
-                    {dayjs(v).format('DD/MM/YYYY')}
-                </Text>
-            ) : '-'
+            render: (v: string) => {
+                const isOverdue = v && dayjs(v).isBefore(dayjs());
+                return v ? (
+                    <Tag bordered={false} style={{
+                        backgroundColor: isOverdue ? '#fee2e2' : '#f1f5f9',
+                        color: isOverdue ? '#ef4444' : '#64748b',
+                        fontWeight: 600,
+                        borderRadius: 6,
+                        padding: '2px 10px',
+                        fontSize: 12
+                    }}>
+                        {dayjs(v).format('DD/MM/YYYY')}
+                    </Tag>
+                ) : '-';
+            }
         },
         {
             title: 'Nominal',
             dataIndex: 'amount',
             key: 'amount',
             align: 'right' as const,
-            render: (v: number) => fmtRp(v),
+            render: (v: number) => (
+                <Text style={{ color: '#64748b', fontSize: 13 }}>
+                    Rp {Number(v).toLocaleString('id-ID')}
+                </Text>
+            ),
         },
         {
             title: 'Diterima',
             dataIndex: 'paid_amount',
             key: 'paid_amount',
             align: 'right' as const,
-            render: (v: number) => <Text type="success">{fmtRp(v)}</Text>,
+            render: (v: number) => (
+                <Text style={{ color: '#16a34a', fontWeight: 600, fontSize: 13 }}>
+                    Rp {Number(v).toLocaleString('id-ID')}
+                </Text>
+            ),
         },
         {
             title: 'Sisa',
@@ -116,21 +182,30 @@ const ReceivablesPage: React.FC = () => {
             align: 'right' as const,
             render: (_: any, record: any) => {
                 const sisa = Number(record.amount) - Number(record.paid_amount);
-                return <Text strong type={sisa > 0 ? 'danger' : 'secondary'}>{fmtRp(sisa)}</Text>;
+                return (
+                    <Text strong style={{
+                        color: sisa > 0 ? '#ef4444' : '#16a34a',
+                        fontSize: 14,
+                        fontWeight: 700
+                    }}>
+                        Rp {sisa.toLocaleString('id-ID')}
+                    </Text>
+                );
             }
         },
         {
             title: 'Aksi',
             key: 'action',
-            width: 100,
+            width: 120,
             align: 'center' as const,
             render: (_: any, record: any) => (
-                <Space>
+                <Space size="small">
                     <Tooltip title="Terima Pembayaran">
                         <Button
                             type="text"
-                            icon={<DollarCircleOutlined style={{ color: '#52c41a' }} />}
+                            icon={<DollarCircleOutlined style={{ color: '#16a34a', fontSize: 16 }} />}
                             size="small"
+                            style={{ borderRadius: 8 }}
                             onClick={() => {
                                 setSelectedDebt(record);
                                 setPaymentDrawerOpen(true);
@@ -141,14 +216,16 @@ const ReceivablesPage: React.FC = () => {
                     <Tooltip title="Riwayat">
                         <Button
                             type="text"
-                            icon={<HistoryOutlined />}
+                            icon={<HistoryOutlined style={{ color: '#64748b', fontSize: 14 }} />}
                             size="small"
+                            style={{ borderRadius: 8 }}
                             onClick={() => message.info('Fitur riwayat segera hadir')}
                         />
                     </Tooltip>
                     <Button
                         type="link"
                         size="small"
+                        style={{ color: '#0fb9b1' }}
                         onClick={() => {
                             setEditData(record);
                             setDrawerOpen(true);
@@ -162,70 +239,104 @@ const ReceivablesPage: React.FC = () => {
     ];
 
     return (
-        <div>
-            <Breadcrumb className="mb-4" items={[{ title: 'Beranda' }, { title: 'Keuangan' }, { title: 'Piutang' }]} />
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <Title level={4} style={{ margin: 0 }}>Piutang (Buku Piutang)</Title>
-                <Space>
-                    <Button icon={<FilterOutlined />} size="small">Filter</Button>
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={() => {
-                            setEditData(null);
-                            setDrawerOpen(true);
-                        }}
-                    >
-                        Piutang Baru
-                    </Button>
-                </Space>
-            </div>
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ fontFamily: "'Poppins', sans-serif" }}
+        >
+            <PageHeader
+                title="Piutang Usaha"
+                description="Kelola dan pantau piutang yang belum diterima dari pelanggan."
+                breadcrumb={[{ label: 'KEUANGAN' }, { label: 'PIUTANG' }]}
+                extra={
+                    <Space size={12}>
+                        <Button
+                            icon={<FilterOutlined />}
+                            style={{ borderRadius: 10, height: 40, fontWeight: 600, color: '#666' }}
+                        >
+                            Filter
+                        </Button>
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={() => {
+                                setEditData(null);
+                                setDrawerOpen(true);
+                            }}
+                            style={{ borderRadius: 12, height: 40, fontWeight: 700, boxShadow: '0 4px 12px rgba(15, 185, 177, 0.2)' }}
+                        >
+                            Piutang Baru
+                        </Button>
+                    </Space>
+                }
+            />
 
             {/* Summary Cards */}
-            <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                <Col xs={24} sm={8}>
-                    <Card bordered={false} style={{ borderRadius: 8, background: '#fff' }} bodyStyle={{ padding: 16 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 12 }}>Total Piutang</Text>}
-                            value={totalAmount}
-                            formatter={(v: any) => fmtRp(v)}
-                            valueStyle={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={8}>
-                    <Card bordered={false} style={{ borderRadius: 8, background: '#fff' }} bodyStyle={{ padding: 16 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 12 }}>Total Diterima</Text>}
-                            value={totalReceived}
-                            formatter={(v: any) => fmtRp(v)}
-                            valueStyle={{ fontSize: 18, fontWeight: 700, color: '#16a34a' }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={8}>
-                    <Card bordered={false} style={{ borderRadius: 8, background: '#fff' }} bodyStyle={{ padding: 16 }}>
-                        <Statistic
-                            title={<Text type="secondary" style={{ fontSize: 12 }}>Sisa Piutang</Text>}
-                            value={remainingAmount}
-                            formatter={(v: any) => fmtRp(v)}
-                            valueStyle={{ fontSize: 18, fontWeight: 700, color: '#dc2626' }}
-                        />
-                    </Card>
-                </Col>
+            <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
+                {stats.map((stat, i) => (
+                    <Col xs={24} sm={8} key={i}>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.1, duration: 0.4 }}
+                        >
+                            <Card
+                                className="premium-card"
+                                bodyStyle={{ padding: '24px' }}
+                                style={{ borderRadius: 20 }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                    <div style={{
+                                        width: 52, height: 52, borderRadius: 16,
+                                        background: stat.bg, color: stat.color,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: 22
+                                    }}>
+                                        {stat.icon}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <Text type="secondary" style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase' }}>
+                                            {stat.title}
+                                        </Text>
+                                        <div style={{ fontSize: 24, fontWeight: 800, color: stat.color, marginTop: 4 }}>
+                                            Rp {stat.value.toLocaleString('id-ID')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                        </motion.div>
+                    </Col>
+                ))}
             </Row>
 
-            <Card bordered={false} style={{ borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }} bodyStyle={{ padding: 0 }}>
+            <Card
+                className="premium-card"
+                bodyStyle={{ padding: 0 }}
+                style={{ borderRadius: 24 }}
+            >
                 {/* Search Bar */}
-                <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{
+                    padding: '20px 24px',
+                    borderBottom: '1px solid #f1f5f9',
+                    display: 'flex',
+                    gap: 12,
+                    alignItems: 'center'
+                }}>
                     <Input
                         placeholder="Cari debitur atau keterangan..."
                         prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
-                        style={{ width: 300 }}
+                        style={{
+                            width: 320,
+                            borderRadius: 12,
+                            background: '#f8fafc',
+                            border: 'none',
+                            height: 44
+                        }}
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
                         allowClear
+                        size="large"
                     />
                 </div>
 
@@ -234,7 +345,12 @@ const ReceivablesPage: React.FC = () => {
                     dataSource={filteredData}
                     rowKey="id"
                     loading={isLoading}
-                    pagination={{ pageSize: 15, showSizeChanger: true }}
+                    pagination={{
+                        pageSize: 15,
+                        showSizeChanger: true,
+                        position: ['bottomRight'],
+                        style: { paddingRight: 24, paddingBottom: 24 }
+                    }}
                     size="middle"
                 />
             </Card>
@@ -250,7 +366,7 @@ const ReceivablesPage: React.FC = () => {
                 onClose={() => setPaymentDrawerOpen(false)}
                 debt={selectedDebt}
             />
-        </div>
+        </motion.div>
     );
 };
 

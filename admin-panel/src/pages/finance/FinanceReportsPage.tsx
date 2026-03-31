@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Table, Card, Typography, Breadcrumb, Tabs, DatePicker } from 'antd';
+import { Card, Typography, Tabs, DatePicker, Table, Tag } from 'antd';
 import { BarChartOutlined, LineChartOutlined, PieChartOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api';
 import dayjs from 'dayjs';
 import { fmtRp } from '../../utils/formatters';
+import PageHeader from '../../components/PageHeader';
+import { motion } from 'framer-motion';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const FinanceReportsPage: React.FC = () => {
     const [dailyMonth, setDailyMonth] = useState(dayjs());
@@ -18,7 +20,8 @@ const FinanceReportsPage: React.FC = () => {
             const res = await api.get('/finance/reports/daily', {
                 params: { month: dailyMonth.month() + 1, year: dailyMonth.year() }
             });
-            return res.data || [];
+            const d = res.data?.data || res.data || [];
+            return Array.isArray(d) ? d : [];
         }
     });
 
@@ -28,7 +31,8 @@ const FinanceReportsPage: React.FC = () => {
             const res = await api.get('/finance/reports/monthly', {
                 params: { year: monthlyYear.year() }
             });
-            return res.data || [];
+            const d = res.data?.data || res.data || [];
+            return Array.isArray(d) ? d : [];
         }
     });
 
@@ -36,156 +40,124 @@ const FinanceReportsPage: React.FC = () => {
         queryKey: ['reports', 'yearly'],
         queryFn: async () => {
             const res = await api.get('/finance/reports/yearly');
-            return res.data || [];
+            const d = res.data?.data || res.data || [];
+            return Array.isArray(d) ? d : [];
         }
     });
 
-    const renderDaily = () => (
-        <div>
-            <div style={{ marginBottom: 16 }}>
-                <DatePicker
-                    picker="month"
-                    value={dailyMonth}
-                    onChange={(v) => v && setDailyMonth(v)}
-                    allowClear={false}
-                />
-            </div>
-            <Table
-                columns={[
-                    { title: 'Tanggal', dataIndex: 'date', key: 'date', render: (v) => dayjs(v).format('DD/MM/YYYY') },
-                    {
-                        title: 'Pemasukan',
-                        dataIndex: 'income',
-                        key: 'income',
-                        align: 'right',
-                        render: (v) => <Text type="success">{fmtRp(v)}</Text>
-                    },
-                    {
-                        title: 'Pengeluaran',
-                        dataIndex: 'expense',
-                        key: 'expense',
-                        align: 'right',
-                        render: (v) => <Text type="danger">{fmtRp(v)}</Text>
-                    },
-                    {
-                        title: 'Selisih',
-                        key: 'diff',
-                        align: 'right',
-                        render: (_, record: any) => {
-                            const diff = Number(record.income) - Number(record.expense);
-                            return <Text strong type={diff >= 0 ? 'success' : 'danger'}>{fmtRp(diff)}</Text>
-                        }
-                    },
-                ]}
-                dataSource={dailyData}
-                loading={loadingDaily}
-                pagination={false}
-                rowKey="date"
-            />
-        </div>
-    );
+    const columns = (type: 'date' | 'month' | 'year') => [
+        { 
+            title: type === 'date' ? 'TANGGAL' : type === 'month' ? 'BULAN' : 'TAHUN', 
+            dataIndex: type, 
+            key: type,
+            render: (v: any) => (
+                <Text strong style={{ fontSize: 13, color: '#475569' }}>
+                    {type === 'date' ? dayjs(v).format('DD MMM YYYY') : 
+                     type === 'month' ? dayjs().month(Number(v) - 1).format('MMMM') : v}
+                </Text>
+            )
+        },
+        {
+            title: 'PEMASUKAN',
+            dataIndex: 'income',
+            key: 'income',
+            align: 'right' as const,
+            render: (v: number) => <Text style={{ color: '#10b981', fontWeight: 600, fontSize: 13 }}>{fmtRp(v)}</Text>
+        },
+        {
+            title: 'PENGELUARAN',
+            dataIndex: 'expense',
+            key: 'expense',
+            align: 'right' as const,
+            render: (v: number) => <Text style={{ color: '#ef4444', fontWeight: 600, fontSize: 13 }}>{fmtRp(v)}</Text>
+        },
+        {
+            title: 'SELISIH (LABA/RUGI)',
+            key: 'diff',
+            align: 'right' as const,
+            render: (_: any, record: any) => {
+                const diff = Number(record.income) - Number(record.expense);
+                return (
+                    <Tag bordered={false} style={{ 
+                        backgroundColor: diff >= 0 ? '#f0fdf4' : '#fef2f2', 
+                        color: diff >= 0 ? '#10b981' : '#ef4444',
+                        fontWeight: 700,
+                        fontSize: 12,
+                        borderRadius: 6,
+                        margin: 0,
+                        padding: '2px 10px'
+                    }}>
+                        {fmtRp(diff)}
+                    </Tag>
+                );
+            }
+        },
+    ];
 
-    const renderMonthly = () => (
-        <div>
-            <div style={{ marginBottom: 16 }}>
-                <DatePicker
-                    picker="year"
-                    value={monthlyYear}
-                    onChange={(v) => v && setMonthlyYear(v)}
-                    allowClear={false}
-                />
-            </div>
-            <Table
-                columns={[
-                    {
-                        title: 'Bulan',
-                        dataIndex: 'month',
-                        key: 'month',
-                        render: (v) => dayjs().month(Number(v) - 1).format('MMMM')
-                    },
-                    {
-                        title: 'Pemasukan',
-                        dataIndex: 'income',
-                        key: 'income',
-                        align: 'right',
-                        render: (v) => <Text type="success">{fmtRp(v)}</Text>
-                    },
-                    {
-                        title: 'Pengeluaran',
-                        dataIndex: 'expense',
-                        key: 'expense',
-                        align: 'right',
-                        render: (v) => <Text type="danger">{fmtRp(v)}</Text>
-                    },
-                    {
-                        title: 'Selisih',
-                        key: 'diff',
-                        align: 'right',
-                        render: (_, record: any) => {
-                            const diff = Number(record.income) - Number(record.expense);
-                            return <Text strong type={diff >= 0 ? 'success' : 'danger'}>{fmtRp(diff)}</Text>
-                        }
-                    },
-                ]}
-                dataSource={monthlyData}
-                loading={loadingMonthly}
-                pagination={false}
-                rowKey="month"
-            />
-        </div>
-    );
-
-    const renderYearly = () => (
-        <Table
-            columns={[
-                { title: 'Tahun', dataIndex: 'year', key: 'year' },
-                {
-                    title: 'Pemasukan',
-                    dataIndex: 'income',
-                    key: 'income',
-                    align: 'right',
-                    render: (v) => <Text type="success">{fmtRp(v)}</Text>
-                },
-                {
-                    title: 'Pengeluaran',
-                    dataIndex: 'expense',
-                    key: 'expense',
-                    align: 'right',
-                    render: (v) => <Text type="danger">{fmtRp(v)}</Text>
-                },
-                {
-                    title: 'Selisih',
-                    key: 'diff',
-                    align: 'right',
-                    render: (_, record: any) => {
-                        const diff = Number(record.income) - Number(record.expense);
-                        return <Text strong type={diff >= 0 ? 'success' : 'danger'}>{fmtRp(diff)}</Text>
-                    }
-                },
-            ]}
-            dataSource={yearlyData}
-            loading={loadingYearly}
-            pagination={false}
-            rowKey="year"
-        />
-    );
-
-    const items = [
-        { key: 'daily', label: 'Laporan Harian', children: renderDaily(), icon: <PieChartOutlined /> },
-        { key: 'monthly', label: 'Laporan Bulanan', children: renderMonthly(), icon: <BarChartOutlined /> },
-        { key: 'yearly', label: 'Laporan Tahunan', children: renderYearly(), icon: <LineChartOutlined /> },
+    const tabItems = [
+        { 
+            key: 'daily', 
+            label: 'HARIAN', 
+            icon: <PieChartOutlined />,
+            children: (
+                <div style={{ padding: '8px 4px' }}>
+                    <div style={{ marginBottom: 24, padding: '0 4px' }}>
+                        <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 8, textTransform: 'uppercase' }}>PILIH BULAN</Text>
+                        <DatePicker picker="month" value={dailyMonth} onChange={(v) => v && setDailyMonth(v)} allowClear={false} style={{ borderRadius: 10, height: 40, width: 220 }} />
+                    </div>
+                    <Table columns={columns('date')} dataSource={dailyData} loading={loadingDaily} pagination={false} rowKey="date" size="middle" />
+                </div>
+            )
+        },
+        { 
+            key: 'monthly', 
+            label: 'BULANAN', 
+            icon: <BarChartOutlined />,
+            children: (
+                <div style={{ padding: '8px 4px' }}>
+                    <div style={{ marginBottom: 24, padding: '0 4px' }}>
+                        <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 8, textTransform: 'uppercase' }}>PILIH TAHUN</Text>
+                        <DatePicker picker="year" value={monthlyYear} onChange={(v) => v && setMonthlyYear(v)} allowClear={false} style={{ borderRadius: 10, height: 40, width: 220 }} />
+                    </div>
+                    <Table columns={columns('month')} dataSource={monthlyData} loading={loadingMonthly} pagination={false} rowKey="month" size="middle" />
+                </div>
+            )
+        },
+        { 
+            key: 'yearly', 
+            label: 'TAHUNAN', 
+            icon: <LineChartOutlined />,
+            children: (
+                <div style={{ padding: '24px 4px 8px' }}>
+                    <Table columns={columns('year')} dataSource={yearlyData} loading={loadingYearly} pagination={false} rowKey="year" size="middle" />
+                </div>
+            )
+        },
     ];
 
     return (
-        <div>
-            <Breadcrumb className="mb-4" items={[{ title: 'Beranda' }, { title: 'Keuangan' }, { title: 'Laporan Kas' }]} />
+        <motion.div 
+            initial={{ opacity: 0, y: 15 }} 
+            animate={{ opacity: 1, y: 0 }}
+            style={{ fontFamily: "'Poppins', sans-serif" }}
+        >
+            <PageHeader
+                title="Laporan Kas"
+                description="Rekapitulasi data pemasukan dan pengeluaran secara periodik."
+                breadcrumb={[{ label: 'LAPORAN' }, { label: 'KAS' }]}
+            />
 
-            <Title level={4} className="mb-4">Laporan Arus Kas</Title>
-
-            <Card bordered={false} style={{ borderRadius: 8 }}>
-                <Tabs defaultActiveKey="daily" items={items} />
+            <Card className="premium-card" style={{ borderRadius: 24 }} bodyStyle={{ padding: 0 }}>
+                <div style={{ padding: '0 24px' }}>
+                    <Tabs 
+                        defaultActiveKey="daily" 
+                        items={tabItems} 
+                        className="premium-tabs"
+                        style={{ padding: '12px 0' }}
+                    />
+                </div>
             </Card>
-        </div>
+        </motion.div>
     );
 };
 

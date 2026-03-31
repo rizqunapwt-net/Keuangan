@@ -28,7 +28,14 @@ abstract class TestCase extends BaseTestCase
      */
     protected function actingAsWithRole(\App\Models\User $user, string $role): static
     {
-        $user->assignRole(\Spatie\Permission\Models\Role::findByName($role, 'web'));
+        $guards = ['web', 'sanctum'];
+        foreach ($guards as $guard) {
+            try {
+                $user->assignRole(\Spatie\Permission\Models\Role::findByName($role, $guard));
+            } catch (\Exception $e) {
+                // Skip if role doesn't exist for this guard
+            }
+        }
 
         \Laravel\Sanctum\Sanctum::actingAs($user);
 

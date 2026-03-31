@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Card, Typography, Row, Col, Button, Space, Breadcrumb, message, Modal, Form, Input, Select, InputNumber, Popconfirm, Tag, Empty, DatePicker } from 'antd';
+import { Card, Typography, Row, Col, Button, Space, message, Modal, Form, Input, Select, InputNumber, Popconfirm, Tag, Empty, DatePicker, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, BankOutlined, WalletOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import api from '../../api';
 import { fmtRp } from '../../utils/formatters';
+import PageHeader from '../../components/PageHeader';
+import { motion } from 'framer-motion';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface BankAccount {
     id: number;
@@ -23,10 +25,10 @@ interface BankAccount {
 }
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    savings: { label: 'Tabungan', color: '#1890ff', bg: '#e6f7ff' },
-    checking: { label: 'Giro', color: '#722ed1', bg: '#f9f0ff' },
-    cash: { label: 'Kas', color: '#52c41a', bg: '#f6ffed' },
-    deposit: { label: 'Deposito', color: '#fa8c16', bg: '#fff7e6' },
+    savings: { label: 'Tabungan', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.08)' },
+    checking: { label: 'Giro', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.08)' },
+    cash: { label: 'Kas Toko', color: '#10b981', bg: 'rgba(16, 185, 129, 0.08)' },
+    deposit: { label: 'Deposito', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.08)' },
 };
 
 const BanksPage: React.FC = () => {
@@ -132,77 +134,155 @@ const BanksPage: React.FC = () => {
     const totalBalance = accounts.reduce((s, a) => s + Number(a.balance), 0);
 
     return (
-        <div>
-            <Breadcrumb className="mb-4" items={[{ title: 'KEUANGAN' }, { title: 'KAS & BANK' }]} />
+        <motion.div 
+            initial={{ opacity: 0, y: 15 }} 
+            animate={{ opacity: 1, y: 0 }}
+            style={{ fontFamily: "'Poppins', sans-serif" }}
+        >
+            <PageHeader
+                title="Kas & Bank"
+                description="Kelola akun kas, rekening bank, dan saldo perusahaan Rizquna."
+                breadcrumb={[{ label: 'KEUANGAN' }, { label: 'KAS & BANK' }]}
+                extra={
+                    <Button 
+                        type="primary" 
+                        icon={<PlusOutlined />} 
+                        size="large" 
+                        onClick={openCreate}
+                        style={{ borderRadius: 12, height: 44, fontWeight: 700, boxShadow: '0 4px 12px rgba(15, 185, 177, 0.2)' }}
+                    >
+                        Tambah Akun
+                    </Button>
+                }
+            />
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <div>
-                    <Title level={4} style={{ margin: 0, fontWeight: 700 }}>Kas & Bank</Title>
-                    <Text type="secondary">Kelola akun kas, rekening bank, dan saldo perusahaan.</Text>
-                </div>
-                <Button type="primary" icon={<PlusOutlined />} size="large" onClick={openCreate}
-                    style={{ borderRadius: 12, height: 44, padding: '0 24px' }}>
-                    Tambah Akun
-                </Button>
-            </div>
-
-            {/* Total Saldo */}
-            <Card bordered={false} style={{ borderRadius: 14, marginBottom: 24, background: 'linear-gradient(135deg, #0fb9b1, #20bf6b)', color: '#fff' }} bodyStyle={{ padding: 24 }}>
-                <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, textTransform: 'uppercase', fontWeight: 700 }}>TOTAL SALDO SEMUA AKUN</Text>
-                <div style={{ fontSize: 32, fontWeight: 800, color: '#fff' }}>
-                    {fmtRp(totalBalance)}
-                </div>
-                <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>{accounts.length} akun terdaftar</Text>
-            </Card>
+            {/* Total Balance Hero Card */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                style={{ marginBottom: 32 }}
+            >
+                <Card 
+                    bordered={false} 
+                    style={{ 
+                        borderRadius: 24, 
+                        background: 'linear-gradient(135deg, #0fb9b1 0%, #20bf6b 100%)', 
+                        color: '#fff',
+                        boxShadow: '0 8px 30px rgba(15, 185, 177, 0.15)',
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }} 
+                    bodyStyle={{ padding: '32px 40px' }}
+                >
+                    <div style={{ position: 'absolute', right: '-20px', bottom: '-20px', opacity: 0.1, fontSize: 160, color: '#fff' }}>
+                        <BankOutlined />
+                    </div>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            TOTAL SALDO AKTIF
+                        </Text>
+                        <div style={{ fontSize: 38, fontWeight: 800, color: '#fff', margin: '4px 0', letterSpacing: '-1px' }}>
+                            {fmtRp(totalBalance)}
+                        </div>
+                        <Space split={<span style={{ opacity: 0.5 }}>•</span>} style={{ marginTop: 8 }}>
+                            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, fontWeight: 500 }}>{accounts.length} Akun Terdaftar</Text>
+                            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, fontWeight: 500 }}>Update: {dayjs().format('DD MMM, HH:mm')}</Text>
+                        </Space>
+                    </div>
+                </Card>
+            </motion.div>
 
             {/* Account Groups */}
-            {grouped.length === 0 && !isLoading && (
-                <Card bordered={false} style={{ borderRadius: 14, textAlign: 'center', padding: 40 }}>
+            {isLoading ? (
+                <Card className="premium-card" style={{ borderRadius: 14 }}>
+                    <Empty description="Memuat data akun..." />
+                </Card>
+            ) : grouped.length === 0 ? (
+                <Card className="premium-card" style={{ borderRadius: 14, textAlign: 'center', padding: 40 }}>
                     <Empty description="Belum ada akun kas/bank. Klik 'Tambah Akun' untuk mulai." />
                 </Card>
-            )}
-
-            {grouped.map((group) => (
-                <div key={group.type} style={{ marginBottom: 24 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                        {group.type === 'cash' ? <WalletOutlined style={{ color: group.color }} /> : <BankOutlined style={{ color: group.color }} />}
-                        <Text strong style={{ fontSize: 15, color: group.color }}>{group.label}</Text>
-                        <Tag color={group.color}>{group.accounts.length}</Tag>
+            ) : (
+                grouped.map((group, gIdx) => (
+                    <div key={group.type} style={{ marginBottom: 32 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, paddingLeft: 4 }}>
+                            <div style={{ 
+                                width: 28, 
+                                height: 28, 
+                                borderRadius: 8, 
+                                background: group.bg, 
+                                color: group.color, 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                fontSize: 14
+                            }}>
+                                {group.type === 'cash' ? <WalletOutlined /> : <BankOutlined />}
+                            </div>
+                            <Text strong style={{ fontSize: 16, color: '#333', letterSpacing: '-0.3px' }}>{group.label}</Text>
+                            <Tag bordered={false} style={{ background: group.bg, color: group.color, fontWeight: 700, borderRadius: 6, margin: 0 }}>
+                                {group.accounts.length}
+                            </Tag>
+                        </div>
+                        <Row gutter={[20, 20]}>
+                            {group.accounts.map((account, aIdx) => (
+                                <Col key={account.id} xs={24} sm={12} md={8}>
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 15 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.2 + (gIdx * 0.1) + (aIdx * 0.05) }}
+                                    >
+                                        <Card 
+                                            className="premium-card"
+                                            bodyStyle={{ padding: '24px' }}
+                                        >
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
+                                                    <Text strong style={{ fontSize: 15, color: '#333', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                        {account.bank_name}
+                                                    </Text>
+                                                    <Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 2 }}>{account.branch_name}</Text>
+                                                </div>
+                                                <Space size={2}>
+                                                    <Tooltip title="Edit">
+                                                        <Button type="text" size="small" icon={<EditOutlined />} onClick={() => openEdit(account)} style={{ color: '#aaa', borderRadius: 8 }} />
+                                                    </Tooltip>
+                                                    <Popconfirm 
+                                                        title="Hapus akun?" 
+                                                        onConfirm={() => deleteMutation.mutate(account.id)} 
+                                                        okText="Hapus" 
+                                                        cancelText="Batal" 
+                                                        okButtonProps={{ danger: true }}
+                                                    >
+                                                        <Button type="text" size="small" danger icon={<DeleteOutlined />} style={{ borderRadius: 8 }} />
+                                                    </Popconfirm>
+                                                </Space>
+                                            </div>
+                                            
+                                            <div style={{ marginTop: 20 }}>
+                                                {account.account_number && (
+                                                    <div style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: 10, border: '1px dashed #e2e8f0', marginBottom: 14 }}>
+                                                        <Text type="secondary" style={{ fontSize: 10, display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>No. Rekening</Text>
+                                                        <Text strong style={{ fontSize: 13, color: '#475569', letterSpacing: '0.5px' }}>{account.account_number}</Text>
+                                                        <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>a.n. {account.account_holder}</div>
+                                                    </div>
+                                                )}
+                                                
+                                                <div style={{ padding: '0 4px' }}>
+                                                    <Text type="secondary" style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#ccc', letterSpacing: '0.8px' }}>SALDO AKTIF</Text>
+                                                    <div style={{ fontSize: 24, fontWeight: 800, color: group.color, letterSpacing: '-0.5px' }}>
+                                                        {fmtRp(account.balance)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    </motion.div>
+                                </Col>
+                            ))}
+                        </Row>
                     </div>
-                    <Row gutter={[16, 16]}>
-                        {group.accounts.map((account) => (
-                            <Col key={account.id} xs={24} sm={12} md={8}>
-                                <Card bordered={false} style={{ borderRadius: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
-                                    bodyStyle={{ padding: 20 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <div>
-                                            <Text strong style={{ fontSize: 15 }}>{account.bank_name}</Text>
-                                            <div><Text type="secondary" style={{ fontSize: 12 }}>{account.branch_name}</Text></div>
-                                            {account.account_number && (
-                                                <div><Text type="secondary" style={{ fontSize: 12 }}>No. Rek: {account.account_number}</Text></div>
-                                            )}
-                                            <div><Text type="secondary" style={{ fontSize: 11 }}>a.n. {account.account_holder}</Text></div>
-                                        </div>
-                                        <Space size={4}>
-                                            <Button type="text" size="small" icon={<EditOutlined />} onClick={() => openEdit(account)} />
-                                            <Popconfirm title="Hapus akun ini?" description="Data saldo akan terhapus."
-                                                onConfirm={() => deleteMutation.mutate(account.id)} okText="Hapus" cancelText="Batal" okButtonProps={{ danger: true }}>
-                                                <Button type="text" size="small" danger icon={<DeleteOutlined />} />
-                                            </Popconfirm>
-                                        </Space>
-                                    </div>
-                                    <div style={{ marginTop: 16, padding: '12px 16px', background: group.bg, borderRadius: 10 }}>
-                                        <Text type="secondary" style={{ fontSize: 11 }}>SALDO</Text>
-                                        <div style={{ fontSize: 22, fontWeight: 700, color: group.color }}>
-                                            {fmtRp(account.balance)}
-                                        </div>
-                                    </div>
-                                </Card>
-                            </Col>
-                        ))}
-                    </Row>
-                </div>
-            ))}
+                ))
+            )}
 
             {/* Create/Edit Modal */}
             <Modal
@@ -214,65 +294,70 @@ const BanksPage: React.FC = () => {
                 okText={editingBank ? 'Simpan' : 'Tambah Akun'}
                 cancelText="Batal"
                 width={520}
+                bodyStyle={{ paddingTop: 12 }}
+                style={{ top: 60 }}
             >
-                <Form form={form} layout="vertical" onFinish={(v) => saveMutation.mutate(v)} requiredMark={false} style={{ marginTop: 16 }}>
+                <Form form={form} layout="vertical" onFinish={(v) => saveMutation.mutate(v)} requiredMark={false}>
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item name="bank_name" label="Nama Bank / Kas" rules={[{ required: true, message: 'Wajib diisi' }]}>
-                                <Input placeholder="BCA, Mandiri, Kas Toko" size="large" style={{ borderRadius: 10 }} />
+                                <Input placeholder="BCA, Mandiri, Kas Toko" />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
                             <Form.Item name="branch_name" label="Cabang" rules={[{ required: true, message: 'Wajib diisi' }]}>
-                                <Input placeholder="KCP Jakarta, Pusat" size="large" style={{ borderRadius: 10 }} />
+                                <Input placeholder="KCP Jakarta, Pusat" />
                             </Form.Item>
                         </Col>
                     </Row>
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item name="account_number" label="Nomor Rekening" rules={[{ required: true, message: 'Wajib diisi' }]}>
-                                <Input placeholder="1234567890" size="large" style={{ borderRadius: 10 }} />
+                                <Input placeholder="1234567890" />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
                             <Form.Item name="account_holder" label="Atas Nama" rules={[{ required: true, message: 'Wajib diisi' }]}>
-                                <Input placeholder="PT Rizquna" size="large" style={{ borderRadius: 10 }} />
+                                <Input placeholder="PT Rizquna" />
                             </Form.Item>
                         </Col>
                     </Row>
                     <Row gutter={16}>
                         <Col span={8}>
                             <Form.Item name="account_type" label="Tipe Akun" rules={[{ required: true }]}>
-                                <Select size="large" options={Object.entries(TYPE_CONFIG).map(([v, c]) => ({ value: v, label: c.label }))} />
+                                <Select options={Object.entries(TYPE_CONFIG).map(([v, c]) => ({ value: v, label: c.label }))} />
                             </Form.Item>
                         </Col>
                         <Col span={8}>
                             <Form.Item name="currency" label="Mata Uang" rules={[{ required: true }]}>
-                                <Select size="large" options={[{ value: 'IDR', label: 'IDR' }, { value: 'USD', label: 'USD' }]} />
+                                <Select options={[{ value: 'IDR', label: 'IDR' }, { value: 'USD', label: 'USD' }]} />
                             </Form.Item>
                         </Col>
                         <Col span={8}>
                             <Form.Item name="opening_date" label="Tgl. Buka" rules={[{ required: true }]}>
-                                <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} size="large" />
+                                <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} />
                             </Form.Item>
                         </Col>
                     </Row>
                     <Form.Item name="opening_balance" label="Saldo Awal" rules={[{ required: true }]}>
-                        <InputNumber style={{ width: '100%', borderRadius: 10 }} size="large" min={0}
+                        <InputNumber 
+                            style={{ width: '100%' }} 
+                            min={0}
                             formatter={(v: any) => `${v || ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                             parser={(v) => v!.replace(/,/g, '')}
-                            prefix={<Text strong style={{ color: '#0fb9b1' }}>Rp</Text>} />
+                            prefix={<Text strong style={{ color: '#0fb9b1' }}>Rp</Text>} 
+                        />
                     </Form.Item>
                     <Form.Item name="account_id" label="Akun COA Terkait" rules={[{ required: true, message: 'Pilih akun COA' }]}>
-                        <Select size="large" showSearch optionFilterProp="children" placeholder="Pilih akun..."
+                        <Select showSearch optionFilterProp="children" placeholder="Pilih akun..."
                             options={coaAccounts.map((a: any) => ({ value: a.id, label: `${a.code} - ${a.name}` }))} />
                     </Form.Item>
-                    <Form.Item name="notes" label="Catatan (Opsional)">
-                        <Input.TextArea rows={2} placeholder="Catatan internal..." style={{ borderRadius: 10 }} />
+                    <Form.Item name="notes" label="Catatan (Opsional)" style={{ marginBottom: 0 }}>
+                        <Input.TextArea rows={2} placeholder="Catatan internal..." />
                     </Form.Item>
                 </Form>
             </Modal>
-        </div>
+        </motion.div>
     );
 };
 

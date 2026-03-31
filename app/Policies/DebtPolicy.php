@@ -25,6 +25,16 @@ class DebtPolicy
         return $this->isAdmin($user) || $user->hasPermissionTo('debt.create');
     }
 
+    public function update(User $user, Debt $debt): bool
+    {
+        return $this->isAdmin($user) || $user->hasPermissionTo('debt.edit');
+    }
+
+    public function delete(User $user, Debt $debt): bool
+    {
+        return $this->isAdmin($user) || $user->hasPermissionTo('debt.delete');
+    }
+
     public function recordPayment(User $user, Debt $debt): bool
     {
         return $this->isAdmin($user) || $user->hasPermissionTo('debt.record_payment');

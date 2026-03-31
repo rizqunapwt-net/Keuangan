@@ -8,6 +8,7 @@ use App\Support\ApiResponse;
 use App\Traits\Auditable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AccountController extends Controller
 {
@@ -50,6 +51,8 @@ class AccountController extends Controller
      */
     public function categories()
     {
+        Gate::authorize('accounting_read');
+
         $cats = $this->getCategories();
 
         return response()->json(['success' => true, 'data' => array_map(function ($c) {
@@ -62,6 +65,8 @@ class AccountController extends Controller
      */
     public function index()
     {
+        Gate::authorize('accounting_read');
+
         $accounts = Account::orderBy('code')->get();
 
         $result = $accounts->map(function (Account $a) {
@@ -101,6 +106,8 @@ class AccountController extends Controller
      */
     public function store(Request $request)
     {
+        Gate::authorize('accounting_write');
+
         $request->validate([
             'code' => 'required|string|unique:accounting_accounts,code',
             'name' => 'required|string|max:255',
@@ -127,6 +134,8 @@ class AccountController extends Controller
      */
     public function update(Request $request, int $id)
     {
+        Gate::authorize('accounting_write');
+
         $account = Account::findOrFail($id);
 
         $request->validate([
@@ -165,6 +174,8 @@ class AccountController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
+        Gate::authorize('accounting_write');
+
         $account = Account::findOrFail($id);
 
         // Check if account has journal entries

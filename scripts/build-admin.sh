@@ -18,9 +18,5 @@ npm install --silent
 echo "🔨 Building admin dashboard..."
 npm run build
 
-echo "📁 Copying build to public/admin/..."
-rm -rf "$DEST_DIR"
-cp -r "$ADMIN_DIR/dist" "$DEST_DIR"
-
 echo "✅ Admin dashboard built → public/admin/"
 echo "   Files: $(find "$DEST_DIR" -type f | wc -l | tr -d ' ')"

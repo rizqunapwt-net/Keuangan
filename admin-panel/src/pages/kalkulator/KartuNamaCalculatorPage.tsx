@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Typography, Row, Col, Form, InputNumber, Select, Button, Tag, Space, Checkbox, Collapse, Input, message, Popconfirm } from 'antd';
-import { IdcardOutlined, ArrowLeftOutlined, SettingOutlined, UndoOutlined, CalculatorOutlined, InfoCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { IdcardOutlined, ArrowLeftOutlined, SettingOutlined, UndoOutlined, CalculatorOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../api';
@@ -13,6 +13,7 @@ const { Option } = Select;
 interface CalcResult {
     unit_price: number; total_price: number; discount_percent?: number;
     weight_kg?: number; estimated_days?: string; finishing_fees?: number;
+    print_method?: string;
 }
 
 interface KNSettings {
@@ -88,6 +89,15 @@ const KartuNamaCalculatorPage: React.FC = () => {
             <Row gutter={[32, 32]}>
                 <Col xs={24} lg={14}>
                     <div className="premium-card" style={{ borderRadius: 28, background: '#fff', padding: '32px', marginBottom: 24, border: 'none' }}>
+                        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 20 }} className="hide-scrollbar">
+                            <Button size="small" shape="round" onClick={() => { 
+                                form.setFieldsValue({ box_qty: 2, print_sides: '1_side', lamination: 'none', finishings: [] });
+                            }} style={{ fontSize: 11, fontWeight: 600 }}>📄 Presets: Standard 1 Sisi</Button>
+                            <Button size="small" shape="round" onClick={() => { 
+                                form.setFieldsValue({ box_qty: 5, print_sides: '2_sides', lamination: 'matte', finishings: [] });
+                            }} style={{ fontSize: 11, fontWeight: 600 }}>🎴 Presets: Premium 2 Sisi Matte</Button>
+                        </div>
+
                         <Form form={form} layout="vertical" initialValues={{ box_qty: settings.minBox, print_sides: '2_sides', lamination: 'matte', finishings: [] }} requiredMark={false}>
                             <Row gutter={16}>
                                 <Col span={8}>
@@ -200,23 +210,27 @@ const KartuNamaCalculatorPage: React.FC = () => {
                                             </div>
                                         </div>
                                         <div style={{ padding: '32px' }}>
-                                             <Row gutter={[16, 24]}>
+                                              <Row gutter={[16, 24]} style={{ marginBottom: 24 }}>
                                                 {[
-                                                    { label: 'Total Pesanan', value: `${watchBox} Box (${totalSheets} lbr)`, icon: <IdcardOutlined /> },
-                                                    { label: 'Status Biaya', value: finishingSurcharge > 0 ? 'Termasuk Finishing' : 'Harga Standar', icon: <CheckCircleOutlined /> },
-                                                    { label: 'Finishing Surcharge', value: finishingSurcharge > 0 ? fmt(result.finishing_fees || 0) : '-', icon: <InfoCircleOutlined /> },
+                                                    { label: 'Total Pesanan', value: `${watchBox} Box`, icon: <IdcardOutlined /> },
+                                                    { label: 'Estimasi Berat', value: result.weight_kg ? `${result.weight_kg} kg` : '-', icon: null },
                                                 ].map((item, i) => (
-                                                    <Col span={24} key={i}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                                            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#f0f3ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4361ee' }}>{item.icon}</div>
-                                                            <div>
-                                                                <Text style={{ fontSize: 10, color: '#aaa', display: 'block', fontWeight: 700 }}>{item.label.toUpperCase()}</Text>
-                                                                <Text strong style={{ fontSize: 14, color: '#333' }}>{item.value}</Text>
-                                                            </div>
-                                                        </div>
+                                                    <Col span={12} key={i}>
+                                                        <Text style={{ fontSize: 10, color: '#aaa', display: 'block', fontWeight: 700, marginBottom: 2 }}>{item.label.toUpperCase()}</Text>
+                                                        <Text strong style={{ fontSize: 14, color: '#333' }}>{item.value}</Text>
                                                     </Col>
                                                 ))}
                                              </Row>
+
+                                             {(result as any).pricing != null && (
+                                                <div style={{ borderTop: '1px dashed #eee', paddingTop: 20, marginBottom: 20 }}>
+                                                    <Text strong style={{ fontSize: 11, color: '#aaa', display: 'block', marginBottom: 12 }}>RINCIAN BIAYA PER LEMBAR</Text>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><Text style={{ fontSize: 12, color: '#64748b' }}>Cetak Dasar</Text><Text strong style={{ fontSize: 12 }}>{fmt((result as any).pricing.base_price_per_unit)}</Text></div>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><Text style={{ fontSize: 12, color: '#64748b' }}>Finishing / Laminasi</Text><Text strong style={{ fontSize: 12 }}>{fmt((result as any).pricing.finishing_cost_per_unit)}</Text></div>
+                                                    </div>
+                                                </div>
+                                             )}
                                              
                                              <div style={{ marginTop: 32, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                                 {result.estimated_days && <Tag color="blue" style={{ borderRadius: 8, padding: '4px 12px', fontWeight: 600 }}>± {result.estimated_days} HARI KERJA</Tag>}

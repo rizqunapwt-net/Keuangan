@@ -8,7 +8,7 @@ import {
 import { motion } from 'framer-motion';
 import PageHeader from '../../components/PageHeader';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface CalcItem {
     key: string;
@@ -115,7 +115,7 @@ const CalcCard: React.FC<{ item: CalcItem; index: number; onNavigate: (path: str
                         )}
                     </div>
                     
-                    <Title level={4} style={{ margin: '0 0 8px 0', fontWeight: 800, color: '#1e293b' }}>{item.title}</Title>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: '#1e293b', marginBottom: 8 }}>{item.title}</div>
                     <Text style={{ fontSize: 13, color: '#64748b', fontWeight: 500, display: 'block', marginBottom: 32, lineHeight: 1.6 }}>
                         {item.desc}
                     </Text>

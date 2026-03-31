@@ -73,6 +73,8 @@ class FinanceController extends Controller
 
     public function exportProfitLossPdf(Request $request)
     {
+        Gate::authorize('finance.view_reports');
+
         ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
 
         return $this->exportService->exportProfitLossPdf($start, $end);
@@ -80,6 +82,8 @@ class FinanceController extends Controller
 
     public function exportProfitLossExcel(Request $request)
     {
+        Gate::authorize('finance.view_reports');
+
         ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
 
         return $this->exportService->exportProfitLossExcel($start, $end);
@@ -87,6 +91,8 @@ class FinanceController extends Controller
 
     public function exportBalanceSheetPdf(Request $request)
     {
+        Gate::authorize('finance.view_reports');
+
         $asOf = $request->input('as_of', now()->format('Y-m-d'));
 
         return $this->exportService->exportBalanceSheetPdf($asOf);
@@ -94,6 +100,8 @@ class FinanceController extends Controller
 
     public function exportBalanceSheetExcel(Request $request)
     {
+        Gate::authorize('finance.view_reports');
+
         $asOf = $request->input('as_of', now()->format('Y-m-d'));
 
         return $this->exportService->exportBalanceSheetExcel($asOf);
@@ -101,6 +109,8 @@ class FinanceController extends Controller
 
     public function exportCashFlowPdf(Request $request)
     {
+        Gate::authorize('finance.view_reports');
+
         ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
 
         return $this->exportService->exportCashFlowPdf($start, $end);
@@ -108,6 +118,8 @@ class FinanceController extends Controller
 
     public function exportCashFlowExcel(Request $request)
     {
+        Gate::authorize('finance.view_reports');
+
         ['start_date' => $start, 'end_date' => $end] = $this->exportService->getDateRange($request);
 
         return $this->exportService->exportCashFlowExcel($start, $end);

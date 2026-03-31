@@ -6,6 +6,9 @@ interface UserProfile {
     email: string;
     name: string;
     role: string;
+    roles: string[];
+    permissions: string[];
+    role_label: string;
     tenant: {
         id: number;
         name: string;
@@ -17,6 +20,7 @@ interface AuthContextType {
     user: UserProfile | null;
     loading: boolean;
     hasPermission: (permission: string) => boolean;
+    isAdmin: () => boolean;
     logout: () => void;
 }
 
@@ -42,9 +46,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    // Single role: admin. All logged-in users have full access.
-    const hasPermission = (_permission: string) => {
-        return !!user;
+    const isAdmin = () => user?.role === 'Admin';
+
+    // Granular permission check
+    const hasPermission = (permission: string) => {
+        if (!user) return false;
+        // Admin has ALL access bypass
+        if (user.role === 'Admin') return true;
+        
+        return user.permissions?.includes(permission) || false;
     };
 
     const logout = async () => {
@@ -60,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, hasPermission, logout }}>
+        <AuthContext.Provider value={{ user, loading, hasPermission, isAdmin, logout }}>
             {children}
         </AuthContext.Provider>
     );

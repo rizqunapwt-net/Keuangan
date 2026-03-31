@@ -22,6 +22,8 @@ class ExpenseController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        Gate::authorize('accounting_read');
+
         $query = Expense::latest('expense_date');
 
         if ($request->has('status')) {
@@ -54,6 +56,8 @@ class ExpenseController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        Gate::authorize('accounting_write');
+
         $validated = $request->validate([
             'refNumber' => 'required|string',
             'transDate' => 'required|date',
