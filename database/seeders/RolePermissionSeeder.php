@@ -40,15 +40,6 @@ class RolePermissionSeeder extends Seeder
             $adminRole = Role::findOrCreate('Admin', $guard);
             $adminRole->syncPermissions($permissions);
 
-            $userRole = Role::findOrCreate('User', $guard);
-            $userRole->syncPermissions([
-                'products_read',
-                'sales_read',
-                'pos_access',
-                'finance.view_reports',
-                'debt.view',
-            ]);
-            
             $kasirRole = Role::findOrCreate('Kasir', $guard);
             $kasirRole->syncPermissions([
                 'pos_access',
