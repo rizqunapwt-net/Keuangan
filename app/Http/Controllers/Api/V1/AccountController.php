@@ -92,6 +92,8 @@ class AccountController extends Controller
      */
     public function banks()
     {
+        Gate::authorize('accounting_read');
+
         // Typically cash and bank accounts start with '11' in this project
         $accounts = Account::where('code', 'like', '11%')
             ->where('is_active', true)

@@ -129,6 +129,8 @@ class FinanceController extends Controller
 
     public function accounts(): JsonResponse
     {
+        Gate::authorize('finance.view_reports');
+
         return response()->json([
             'success' => true,
             'data' => Account::where('is_active', true)->orderBy('code')->get(),
